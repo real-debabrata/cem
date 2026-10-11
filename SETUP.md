@@ -553,3 +553,64 @@ Re-publish the 3.5.0 rules and restore the 3.5.0 files. Attendees keep their ext
 | "This is an old Excel (.xls) file" | Open it in Excel or Google Sheets and use Save as / Download as `.xlsx` or CSV. |
 | "This browser cannot open Excel files" | The browser is too old to unzip (needs Chrome / Edge 103+, Firefox 113+, Safari 16.4+). Update it or save the sheet as CSV. |
 | Calculator button missing | `calc.js` was not uploaded, or the old page is cached. Redeploy and refresh. |
+
+---
+
+## Upgrade to 3.6.1: more roles, custom roles, and Help & guides
+
+3.6.1 needs **one change in Firebase** (republish the rules) and new files. There is nothing to convert, no new npm package, no change to the workflows, the Worker or the signing key. Free plans only. Allow about 10 minutes.
+
+**Read this first**
+- **Publish the rules before anyone uses a new role.** The 3.6.0 rules do not know the new roles or the `croles` field, so creating a custom role, or giving someone a new role, shows "No permission" until the 3.6.1 rules are live.
+- **Ask people to update the app.** A 3.6.0 app does not know the new roles: someone holding one would see an unknown role name and a read-only event. The website updates by itself once it is redeployed. Optionally set `latest` to `3.6.1` in Firestore > `appconfig` > `version`. Do **not** raise `min`: 3.6.0 apps still work for everyone who keeps a classic role.
+- Existing events and members are untouched. Every member keeps the role they have; the six classic roles behave exactly as before.
+
+### Files
+In the repo root replace: `firestore.rules`, `package.json`, `README.md`, `SETUP.md`.
+In `www/` replace: `index.html`, `app2.js`, `event.js`, `event.css`, `sync.js`, `ui.js`, `chat.js`, `expenses.js`, `income.js`, `signup.js`, `payment.js`, `import.js`, `calc.js`.
+In `www/` add (new): `help.js`.
+Not changed: `.github/`, `scripts/`, `worker/`, `scan.js`, `sheet.js`, `404.html`, `login.html`, `register.html`, `pay.html`, `ticket.html`, `firebase-config.js`, `vendor/`.
+
+### Steps
+1. **Upload the files** above to GitHub and commit to `main`. Pushing starts **Build APK** by itself.
+2. **Publish the new rules.** Firebase console > Firestore Database > **Rules** > select everything > paste the new `firestore.rules` > **Publish**. Check there are no red error markers before you publish. If the editor shows an error, do not publish; keep the old rules and note the line the marker points to.
+3. **Deploy the website.** Actions > **Deploy web version** > Run workflow. Open the site, refresh once, and check profile icon > About & updates shows **v3.6.1**.
+4. **Install the new APK** over the old one if you use the app (Actions > Build APK).
+5. **Run the test checklist below** on a test event with a second account.
+
+### What is new
+- **Five more built-in roles:** Coordinator, Registration desk, Logistics lead, Sponsorship lead, Volunteer. They appear in the role drop-down of the People tab.
+- **Custom roles:** People tab > **Custom roles** (organizer and managers only) > **+ New role**. Name it, optionally copy the permissions of an existing role, and tick the permissions. Nine permissions exist: Tick off own tasks, Team member basics, Manage tasks, Items to buy, Volunteer list, Attendees and check-in, Edit event and registrations, Payments and online registration, Money.
+- **Help & guides:** every explanatory paragraph that used to sit inside the tabs is now in one place: profile icon > **Help & guides** (right after "Account, alerts & join event"). It has a search box, and its "Roles and permissions" section also lists the custom roles of the event you have open. The event's **Details** tab has a short note that says where to find it.
+
+### Test checklist (15 minutes, test event, a second account joined with the event code)
+1. **Rules published.** Firebase > Firestore > Rules shows the new text (search for `permsOf`).
+2. **New built-in role.** On the organizer account open People and set the second account to **Registration desk**. On the second account (refresh it): Attendees shows **Register attendee**, **Check in** and **Scan tickets**; Tasks has no "+ New group"; there is no Expenses or Income tab.
+3. **Custom role.** On the organizer account: People > Custom roles > + New role. Name it `Gate`, choose **Copy permissions from** Registration desk, tick **Money**, **Create role**. Give it to the second account. On that account (refresh): the **Expenses** and **Income** tabs appear and Details says **Your role: Gate**.
+4. **Server check (the important one).** The app hides buttons the moment a role changes, so test the rules themselves with Firebase's **Rules Playground** (Firestore > Rules > Rules Playground). Simulate a **get** on `/databases/(default)/documents/events/<event code>/fin/data`, switch **Authenticated** on and enter the second account's UID (Firebase > Authentication > Users); if the playground offers an email-verified option, tick it. With **Money** ticked on the role it must say **Allowed**. Untick Money on the role (Edit > Save role), wait a few seconds, run the same simulation again: **Denied**. Repeat with a **get** on `.../regpages/<event code>` and the permission **Payments and online registration**.
+5. **Field limits.** With a custom role that has only **Tick off own tasks**, the second account can tick a task given to them but cannot add a task group, edit the event, or register an attendee.
+6. **Chat.** A **Volunteer** can chat. A custom role with nothing ticked can read the chat but the message box is replaced by a note.
+7. **Roles stay with the top.** On the second account (as Registration desk or any custom role) the People tab shows no role drop-downs and no Custom roles card.
+8. **Delete rules.** Try to delete a custom role while someone holds it: the app refuses. Move the person to another role and delete it.
+9. **Help & guides.** Profile icon > Help & guides opens, the search finds "cash", Esc closes it. Open an event > Details: the note about Help & guides is there, and its button opens the panel. The tabs no longer show intro paragraphs.
+10. **Alerts.** When you change the second account's role, it gets "Your role is now Gate" (the custom role's name, not an id).
+
+### How it works
+- **Permissions are lists.** Each role is a list of permission keys. The six classic roles keep their original rules in `firestore.rules`. The five new roles are listed in the function `permsOf` in the rules and in `BASE` in `www/app2.js` (**keep the two lists identical** if you ever change one). A custom role is stored in the event document as `croles.<id> = { id, n, p, at }`, with an id like `c_k3j2m1`; the member's `role` is that id.
+- **What the rules check.** `customFieldsOk()` allows each top-level field of the event document only if the role holds a permission that opens it (for example `groups` needs Manage tasks, `info` needs Edit event). `regsOk()` decides who may add, change and remove attendees. The money document needs Money, and payment links, online registration and link names need Payments and online registration. Chat needs at least one permission. Changing roles, defining custom roles and deleting the event stay with the organizer and managers (the organizer for deleting). The rules cap `croles` at 20 entries; the app allows 12.
+- **Custom roles are data, not code.** Nothing is deployed when a role is created or edited. Editing a role changes every holder at once.
+
+### Free-plan budget
+No new reads. Creating or editing a role is one write to the event document; giving a role is the same single write as before.
+
+### Rolling back
+Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or custom role then has no permissions in the old app (read only), and you can set them back to a classic role from the People tab. The `croles` field stays in the event document and is ignored.
+
+### Troubleshooting
+| What you see | Cause and fix |
+| --- | --- |
+| "No permission" when creating a role or giving a new role | The 3.6.1 rules are not published (step 2), or you are not the organizer or a manager. |
+| "No permission" when someone with a custom role does something their role should allow | The role is missing the permission that opens that field (see "How it works"), or their app is older than 3.6.1 and shows buttons the rules refuse. Update the app. |
+| A person shows **Role removed** | The custom role they held was deleted from another device. Give them another role. |
+| The Custom roles card is missing | You are not the organizer or a manager, or the event is not shared yet. |
+| Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |

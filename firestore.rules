@@ -15,9 +15,39 @@ service cloud.firestore {
     function isMember(eid) { return signedIn() && request.auth.uid in evData(eid).memberIds; }
     function role(eid) { return evData(eid).members[request.auth.uid].role; }
     function isStaff(eid) { return isMember(eid) && role(eid) in ['owner','organizer','manager','treasurer']; }
-    function isWriter(eid) { return isMember(eid) && role(eid) in ['owner','organizer','manager','treasurer','lead','member']; }
     function formData(fid) { return get(/databases/$(database)/documents/payforms/$(fid)).data; }
-    function seesForm(fid) { return signedIn() && (formData(fid).by == request.auth.uid || isStaff(formData(fid).eid)); }
+
+    // ------------------------------------------------------------------------------------------------
+    // v3.6.1: more roles, and custom roles built by the organizer or a manager by ticking permissions.
+    //
+    // A role is a list of permission keys. The six classic roles keep their own rules below (unchanged). Five new ready-made roles
+    // and every custom role are described by a permission list instead:
+    //   tick    tick off tasks assigned to them          write   team member basics (tick, add people, payment links, add attendees)
+    //   tasks   task groups and assigning tasks          items   items to buy
+    //   people  volunteers and who reports to whom       regs    attendees: add, check in, mark paid, teams
+    //   event   edit event details, remove registrations, delete any chat message
+    //   pay     payments, payment links, UPI settings, online registration     exp   budget, vendors, bills, sponsors (money document)
+    // Changing roles, and defining custom roles, stays with owner and manager only. Deleting the event stays with the owner.
+    // The five ready-made roles are listed here AND in www/app2.js (BASE). Keep the two lists identical.
+    // A custom role is stored in the event as croles.<id> = { id, n (name), p (permission list), at } and its id looks like c_ followed by 3 to 10 letters or digits.
+    // ------------------------------------------------------------------------------------------------
+    function customRoles(d) { return d.get('croles', {}); }
+    function permsOf(d, r) {
+      return r == 'coord' ? ['tick','write','tasks','items','regs','people']
+           : r == 'desk'  ? ['tick','write','regs']
+           : r == 'logi'  ? ['tick','write','tasks','items']
+           : r == 'spons' ? ['tick','write','exp']
+           : r == 'vol'   ? ['tick']
+           : (r.matches('c_[a-z0-9]{3,10}') && r in customRoles(d)) ? customRoles(d)[r].get('p', [])
+           : [];
+    }
+    function evPerms(eid) { return permsOf(evData(eid), role(eid)); }
+    function isWriter(eid) { return isMember(eid) && (role(eid) in ['owner','organizer','manager','treasurer','lead','member'] || 'write' in evPerms(eid)); }
+    function canExp(eid) { return isStaff(eid) || (isMember(eid) && 'exp' in evPerms(eid)); }
+    function canPay(eid) { return isStaff(eid) || (isMember(eid) && 'pay' in evPerms(eid)); }
+    function canChat(eid) { return isWriter(eid) || (isMember(eid) && evPerms(eid).size() > 0); }
+    function canMod(eid) { return isMember(eid) && (role(eid) in ['owner','organizer','manager'] || 'event' in evPerms(eid)); }
+    function seesForm(fid) { return signedIn() && (formData(fid).by == request.auth.uid || canPay(formData(fid).eid)); }
 
     // Chat text is either a plain string (max 1000 chars) or deflate-compressed bytes flagged with c == 1.
     function chatTextOk(d) {
@@ -57,16 +87,40 @@ service cloud.firestore {
     function legacy() { return ['bud','ven','exp','payments','don']; }
     function topChanged() { return request.resource.data.diff(resource.data).affectedKeys(); }
     function evRole() { return resource.data.members[request.auth.uid].role; }
+    function myPerms() { return permsOf(resource.data, evRole()); }
     function amMember() { return request.auth.uid in resource.data.memberIds; }
 
     function fieldsOk() {
       let r = evRole();
       let ch = topChanged();
-      return (r in ['owner','organizer'] && ch.hasOnly(['info','team','groups','tasks','teams','pay','regs','forms','itm','ntfy','rc','members','memberIds','bud','ven','exp','payments','don']))
-          || (r == 'manager' && ch.hasOnly(['info','team','groups','tasks','teams','pay','regs','forms','itm','rc','members','memberIds','bud','ven','exp','payments','don']))
+      return (r in ['owner','organizer'] && ch.hasOnly(['info','team','groups','tasks','teams','pay','regs','forms','itm','ntfy','rc','members','memberIds','croles','bud','ven','exp','payments','don']))
+          || (r == 'manager' && ch.hasOnly(['info','team','groups','tasks','teams','pay','regs','forms','itm','rc','members','memberIds','croles','bud','ven','exp','payments','don']))
           || (r == 'treasurer' && ch.hasOnly(['team','tasks','teams','pay','regs','forms','itm']))
           || (r == 'lead' && ch.hasOnly(['team','groups','tasks','teams','regs','forms','itm']))
-          || (r == 'member' && ch.hasOnly(['team','tasks','teams','regs','forms','itm']));
+          || (r == 'member' && ch.hasOnly(['team','tasks','teams','regs','forms','itm']))
+          || customFieldsOk();
+    }
+
+    // v3.6.1: the five ready-made roles and custom roles. Every changed top-level field needs one of the permissions that opens it.
+    function customFieldsOk() {
+      let p = myPerms();
+      let ch = topChanged();
+      return p.size() > 0
+        && ch.hasOnly(['team','tasks','teams','groups','forms','itm','regs','info','pay'])
+        && (!ch.hasAny(['team'])   || p.hasAny(['write','tasks','items','people']))
+        && (!ch.hasAny(['tasks'])  || p.hasAny(['write','tick','tasks']))
+        && (!ch.hasAny(['teams'])  || p.hasAny(['write','tasks','regs']))
+        && (!ch.hasAny(['groups']) || 'tasks' in p)
+        && (!ch.hasAny(['forms'])  || p.hasAny(['write','pay']))
+        && (!ch.hasAny(['itm'])    || p.hasAny(['write','items']))
+        && (!ch.hasAny(['regs'])   || p.hasAny(['write','regs','event','pay']))
+        && (!ch.hasAny(['info'])   || 'event' in p)
+        && (!ch.hasAny(['pay'])    || 'pay' in p);
+    }
+
+    // Custom roles live in the event document; at most 20 of them (the rules cannot loop over the map to check each entry).
+    function croleOk() {
+      return !topChanged().hasAny(['croles']) || request.resource.data.get('croles', {}).size() <= 20;
     }
 
     // Attendees are one map entry each (regs.<id>). Organizer and manager: everything. Treasurer and team lead: add and change
@@ -79,6 +133,12 @@ service cloud.firestore {
                 || (r in ['treasurer','lead'] && request.resource.data.regs.diff(resource.data.regs).removedKeys().size() == 0)
                 || (r == 'member'
                     && request.resource.data.regs.diff(resource.data.regs).removedKeys().size() == 0
+                    && request.resource.data.regs.diff(resource.data.regs).changedKeys().size() == 0)
+                // v3.6.1: ready-made and custom roles. 'event' may also remove; 'regs' or 'pay' may add and change; 'write' may only add.
+                || 'event' in myPerms()
+                || (myPerms().hasAny(['regs','pay']) && request.resource.data.regs.diff(resource.data.regs).removedKeys().size() == 0)
+                || ('write' in myPerms()
+                    && request.resource.data.regs.diff(resource.data.regs).removedKeys().size() == 0
                     && request.resource.data.regs.diff(resource.data.regs).changedKeys().size() == 0)));
     }
 
@@ -88,7 +148,8 @@ service cloud.firestore {
 
     // Changing someone else's role, or removing them. The app sends a small witness field rc = {u: their id, r: new role or '-', at: time}.
     // The rules cannot loop over the members map, so they require that exactly the member named in rc changed, and that the new role matches rc.
-    // Owner: can set manager, treasurer, lead, member, viewer. Manager: can set treasurer, lead, member, viewer, and cannot touch another manager or the owner.
+    // Owner: can set manager, treasurer, lead, member, viewer, the five ready-made roles (coord, desk, logi, spons, vol) and any custom role that already exists.
+    // Manager: the same except manager, and cannot touch another manager or the owner.
     function peopleOk() {
       let n = request.resource.data;
       let o = resource.data;
@@ -104,7 +165,8 @@ service cloud.firestore {
         && n.members.diff(o.members).affectedKeys() == [n.rc.u].toSet()
         && (n.rc.r == '-'
             ? (!(n.rc.u in n.members) && n.memberIds.toSet() == o.memberIds.toSet().difference([n.rc.u].toSet()))
-            : (n.rc.r in (r == 'manager' ? ['treasurer','lead','member','viewer'] : ['manager','treasurer','lead','member','viewer'])
+            : ((n.rc.r in (r == 'manager' ? ['treasurer','lead','coord','desk','logi','spons','vol','member','viewer'] : ['manager','treasurer','lead','coord','desk','logi','spons','vol','member','viewer'])
+                || (n.rc.r.matches('c_[a-z0-9]{3,10}') && n.rc.r in customRoles(o)))
                && n.members[n.rc.u].role == n.rc.r
                && n.members[n.rc.u].keys().hasOnly(['name','role'])
                && n.members[n.rc.u].name == o.members[n.rc.u].name
@@ -167,26 +229,26 @@ service cloud.firestore {
         joinOk()
         || leaveOk()
         || ownNameOk()
-        || (amMember() && fieldsOk() && regsOk() && legacyOk() && (!topChanged().hasAny(['members','memberIds','rc']) || peopleOk())));
+        || (amMember() && fieldsOk() && regsOk() && legacyOk() && croleOk() && (!topChanged().hasAny(['members','memberIds','rc']) || peopleOk())));
 
       allow delete: if signedIn() && resource.data.owner == request.auth.uid;
 
       // Money data (v3.5.0): budget lines (bud), vendors (ven), vendor bills (exp), earlier payments (payments), donations (don)
-      // and sponsors (spn), one map per kind with one entry per item. Staff only: owner, manager, treasurer.
+      // and sponsors (spn), one map per kind with one entry per item. Staff only: owner, manager, treasurer (v3.6.1: and any role with the 'exp' permission).
       match /fin/{doc} {
-        allow read: if isStaff(id);
-        allow create, update: if isStaff(id)
+        allow read: if canExp(id);
+        allow create, update: if canExp(id)
           && request.resource.data.keys().hasOnly(['bud','ven','exp','payments','don','spn']);
-        allow delete: if isStaff(id);
+        allow delete: if canExp(id);
       }
 
       // Event chat (v2.0.0). Members read everything, including messages sent before they joined.
       match /chat/{mid} {
         allow read: if isMember(id);
 
-        // Only a member who may write (not a viewer) can post, only as themselves, with their own member name.
+        // Only a member who may post (any role except a viewer or a custom role with no permissions) can post, only as themselves, with their own member name.
         // 'at' must be the server's time, so nobody can fake or back-date a message.
-        allow create: if isWriter(id)
+        allow create: if canChat(id)
           && request.resource.data.keys().hasOnly(['u','n','t','at','c','m'])
           && request.resource.data.u == request.auth.uid
           && request.resource.data.n == evData(id).members[request.auth.uid].name
@@ -195,7 +257,7 @@ service cloud.firestore {
           && mentionOk(id, request.resource.data);
 
         // Own messages can be edited for 2 hours after they were sent.
-        allow update: if isWriter(id)
+        allow update: if canChat(id)
           && resource.data.u == request.auth.uid
           && request.time < resource.data.at + duration.value(2, 'h')
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['t','c','ed','m'])
@@ -207,7 +269,7 @@ service cloud.firestore {
         // (moderation, and clearing the chat when the event is deleted).
         allow delete: if isMember(id) && (
           (resource.data.u == request.auth.uid && request.time < resource.data.at + duration.value(2, 'h'))
-          || role(id) in ['owner','organizer','manager']);
+          || canMod(id));
       }
     }
 
@@ -216,19 +278,19 @@ service cloud.firestore {
     match /payforms/{fid} {
       allow get: if resource == null
         || liveForm(resource.data)
-        || (signedIn() && (resource.data.by == request.auth.uid || isStaff(resource.data.eid)));
+        || (signedIn() && (resource.data.by == request.auth.uid || canPay(resource.data.eid)));
       allow list: if false;
       allow create: if signedIn()
         && request.resource.data.by == request.auth.uid
-        && isWriter(request.resource.data.eid)
+        && (isWriter(request.resource.data.eid) || canPay(request.resource.data.eid))
         && request.resource.data.until is number;
       allow update: if signedIn()
-        && (resource.data.by == request.auth.uid || isStaff(resource.data.eid))
+        && (resource.data.by == request.auth.uid || canPay(resource.data.eid))
         && request.resource.data.eid == resource.data.eid
         && request.resource.data.by == resource.data.by
         && request.resource.data.until is number;
       allow delete: if signedIn()
-        && (resource.data.by == request.auth.uid || isStaff(resource.data.eid));
+        && (resource.data.by == request.auth.uid || canPay(resource.data.eid));
 
       match /subs/{sid} {
         // Payers need no account. The document id is the UTR, so a UTR can be submitted only once. Closed once the link expires or the event is deleted.
@@ -258,13 +320,13 @@ service cloud.firestore {
     match /regpages/{eid} {
       allow get: if resource == null
         || liveReg(resource.data)
-        || (signedIn() && isStaff(eid));
+        || (signedIn() && canPay(eid));
       allow list: if false;
-      allow create, update: if signedIn() && isStaff(eid)
+      allow create, update: if signedIn() && canPay(eid)
         && request.resource.data.eid == eid
         && request.resource.data.open is bool
         && request.resource.data.until is number;
-      allow delete: if signedIn() && isStaff(eid);
+      allow delete: if signedIn() && canPay(eid);
 
       match /subs/{sid} {
         // The document id is the normalised College ID, so one College ID can apply only once per event (a second create becomes an
@@ -291,11 +353,11 @@ service cloud.firestore {
           && (!('cp' in request.resource.data) || (request.resource.data.get('pm', '') == 'cash' && request.resource.data.cp is bool))
           && exists(/databases/$(database)/documents/regpages/$(eid))
           && liveReg(get(/databases/$(database)/documents/regpages/$(eid)).data);
-        allow get, list: if signedIn() && isStaff(eid);
-        allow update: if signedIn() && isStaff(eid)
+        allow get, list: if signedIn() && canPay(eid);
+        allow update: if signedIn() && canPay(eid)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['s','ri'])
           && request.resource.data.s in ['pending','waitlist','approved','rejected'];
-        allow delete: if signedIn() && isStaff(eid);
+        allow delete: if signedIn() && canPay(eid);
       }
     }
 
@@ -311,11 +373,11 @@ service cloud.firestore {
         && request.resource.data.eid is string
         && request.resource.data.by == request.auth.uid
         && request.resource.data.at is number
-        && isStaff(request.resource.data.eid);
+        && canPay(request.resource.data.eid);
       allow update: if signedIn()
-        && isStaff(resource.data.eid)
+        && canPay(resource.data.eid)
         && request.resource.data.eid == resource.data.eid;
-      allow delete: if signedIn() && isStaff(resource.data.eid);
+      allow delete: if signedIn() && canPay(resource.data.eid);
     }
 
     // App version control: everyone can read, nobody can write from the app. Edit this doc in the Firebase console.

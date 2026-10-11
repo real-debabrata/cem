@@ -1,9 +1,57 @@
-# Campus Events (CEM) 3.6.0
+# Campus Events (CEM) 3.6.1
 
 Plan campus events with your team: registrations, tasks, roles, UPI payment links, a chat inside every event, a budget with bills and vendors, public self-registration, QR tickets with scan-to-check-in, and an income and sponsor tracker.
 Runs as an Android app (APK built by GitHub, no installs) and as a website. Everything fits in the free plans of GitHub and Firebase (Spark).
 
-## What's new in 3.6.0: spreadsheet import, custom registration link, cash or UPI, calculator
+## What's new in 3.6.1: more roles, custom roles, and a tidier app with Help & guides
+Everything stays free (no new service, no new npm package, no Cloud Functions). **This release changes `firestore.rules`, so republish the rules before anyone uses a new role** (SETUP.md > Upgrade to 3.6.1, about 10 minutes, nothing to convert). Existing events, members and the six classic roles are untouched.
+
+### 1. Five more built-in roles
+| Role | What it is for | Permissions |
+| --- | --- | --- |
+| **Coordinator** | Runs the day: task groups, items, attendees, the volunteer list | Team member basics, Manage tasks, Items to buy, Volunteer list, Attendees and check-in |
+| **Registration desk** | Gate and desk volunteers: register walk-ins, check in, scan, mark fees paid | Team member basics, Attendees and check-in |
+| **Logistics lead** | Task groups, tasks and items to buy, given to anyone | Team member basics, Manage tasks, Items to buy |
+| **Sponsorship lead** | Sponsors and the money side | Team member basics, Money |
+| **Volunteer** | Ticks off the tasks given to them and chats | Tick off own tasks |
+
+They sit next to the classic roles (Organizer, Manager, Treasurer, Team lead, Member, Viewer) in the People tab's role drop-down.
+
+### 2. Custom roles, with permissions you tick (`app2.js`, `firestore.rules`)
+People tab > **Custom roles** (organizer and managers only, shared events) > **+ New role**. Give it a name, optionally **Copy permissions from** an existing role, tick what it may do, **Create role**. Give it to people with the same drop-down. Editing a role changes every holder at once; a role can be deleted only when nobody holds it; an event can have up to 12.
+
+| Permission | Allows |
+| --- | --- |
+| Tick off own tasks | Mark the tasks given to them as done |
+| Team member basics | Tick own tasks, add people who report to them, create payment links, register attendees (no check-in) |
+| Manage tasks | Task groups and tasks, given to anyone |
+| Items to buy | Add items to buy and give them to people |
+| Volunteer list | Add and remove people without an account, set who reports to whom |
+| Attendees and check-in | Register, check in, scan tickets, mark fees paid, import a list, participant teams |
+| Edit event and registrations | Edit the event details, remove registrations, delete any chat message |
+| Payments and online registration | Verify payments, payment links, UPI settings, online registration, cash collectors |
+| Money | Budget, vendors, bills, sponsors, and the Income and Expenses tabs |
+
+- **Enforced by the database, not just hidden buttons.** Each role is a list of permission keys. `firestore.rules` opens each field of the event document only to roles that hold a matching permission (`customFieldsOk`, `regsOk`), and the money document, payment links, online registration and chat check the same lists (`canExp`, `canPay`, `canChat`, `canMod`). A custom role is stored as `croles.<id>` in the event document (one entry per role, like attendees), and a member's `role` is that id.
+- **Not delegable:** changing roles and making custom roles (organizer and managers), deleting the event (organizer), the ntfy topic. A custom role with nothing ticked is read only.
+- The five new built-in roles are listed twice, in `permsOf` in `firestore.rules` and in `BASE` in `www/app2.js`. Keep them identical if you change either.
+- Chat now needs any one permission to post (a Viewer or an empty custom role can read only). Ticking a task needs Tick off own tasks (or Team member basics, or Manage tasks): a Viewer can no longer tick a task that was given to them (the rules always refused it; the box is now disabled instead of failing).
+- Role names show everywhere (People, Details, chat names, alerts such as "Your role is now Gate").
+
+### 3. An uncluttered app, and one place for help (`help.js`)
+- The explanatory paragraphs that sat at the top of tabs, under forms and in cards are gone: the role guide, tab introductions, "how it works" notes, import and registration blurbs, payment-link notes, expense and income hints, the chat header text and the preset note on the event form. What is left in the tabs is status (counts, "Open", "Expired"), empty states and the few prompts that explain why something is unavailable (for example "Share the event first").
+- **Profile icon > Help & guides** (right after "Account, alerts & join event") opens one searchable panel with 14 folding sections: Getting started, Details, Attendees and tickets (with the spreadsheet import), Online registration, Cash or UPI, Tasks and items, People, **Roles and permissions** (built-in roles, how to make your own, every permission, and the custom roles of the event you have open), Payments, Expenses and Income, Chat, Calculator, Account and updates, and Troubleshooting.
+- The event's **Details** tab has a short note ("Need help or a guide? Tap your profile icon...") with a button that opens the panel.
+- Not changed on purpose: the public pages (`login.html`, `register.html`, `pay.html`, `ticket.html`) keep their own instructions, because those are for visitors who never see the app menu.
+
+### Known limits of 3.6.1 (please read)
+- **The new rules could not be run against the Firebase emulator when this release was prepared** (it needs a download that was not available). The app was tested in a headless browser against a mock database (roles, the role form, sync of `croles`, Help & guides, all tabs for all roles) and the rules were checked by reading and for balanced syntax, not by running them. Run the test checklist in SETUP.md > Upgrade to 3.6.1, including the **Rules Playground** step, before you rely on it.
+- The rules cannot loop over a map. So a custom role's name and permission list are not validated entry by entry (only the number of roles, at most 20, and who may write them: organizer and managers), and they cannot stop someone deleting a role that is still in use. The app refuses that; if it happens from two devices at once, the holder shows **Role removed** and has no permissions until you give them another role.
+- As before, per-attendee limits are not possible: a role allowed to change attendees could change any attendee's fields. And `tasks`, `team` and `teams` are still whole-field writes.
+- A 3.6.0 app does not know the new roles: a person holding one sees a read-only event until they update the app.
+- Not tested on a real phone or against the real Firebase project.
+
+## What was new in 3.6.0: spreadsheet import, custom registration link, cash or UPI, calculator
 Everything stays free (no new service, no new npm package, no Cloud Functions). **This release adds two collections to `firestore.rules`, so republish the rules** (SETUP.md > Upgrade to 3.6.0, about 10 minutes, nothing to convert).
 
 ### 1. Import pre-registered attendees from CSV, Excel or a spreadsheet (`sheet.js`, `import.js`)
@@ -163,7 +211,7 @@ The tab bar scrolls sideways on a phone and shows small counters: attendees, ope
 
 ## Build the APK
 ### Option A: no installs, GitHub builds it for you
-1. Create a new GitHub repository and upload everything in this folder (keep the .github and scripts folders; the 3.6.0 files are all under www/ and need no workflow change).
+1. Create a new GitHub repository and upload everything in this folder (keep the .github and scripts folders; the 3.6.1 files are all under www/ and need no workflow change).
 2. **One time only:** create the permanent signing key (see "APK updates and signing" below). Without it the build stops with a clear error.
 3. Open the Actions tab, pick "Build APK", click Run workflow (it also runs on every push to main).
 4. When it finishes (about 5 minutes), download "campus-events-apk" from the run page and unzip it.
@@ -218,7 +266,7 @@ An app installed from a build that used a random key (or a different key) can ne
 Notes: the app version people see (`APP_VERSION` in www/ui.js) and Android's `versionCode` are separate. Bump `APP_VERSION` for what users read; `versionCode` is set automatically on every build. If you build on your computer (Option B), make sure the same key is used, otherwise that APK cannot update one built by GitHub.
 
 ## Set up Firebase, chat and the website
-Follow **SETUP.md** (Firebase project, rules, GitHub Pages, and the upgrade steps: **"Upgrade to 3.5.0" (new rules, self-registration, QR tickets, sponsors: read this one first)**, "Upgrade to 3.4.0" (new event page, files only), "Upgrade to 2.0.0" (chat), "Upgrade to 3.1.0" (expenses, payment-link expiry, tagging) **"Upgrade to 3.2.0" (email-code sign-up)** and **"Upgrade to 3.3.0" (Google sign-in)**).
+Follow **SETUP.md** (Firebase project, rules, GitHub Pages, and the upgrade steps: **"Upgrade to 3.5.0" (new rules, self-registration, QR tickets, sponsors: read this one first)**, "Upgrade to 3.4.0" (new event page, files only), "Upgrade to 2.0.0" (chat), "Upgrade to 3.1.0" (expenses, payment-link expiry, tagging) **"Upgrade to 3.2.0" (email-code sign-up)** and **"Upgrade to 3.3.0" (Google sign-in)**, **"Upgrade to 3.6.0"** (spreadsheet import, link names, cash or UPI) and **"Upgrade to 3.6.1"** (more roles, custom roles, Help & guides: republish the rules)).
 
 ## Files
 | Path | What it does |
@@ -238,10 +286,11 @@ Follow **SETUP.md** (Firebase project, rules, GitHub Pages, and the upgrade step
 | www/vendor/jsQR.js | QR decoder for browsers without BarcodeDetector. Apache-2.0, see vendor/jsQR.LICENSE.txt (new in 3.5.0) |
 | www/event.css | Styles for the event page: tabs, lists, status pills, budget cards (new in 3.4.0) |
 | www/sync.js | Firebase sign-in, live sync, alerts. 3.5.0: staff-only money document, one entry per attendee, one-time conversion of old events |
-| www/app2.js | Roles and permissions, Tasks, People, Payments (money in) and payment-link expiry |
+| www/app2.js | Roles and permissions (built-in and custom, 3.6.1), Tasks, People with the custom roles card, Payments (money in) and payment-link expiry |
+| www/help.js | Help & guides panel: every explanation that used to sit in the tabs, searchable, opened from the profile icon menu (new in 3.6.1) |
 | www/expenses.js | Expenses & Budget (budget, bills, vendors) and the Items to buy list shown in Tasks (3.1.0, redesigned in 3.4.0) |
 | www/chat.js | Event chat, @tagging, full-screen layout |
-| www/ui.js | Menu bar, themes, version control. `APP_VERSION` lives here |
+| www/ui.js | Menu bar, profile menu (Account, Help & guides, Theme, About), themes, version control. `APP_VERSION` lives here |
 | www/splash.css, www/splash.js | Animated logo loader (new in 2.0.0) |
 | www/login.html, www/pay.html | Sign-in and sign-up page (Google button; email sign-up asks for an emailed code), public payment page |
 | www/firebase-config.js | Your Firebase keys, plus `OTP_API` (address of the OTP Worker) and the optional `TURNSTILE_SITE_KEY` |
@@ -255,7 +304,7 @@ Follow **SETUP.md** (Firebase project, rules, GitHub Pages, and the upgrade step
 | scripts/patch-scanner.sh | Adds the camera permission and the scanner meta-data to the generated Android manifest (new in 3.5.0) |
 | scripts/patch-android.sh | Writes the signing key path and an ever-increasing versionCode into the generated Android project |
 | signing/debug.keystore.gpg | Your encrypted permanent key. Never delete it |
-| firestore.rules | Security rules (3.6.0: link names in `regslugs`, cash fields on applications; 3.5.0: field limits per role, staff-only money document, public registration pages; 3.3.0: only confirmed emails). Paste into Firebase console > Firestore > Rules |
+| firestore.rules | Security rules (3.6.1: permission lists for the five new roles and custom roles, `croles`; 3.6.0: link names in `regslugs`, cash fields on applications; 3.5.0: field limits per role, staff-only money document, public registration pages; 3.3.0: only confirmed emails). Paste into Firebase console > Firestore > Rules |
 
 ## Notes
 - **Google sign-in and the confirmed-email rule (3.3.0).** `firestore.rules` has one switch, `requireVerifiedEmail()`, set to `true`. Leave it on. Turning it off while Firebase's public sign-up is on lets bots create accounts that can use your free Firestore quota.
