@@ -114,11 +114,9 @@ function plan(e,st){
 const ACCEPT='.csv,.tsv,.txt,.xlsx,.xlsm,.ods,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet';
 function pick(e,err){
  return `<div class="sh"><h3>Import pre-registered attendees</h3></div>
-  <p class="lead" style="margin-bottom:10px">Already have a list? Upload a spreadsheet and add everyone in one go: <b>CSV, Excel (.xlsx) or OpenDocument (.ods)</b>. The file is read on this device and is not uploaded anywhere. The first row should hold the column names.</p>
   ${err?`<div class="note" role="alert" style="margin-bottom:10px">${esc(err)}</div>`:''}
   <div class="row"><button class="btn" data-im="pick">Choose spreadsheet</button><button class="btn ghost" data-im="tpl">Download blank template</button></div>
-  <input type="file" id="impf" accept="${ACCEPT}" hidden aria-label="Spreadsheet file">
-  <p class="meta" style="margin:10px 0 0">You can also drop a file on this card. Old .xls files: open them in Excel and use Save as .xlsx first.</p>`;
+  <input type="file" id="impf" accept="${ACCEPT}" hidden aria-label="Spreadsheet file">`;
 }
 function mapUI(e,st){
  const sh=st.sheets[st.si],T=targets(e),hdr=st.hdr,head=hdr?sh.rows[0]||[]:[],ncol=Math.max.apply(null,sh.rows.slice(0,50).map(r=>r.length).concat([1]));
@@ -131,14 +129,13 @@ function mapUI(e,st){
  const reasons={};p.skipped.forEach(s=>{const k=s.reason.replace(/\(.*\)/,'').trim();reasons[k]=(reasons[k]||0)+1});
  const W=p.W,warn=[W.badEmail?W.badEmail+' email(s) not valid, left empty':'',W.badPhone?W.badPhone+' phone number(s) too short, left empty':'',W.badCollector?W.badCollector+' collector name(s) not on your cash collectors list, ignored':'',W.badMode?W.badMode+' payment mode(s) not understood, ignored':''].filter(Boolean);
  return `<div class="sh"><h3>Import: ${esc(st.name)}</h3><button class="btn ghost sm" data-im="x">Cancel</button></div>
-  <p class="meta" style="margin:0 0 8px">${p.n} row${p.n===1?'':'s'} found${st.sheets.length>1?'':' in the file'}. Check how your columns match the registration form.</p>
+  <p class="meta" style="margin:0 0 8px">${p.n} row${p.n===1?'':'s'} found${st.sheets.length>1?'':' in the file'}.</p>
   <div class="row" style="margin-bottom:6px">${st.sheets.length>1?`<label style="margin:0" for="ims">Sheet</label><select id="ims" class="sel-s">${st.sheets.map((s,i)=>`<option value="${i}" ${i===st.si?'selected':''}>${esc(s.name)} (${s.rows.length} rows)</option>`).join('')}</select>`:''}
    <label style="margin:0;font-weight:400"><input type="checkbox" id="imh" ${hdr?'checked':''}> First row has column names</label></div>
   ${rows}
   ${fee>0&&!(st.map.paid>=0)?`<label style="margin:10px 0 0;font-weight:400"><input type="checkbox" id="imp" ${st.allPaid?'checked':''}> These attendees have already paid the ticket fee (₹${fee})</label>`:''}
   <div class="${p.ready.length?'scres ok':'scres warn'}" style="margin-top:12px" role="status"><b>${p.ready.length} ready to import</b>${p.skipped.length?`${p.skipped.length} will be skipped: ${Object.keys(reasons).map(k=>esc(k)+' ('+reasons[k]+')').join(', ')}.`:'No problems found.'}${warn.length?`<br>${esc(warn.join('; '))}.`:''}</div>
-  <div class="acts row" style="margin-top:10px"><button class="btn" data-im="go" ${p.ready.length?'':'disabled'}>Import ${p.ready.length} attendee${p.ready.length===1?'':'s'}</button>${p.skipped.length?'<button class="btn ghost" data-im="skip">Download skipped rows</button>':''}<button class="btn ghost" data-im="x">Cancel</button></div>
-  ${(regsOf(e.id).length+p.ready.length)>800?'<p class="meta" style="margin:10px 0 0">Large events: see the README note about more than about 800 attendees.</p>':''}`;
+  <div class="acts row" style="margin-top:10px"><button class="btn" data-im="go" ${p.ready.length?'':'disabled'}>Import ${p.ready.length} attendee${p.ready.length===1?'':'s'}</button>${p.skipped.length?'<button class="btn ghost" data-im="skip">Download skipped rows</button>':''}<button class="btn ghost" data-im="x">Cancel</button></div>`;
 }
 function doneUI(st){
  const d=st.done;

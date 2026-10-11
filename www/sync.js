@@ -7,8 +7,8 @@ let N=LS('campus-notes',[]);
 let U=null,db,unsub,applying=false;const sent={},owners={};
 // 3.5.0: the event document keeps KEYS. The money data (FINK) lives in events/{id}/fin/data, which only owner, manager and treasurer can read or write.
 //   bud=budget lines, ven=vendors, exp=vendor bills, payments=earlier payments, don=donations, spn=sponsors and other income.
-// MAPK fields are stored one entry per field (forms.<id>, itm.<id>, regs.<id>) so two people never overwrite each other.
-const KEYS=['info','team','groups','tasks','teams','pay','regs','forms','itm'],FINK=['don','bud','ven','exp','payments','spn'],MAPK=['forms','itm','regs'],ALLK=KEYS.concat(FINK),LEGACY=['bud','ven','exp','payments','don'];
+// MAPK fields are stored one entry per field (forms.<id>, itm.<id>, regs.<id>, croles.<id>) so two people never overwrite each other. 3.6.1: croles = custom roles (written by organizer and manager only).
+const KEYS=['info','team','groups','tasks','teams','pay','regs','forms','itm','croles'],FINK=['don','bud','ven','exp','payments','spn'],MAPK=['forms','itm','regs','croles'],ALLK=KEYS.concat(FINK),LEGACY=['bud','ven','exp','payments','don'];
 const arr=o=>Array.isArray(o)?o:Object.values(o||{}).sort((a,b)=>(a.at||0)-(b.at||0));
 const toMap=a=>Object.fromEntries((a||[]).map((x,i)=>[x.id||('i'+i),x]));
 const withIds=(a,p)=>arr(a).map((x,i)=>x&&x.id?x:Object.assign({id:p+i},x));
@@ -50,7 +50,7 @@ function snapOf(e){
  const o={info:{name:e.name,type:e.type,date:e.date,time:e.time,venue:e.venue,cap:e.cap,desc:e.desc,fields:e.fields},
   team:e.team||[],groups:e.groups||[],tasks:e.tasks||[],teams:e.teams||[],don:e.don||[],pay:e.pay||{upi:'',payee:'',fee:0},
   regs:S.regs.filter(r=>r.eid===e.id).map(r=>{const c=Object.assign({},r);delete c.eid;return c}),   // 3.5.0: no eid inside the stored entry
-  forms:e.forms||[],payments:e.payments||[],bud:e.bud||[],ven:e.ven||[],exp:e.exp||[],itm:e.itm||[],spn:e.spn||[],members:e.members||{}};
+  forms:e.forms||[],payments:e.payments||[],bud:e.bud||[],ven:e.ven||[],exp:e.exp||[],itm:e.itm||[],spn:e.spn||[],croles:e.croles||[],members:e.members||{}};
  return clean(o);
 }
 const parts=e=>{const o=snapOf(e),r={};ALLK.forEach(k=>r[k]=JSON.stringify(o[k]));return r};
@@ -72,7 +72,7 @@ function diff(o,n,who){
  if(np)out.push({cat:'money',text:np+' fee payment'+(np>1?'s':'')+' recorded'});
  const om=o.members||{},nmem=n.members||{};
  Object.keys(nmem).filter(k=>!om[k]).forEach(k=>out.push({cat:'people',text:nmem[k].name+' joined the event'}));
- Object.keys(nmem).forEach(k=>{if(om[k]&&om[k].role!==nmem[k].role&&k===window.MYUID)out.push({cat:'people',me:true,text:'Your role is now '+nmem[k].role})});
+ Object.keys(nmem).forEach(k=>{if(om[k]&&om[k].role!==nmem[k].role&&k===window.MYUID)out.push({cat:'people',me:true,text:'Your role is now '+(window.roleLabel?roleLabel({croles:n.croles||[]},nmem[k].role):nmem[k].role)})});
  added(o.payments||[],n.payments||[]).forEach(p=>out.push({cat:'money',text:'Payment of ₹'+p.a+' from '+p.n+' submitted'}));
  const mineItem=i=>i.who&&(i.who===window.MYUID||(who&&nm(i.who)===who));   // 3.1.0: items to buy assigned to you
  added(o.itm||[],n.itm||[]).forEach(i=>{if(mineItem(i))out.push({cat:'tasks',me:true,text:'Item to buy assigned to you: '+i.t})});
@@ -89,7 +89,7 @@ function apply(id,d){
  let e=S.events.find(x=>x.id===id);const old=e?snapOf(e):null;
  if(!e){e={id};S.events.push(e)}
  Object.assign(e,d.info||{},{team:d.team||[],groups:d.groups||[],tasks:d.tasks||[],teams:d.teams||[],
-  pay:d.pay||{upi:'',payee:'',fee:0},forms:arr(d.forms),itm:arr(d.itm),cloud:1,owner:d.owner,ntfy:d.ntfy||'',members:d.members||{}});
+  pay:d.pay||{upi:'',payee:'',fee:0},forms:arr(d.forms),itm:arr(d.itm),croles:arr(d.croles),cloud:1,owner:d.owner,ntfy:d.ntfy||'',members:d.members||{}});
  // 3.5.0: money data comes from events/{id}/fin/data (see watchFin). Events not yet converted still carry it here; staff see it until the one-time conversion runs.
  FINK.forEach(k=>{if(!Array.isArray(e[k]))e[k]=[]});
  let lg=0;if(!finLoaded[id]&&window.can&&can(e,'exp'))FINK.forEach(k=>{if(d[k]!==undefined){e[k]=withIds(d[k],k[0]);lg=1}});
@@ -233,7 +233,7 @@ async function share(id){
  const regs=S.regs.filter(r=>r.eid===id);
  S.regs.forEach(r=>{if(r.eid===id)r.eid=code});
  e.id=code;e.cloud=1;e.owner=U.uid;e.ntfy='campus-'+code+'-'+rnd(8).toLowerCase();e.members={[U.uid]:{name:U.displayName||U.email,role:'owner'}};
- const o=snapOf(e),fin={};FINK.forEach(k=>{fin[k]=toMap(o[k]);delete o[k]});['forms','itm','regs'].forEach(k=>{o[k]=toMap(o[k])});
+ const o=snapOf(e),fin={};FINK.forEach(k=>{fin[k]=toMap(o[k]);delete o[k]});['forms','itm','regs','croles'].forEach(k=>{o[k]=toMap(o[k])});
  try{await db.collection('events').doc(code).set(Object.assign(o,{owner:U.uid,ntfy:e.ntfy,members:e.members,memberIds:[U.uid]}));
   if(FINK.some(k=>Object.keys(fin[k]).length))await db.collection('events').doc(code).collection('fin').doc('data').set(fin);
   sent[code]=parts(e);owners[code]=U.uid;V.eid=code;persist();render();toast('Shared. Code: '+code)}
@@ -293,7 +293,6 @@ function panel(){
  if(!U){tp.innerHTML='<p class="meta">Not signed in.</p>';return}
  tp.innerHTML=`<button type="button" class="x" id="tpx" aria-label="Close">✕</button><h3>${esc(U.displayName||'Member')}</h3><p class="meta">${esc(U.email)}</p>
  <label for="nmi">Your name</label><div class="row"><input id="nmi" maxlength="40" value="${esc(U.displayName||'')}" autocomplete="name" style="flex:1"><button class="btn" id="nmb">Save</button></div>
- <p class="meta" style="margin:4px 0 0">Changes your name in all your events. Old chat messages keep the name they were sent with.</p>
  <label>Join an event</label><div class="row"><input id="jc" placeholder="Event code" style="flex:1;text-transform:uppercase"><button class="btn" id="jb">Join</button></div>
  <label>Notify me about</label><div class="row">${[['tasks','Tasks'],['people','People'],['money','Money'],['event','Event changes'],['chat','Chat messages'],['mention','Chat mentions']].map(k=>`<label style="margin:0"><input type="checkbox" data-p="${k[0]}" ${P[k[0]]?'checked':''}> ${k[1]}</label>`).join('')}</div>
  <label><input type="checkbox" data-p="ntfy" ${P.ntfy?'checked':''}> Also send my changes to the event's ntfy topic</label>

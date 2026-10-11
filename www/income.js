@@ -103,7 +103,7 @@ window.exportV=function(e){
  const A=can(e,'regs'),P=can(e,'pay'),B=can(e,'exp');
  if(!A&&!P&&!B)return '';
  const b=(k,t)=>`<button class="btn ghost sm" data-ex="${k}">${t}</button>`;
- return `<div class="card"><h3 style="margin-bottom:4px">Export data</h3><p class="meta" style="margin:0 0 10px">Download your records as CSV files. They open in Excel and Google Sheets.</p>
+ return `<div class="card"><h3 style="margin-bottom:10px">Export data</h3>
   <div class="row"><button class="btn sm" data-ex="all">Download everything (ZIP)</button>${A?b('att','Attendees'):''}${P?b('pay','Payments'):''}${B?b('bills','Bills'):''}${B?b('spn','Sponsors'):''}</div></div>`;
 };
 async function runExport(e,which){
@@ -154,22 +154,20 @@ function spRow(e,s){
   <div class="act">${out?`<button class="btn ghost sm" data-ic="spr" data-id="${esc(s.id)}">Mark fully received</button>`:''}<button class="btn ghost sm" data-ic="spe" data-id="${esc(s.id)}">Edit</button><button class="btn ghost sm del" data-ic="spd" data-id="${esc(s.id)}">Delete</button></div></div>`;
 }
 window.incV=function(e){
- if(!can(e,'exp'))return '<div class="empty">Income and sponsors are managed by the organizer, managers and treasurer.</div>';
+ if(!can(e,'exp'))return '<div class="empty">You do not have access to this section.</div>';
  const f=figures(e),spn=e.spn||[],tin=f.tIn+f.spIn,exp=f.tDue+f.spOut;
  const surplus=f.full-f.cost;
  const price=`<form id="ipf" class="row" style="margin:0 0 4px"><label style="margin:0" for="ipr">Ticket price ₹</label><input id="ipr" name="fee" type="number" min="0" step="1" inputmode="numeric" value="${f.price||0}" style="width:110px"><button class="btn sm" type="submit">Save</button><span class="meta">0 means free. Also used by online registration.</span></form>`;
  const open=V.spa||V.spe;
  const list=spn.slice().sort((a,b)=>(a.at||0)-(b.at||0)).map(s=>V.spe===s.id?spForm(e,s):spRow(e,s)).join('');
- return `<p class="lead">Money coming in: ticket fees and sponsors, compared with what the event costs.</p>
- <div class="stats"><div class="stat"><b>${R(tin)}</b><span>Received so far</span></div><div class="stat"><b>${R(exp)}</b><span>Still expected</span></div><div class="stat"><b>${R(f.cost)}</b><span>${f.basis==='plan'?'Budget (cost)':'Spent and to pay (cost)'}</span></div><div class="stat"><b class="${surplus<0?'xo':''}" style="${surplus<0?'-webkit-text-fill-color:var(--bad)':''}">${surplus<0?'-':''}${R(Math.abs(surplus))}</b><span>${surplus<0?'Shortfall':'Surplus'} if every seat sells</span></div></div>
+ return `<div class="stats"><div class="stat"><b>${R(tin)}</b><span>Received so far</span></div><div class="stat"><b>${R(exp)}</b><span>Still expected</span></div><div class="stat"><b>${R(f.cost)}</b><span>${f.basis==='plan'?'Budget (cost)':'Spent and to pay (cost)'}</span></div><div class="stat"><b class="${surplus<0?'xo':''}" style="${surplus<0?'-webkit-text-fill-color:var(--bad)':''}">${surplus<0?'-':''}${R(Math.abs(surplus))}</b><span>${surplus<0?'Shortfall':'Surplus'} if every seat sells</span></div></div>
  <div class="card"><div class="sh"><h3>Break-even</h3><div class="seg" style="margin:0;min-width:230px" role="group" aria-label="Cost to compare with"><button class="${f.basis==='plan'?'on':''}" data-ic="bas" data-v="plan">Budget</button><button class="${f.basis==='act'?'on':''}" data-ic="bas" data-v="act">Spent + to pay</button></div></div>
   ${price}
   <p class="meta" style="margin:4px 0 0">${R(f.price)} x ${f.cap} seats = ${R(f.tFull)}, plus sponsorship ${R(f.spAll)} = <b>${R(f.full)}</b> against costs of <b>${R(f.cost)}</b>.</p>
   ${breakEven(f)}
   <p class="meta" style="margin:12px 0 0">Attendees paid: ${f.paidN} of ${f.rs.length} registered (${R(f.tIn)} received, ${R(f.tDue)} still to collect).${(()=>{const pc=f.rs.filter(r=>r.paid&&r.pm==='cash').length,pu=f.rs.filter(r=>r.paid&&r.pm==='upi').length;return pc||pu?` Of the paid: ${pc} by cash (${R(pc*f.price)}), ${pu} by UPI (${R(pu*f.price)}).`:''})()}</p></div>
  <div class="card"><div class="sh"><h3>Sponsors and other income (${spn.length})</h3>${V.spe?'':`<button class="btn sm" data-ic="spa">${V.spa?'Close form':'+ Add'}</button>`}</div>
-  <p class="lead" style="margin-bottom:6px">Record what each sponsor committed, what has arrived, and what you promised in return.</p>
-  ${V.spa&&!V.spe?spForm(e):''}${list||(open?'':'<p class="meta" style="margin:0">No sponsors yet. Tap + Add.</p>')}</div>
+  ${V.spa&&!V.spe?spForm(e):''}${list||(open?'':'<p class="meta" style="margin:0">No sponsors yet.</p>')}</div>
  ${exportV(e)}`;
 };
 

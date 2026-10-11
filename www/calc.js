@@ -110,8 +110,7 @@ function whoOpts(E){
 }
 function pCash(E){
  const f=feeOf(E);
- return `<p class="meta" style="margin:0 0 6px">How many of each note or coin are in the box?</p>
-  ${DEN.map(d=>`<div class="dn"><b>₹${d}</b><input type="number" min="0" step="1" inputmode="numeric" data-dn="${d}" value="${K.cash.n[d]||''}" placeholder="0" aria-label="Number of ₹${d}"><span class="sub" id="dns${d}">₹0</span></div>`).join('')}
+ return `${DEN.map(d=>`<div class="dn"><b>₹${d}</b><input type="number" min="0" step="1" inputmode="numeric" data-dn="${d}" value="${K.cash.n[d]||''}" placeholder="0" aria-label="Number of ₹${d}"><span class="sub" id="dns${d}">₹0</span></div>`).join('')}
   ${f?whoOpts(E):''}
   <label for="cce">Expected cash (₹)</label><div class="row"><input id="cce" type="number" min="0" step="any" inputmode="decimal" value="${K.cash.exp}" style="flex:1">${f&&E?'<button type="button" class="btn ghost sm" data-cl="usecash">Use cash received so far</button>':''}</div>
   <div class="out" id="cco"></div><div class="row" style="margin-top:10px"><button class="btn ghost sm" data-cl="rcash">Reset counts</button></div>`;

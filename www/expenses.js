@@ -1,4 +1,4 @@
-/* CEM expenses.js. 3.1.0: budget, vendors, payments to vendors, items to buy.
+/* CEM expenses.js. 3.6.1: the explanatory paragraphs moved to Help & guides (help.js). 3.1.0: budget, vendors, payments to vendors, items to buy.
    3.4.0: redesigned.
    - Expenses tab (organizer, manager, treasurer): a summary card on top, then three views: Budget (category cards), Bills (what you owe
      or have paid vendors) and Vendors. Forms open from buttons, so the page stays short.
@@ -23,7 +23,7 @@ const people=e=>window.peopleOf?peopleOf(e):[];
 const pname=(e,id)=>window.pnOf?pnOf(e,id):'Unassigned';
 const mineIds=e=>window.mineIdsOf?mineIdsOf(e):[me()];
 const isMine=(e,i)=>!!i.who&&(mineIds(e).includes(i.who)||(!e.cloud&&i.who==='me'));
-const canBuy=(e,i)=>can(e,'items')||isMine(e,i);
+const canBuy=(e,i)=>can(e,'items')||(can(e,'write')&&isMine(e,i));   // 3.6.1: writing items needs Items to buy or Team member basics, as in firestore.rules
 const upiOk=u=>/^[\w.\-]{2,}@[\w]{2,}$/.test(u||'');
 const enc=encodeURIComponent;
 const SUG=['Venue','Food and refreshments','Decor','Printing','Prizes','Travel','Marketing','Equipment','Miscellaneous'];
@@ -59,11 +59,11 @@ function hero(e,C){
  const sp=C.plan>0?Math.min(100,C.paid/C.plan*100):0,tp=C.plan>0?Math.min(100-sp,C.due/C.plan*100):0;
  const top=C.plan>0
   ?`<div class="xl">${over?'Over budget by':'Left to spend'}</div><div class="big ${over?'over':''}">${R(Math.abs(C.left))}</div><div class="of">of your ${R(C.plan)} budget</div>`
-  :`<div class="xl">Planned spending</div><div class="big">${R(used)}</div><div class="of">No budget set yet. Add categories in the Budget view to see how much is left.</div>`;
+  :`<div class="xl">Planned spending</div><div class="big">${R(used)}</div><div class="of">No budget set yet.</div>`;
  const bar=C.plan>0?`<div class="mbar ${over?'over':''}" role="progressbar" aria-label="Budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100,Math.round(sp+tp))}"><i class="sp" style="width:${sp}%"></i><i class="tp" style="width:${tp}%"></i></div>`:'';
  return `<div class="card xh">${top}${bar}
   <div class="mlg"><span><i class="a"></i>Spent <b>${R(C.paid)}</b></span><span><i class="b"></i>To pay <b>${R(C.due)}</b></span></div>
-  ${it.length?`<div class="xitems"><span>Items to buy: <b>${bought} of ${it.length}</b> bought. Their cost counts in the budget.</span><button class="btn ghost sm" data-x="igo" data-e="${e.id}">Open in Tasks</button></div>`:''}</div>`;
+  ${it.length?`<div class="xitems"><span>Items to buy: <b>${bought} of ${it.length}</b> bought.</span><button class="btn ghost sm" data-x="igo" data-e="${e.id}">Open in Tasks</button></div>`:''}</div>`;
 }
 function seg(e){
  const n=(e.exp||[]).filter(x=>x.s!=='paid').length,od=billsOverdueN(e),nv=(e.ven||[]).length,v=V.xv||'budget';
@@ -80,7 +80,7 @@ function catCard(e,r){
  const lines=bills.map(x=>{const p=x.s==='paid';return `<div class="xln"><span>${esc(x.t)}<br><span class="meta">${esc((e.ven||[]).find(v=>v.id===x.v)?.n||x.vn||'')}</span></span><b>${R(x.a)}</b><span class="pill ${p?'ok':''}">${p?'Paid':'To pay'}</span></div>`}).join('')
   +items.map(i=>{const p=i.s==='bought';return `<div class="xln"><span>${esc(i.t)}${i.q>1?' ×'+i.q:''}<br><span class="meta">Item to buy</span></span><b>${R(p?i.ac:i.p)}</b><span class="pill ${p?'ok':''}">${p?'Bought':'To buy'}</span></div>`}).join('');
  const body=open?`<div class="xcb"><div class="pl"><label style="margin:0" for="xb_${b.id}">Planned amount ₹</label><input id="xb_${b.id}" class="xin" type="number" min="0" step="any" inputmode="decimal" data-xb="${e.id}|${b.id}" value="${b.a}"></div>
-   ${lines||`<p class="meta" style="margin:0 0 8px">Nothing recorded under ${esc(b.n)} yet. Add a bill, or choose this category when you add an item to buy.</p>`}
+   ${lines||`<p class="meta" style="margin:0 0 8px">Nothing recorded under ${esc(b.n)} yet.</p>`}
    <div style="margin-top:10px"><button class="btn ghost sm del" data-x="bdel" data-e="${e.id}" data-i="${b.id}">Delete category</button></div></div>`:'';
  return `<div class="xc"><button class="xch" data-x="xcat" data-e="${e.id}" data-i="${b.id}" aria-expanded="${open}">
    <span class="r1"><span class="xn">${esc(b.n)}</span>${st}${chev}</span>
@@ -95,9 +95,8 @@ function budgetView(e,C){
    <div class="rg"><div><label>Category *</label><input name="n" required maxlength="40" placeholder="Food and refreshments"></div>
    <div><label>Planned amount in ₹ *</label><input name="a" type="number" min="0" step="any" inputmode="decimal" required></div></div>
    <div class="acts"><button class="btn" type="submit">Add category</button>${has?'<button type="button" class="btn ghost" data-x="xat" data-e="'+e.id+'">Close</button>':''}</div></form>`:'';
- const oth=(C.oth.paid||C.oth.due)?`<div class="xc"><div class="xch" style="cursor:default"><span class="r1"><span class="xn">No category</span><span class="pill">Not in the budget</span></span><span class="r2"><span><b>${R(C.oth.paid+C.oth.due)}</b> spent or to pay</span></span></div><p class="meta" style="margin:0 0 12px">Choose a category when you add a bill or an item so it counts against a budget line.</p></div>`:'';
+ const oth=(C.oth.paid||C.oth.due)?`<div class="xc"><div class="xch" style="cursor:default"><span class="r1"><span class="xn">No category</span><span class="pill">Not in the budget</span></span><span class="r2"><span><b>${R(C.oth.paid+C.oth.due)}</b> spent or to pay</span></span></div></div>`:'';
  return `<div class="card"><div class="sh"><h3>Budget by category</h3>${has?`<button class="btn sm" data-x="xat" data-e="${e.id}">${V.xa?'Close form':'+ Add category'}</button>`:''}</div>
-  ${has?'<p class="lead" style="margin-bottom:6px">Tap a category to see what is in it and change its planned amount.</p>':'<p class="lead">Set how much each area may cost. Spent and to-pay amounts fill in from your bills and items to buy.</p>'}
   ${form}${C.rows.map(r=>catCard(e,r)).join('')}${oth}</div>`;
 }
 
@@ -111,7 +110,7 @@ function billRow(e,x){
   :`${canUpi?`<button class="btn ghost sm" data-x="xq" data-e="${e.id}" data-i="${x.id}" aria-expanded="${V.xq===x.id}">Pay via UPI</button>`:''}<button class="btn sm" data-x="xpd" data-e="${e.id}" data-i="${x.id}" aria-expanded="${V.xp===x.id}">Mark paid</button>${del}`;
  let sf='';
  if(V.xq===x.id&&canUpi){const l=`upi://pay?pa=${enc(v.upi)}&pn=${enc(v.n)}&am=${x.a}&cu=INR&tn=${enc(x.t)}`;
-  sf+=`<div class="xsub"><div class="xqr">${qrSvg(l)}<div><p class="meta" style="margin:0 0 8px">Scan with any UPI app, or open your UPI app on this phone. Pay ${R(x.a)} to ${esc(v.n)} (${esc(v.upi)}). Then tap Mark paid and add the UTR.</p><a class="btn sm" href="${esc(l)}" style="text-decoration:none;display:inline-block">Open UPI app</a></div></div></div>`}
+  sf+=`<div class="xsub"><div class="xqr">${qrSvg(l)}<div><p class="meta" style="margin:0 0 8px">Pay ${R(x.a)} to ${esc(v.n)} (${esc(v.upi)}).</p><a class="btn sm" href="${esc(l)}" style="text-decoration:none;display:inline-block">Open UPI app</a></div></div></div>`}
  if(V.xp===x.id&&!paid)sf+=`<div class="xsub"><form id="xpf" class="row" data-e="${e.id}" data-i="${x.id}"><select name="m" aria-label="Paid by">${['UPI','Cash','Bank transfer','Other'].map(m=>`<option ${x.m===m?'selected':''}>${m}</option>`).join('')}</select><input name="r" maxlength="40" value="${esc(x.ref||'')}" placeholder="UTR / reference (optional)" style="flex:1;min-width:150px" aria-label="UTR or reference"><button class="btn sm" type="submit">Confirm paid</button><button type="button" class="btn ghost sm" data-x="xpc" data-e="${e.id}">Cancel</button></form></div>`;
  return `<div class="li"><div class="main"><div class="ttl">${esc(x.t)}</div><div class="sub">${sub}</div></div><span class="amt">${R(x.a)}</span>${status}<div class="act">${act}</div>${sf}</div>`;
 }
@@ -129,7 +128,6 @@ function billsView(e){
   <datalist id="xvl">${(e.ven||[]).map(v=>`<option value="${esc(v.n)}"></option>`).join('')}</datalist>
   <div class="acts"><button class="btn" type="submit" name="s" value="due">Add to bills</button><button class="btn ghost" type="submit" name="s" value="paid">Add as already paid</button>${ex.length?'<button type="button" class="btn ghost" data-x="xat" data-e="'+e.id+'">Close</button>':''}</div></form>`:'';
  return `<div class="card"><div class="sh"><h3>Bills</h3>${ex.length?`<button class="btn sm" data-x="xat" data-e="${e.id}">${V.xa?'Close form':'+ Add bill'}</button>`:''}</div>
-  <p class="lead" style="margin-bottom:8px">Money you owe vendors, or have already paid them. Bills still to pay count in your budget as money about to go out.</p>
   ${form}
   ${ex.length?`<div class="xtot"><span>To pay <b>${R(sum(due,'a'))}</b> (${due.length})</span><span>Paid <b>${R(sum(paid,'a'))}</b> (${paid.length})</span>${od?`<span class="pill bad">${od} overdue</span>`:''}</div>`:''}
   ${due.length?due.map(x=>billRow(e,x)).join(''):(ex.length&&!open?'<p class="meta" style="margin:8px 0">Nothing left to pay.</p>':'')}
@@ -145,13 +143,13 @@ function vendorsView(e){
   return `<div class="li"><div class="main"><div class="ttl">${esc(v.n)}</div><div class="sub">${v.ph?`<a href="tel:${esc(v.ph)}">${esc(v.ph)}</a>`:'No phone'}, ${v.upi?'UPI '+esc(v.upi):'no UPI ID'}</div><div class="vcard"><span>Paid <b>${R(sum(mine.filter(x=>x.s==='paid'),'a'))}</b></span><span>To pay <b>${R(sum(mine.filter(x=>x.s!=='paid'),'a'))}</b></span></div></div>
    <div class="act"><button class="btn ghost sm" data-x="vbill" data-e="${e.id}" data-i="${v.id}">Add bill</button><button class="btn ghost sm del" data-x="vdel" data-e="${e.id}" data-i="${v.id}">Delete</button></div></div>`}).join('');
  return `<div class="card"><div class="sh"><h3>Vendors and parties</h3>${ven.length?`<button class="btn sm" data-x="xat" data-e="${e.id}">${V.xa?'Close form':'+ Add vendor'}</button>`:''}</div>
-  <p class="lead" style="margin-bottom:6px">The shops and people you pay. With a UPI ID you can pay them from the Bills view using a QR code.</p>${form}${rows}</div>`;
+  ${form}${rows}</div>`;
 }
 
 window.expV=function(e){
- if(!can(e,'exp'))return '<div class="empty">The budget, bills and vendors are managed by the organizer, managers and treasurer.</div>';
+ if(!can(e,'exp'))return '<div class="empty">You do not have access to this section.</div>';
  const C=calc(e),v=V.xv||'budget';
- return `<p class="lead">Money going out: what the event costs and what you owe.</p>${hero(e,C)}${seg(e)}${v==='bills'?billsView(e):v==='vendors'?vendorsView(e):budgetView(e,C)}`;
+ return `${hero(e,C)}${seg(e)}${v==='bills'?billsView(e):v==='vendors'?vendorsView(e):budgetView(e,C)}`;
 };
 
 /* ---------- Items to buy (drawn inside the Tasks tab) ---------- */
@@ -177,7 +175,6 @@ window.itemsV=function(e){
  const by={};all.forEach(i=>{const k=i.who||'';(by[k]=by[k]||[]).push(i)});
  const who=Object.keys(by).map(k=>{const l=by[k];return `<div class="li" style="padding:7px 0"><div class="main"><div class="ttl">${esc(k?pname(e,k):'Unassigned')}${k&&k===me()?' <span class="pill">you</span>':''}</div><div class="sub">${l.length} item${l.length>1?'s':''}, ${l.filter(i=>i.s==='bought').length} bought</div></div><span class="sub">To buy ${R(sum(l.filter(i=>i.s!=='bought'),'p'))}, spent ${R(sum(l.filter(i=>i.s==='bought'),'ac'))}</span></div>`}).join('');
  const html=`<div class="card"><div class="sh"><h3>Items to buy</h3><div class="row"><span class="meta">${done} of ${all.length} bought</span>${itp?`<button class="btn ghost sm" data-x="ia" data-e="${e.id}">${V.ia?'Close form':'+ Add item'}</button>`:''}</div></div>
-  <p class="lead" style="margin-bottom:6px">${itp?'Add what the event needs and give each item to a person. They are alerted. Tick an item once it is bought, then enter what it cost.':'Items given to you are also in My tasks. Tick an item once you have bought it, then enter what it cost.'}</p>
   ${form}${vis.map(row).join('')||`<p class="meta" style="margin:8px 0 0">${all.length?'Nothing in this filter.':'No items yet.'}</p>`}
   ${all.length?`<p class="meta" style="margin:10px 0 0">Still to buy (estimate): <b>${R(est)}</b>. Spent on bought items: <b>${R(spent)}</b>.</p><div style="margin-top:6px"><button class="link" data-x="xw" data-e="${e.id}" aria-expanded="${!!V.xw}">${V.xw?'Hide':'Show'} who is buying what</button></div>${V.xw?who:''}`:''}</div>`;
  return{html,n:vis.length};

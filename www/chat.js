@@ -45,7 +45,7 @@ async function read(d){
 /* ---------- small helpers ---------- */
 const tm=t=>new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
 const dl=t=>{const d=new Date(t),n=new Date(),s=d.toDateString();return s===n.toDateString()?'Today':s===new Date(n-864e5).toDateString()?'Yesterday':d.toLocaleDateString([],{day:'numeric',month:'short',year:d.getFullYear()===n.getFullYear()?undefined:'numeric'})};
-const roleOf=(e,u)=>{const m=(e.members||{})[u];if(!m)return '';const r=m.role==='organizer'?'owner':m.role;return (window.LBL||{})[r]||''};
+const roleOf=(e,u)=>{const m=(e.members||{})[u];if(!m)return '';return window.roleLabel?roleLabel(e,m.role):''};   // 3.6.1: custom roles show their own name
 const hue=u=>{let h=0;for(let i=0;i<u.length;i++)h=(h*31+u.charCodeAt(i))%360;return h};
 const link=s=>esc(s).replace(/https?:\/\/[^\s<>]+/g,u=>`<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`);
 const myName=e=>{const m=(e.members||{})[uidNow()];return (m&&m.name)||window.MYNAME||'Member'};
@@ -199,7 +199,7 @@ function rich(e,m){
 
 /* ---------- drawing ---------- */
 function actions(e,m){
- const mine=m.u===uidNow(),w=can(e,'write'),ok=mine&&w&&Date.now()-m.at<WIN,b=[`<button class="btn ghost sm" data-ch="copy" data-mid="${m.id}">Copy</button>`];
+ const mine=m.u===uidNow(),w=can(e,'chat'),ok=mine&&w&&Date.now()-m.at<WIN,b=[`<button class="btn ghost sm" data-ch="copy" data-mid="${m.id}">Copy</button>`];
  if(ok)b.push(`<button class="btn ghost sm" data-ch="edit" data-mid="${m.id}">Edit</button>`);
  if(ok||can(e,'event'))b.push(`<button class="btn ghost sm del" data-ch="del" data-mid="${m.id}">Delete</button>`);
  return `<div class="ca">${b.join('')}</div>`;
@@ -209,7 +209,7 @@ function msgsHtml(e){
  if(c.err&&!list.length)return `<div class="cn">Could not load messages (${esc(c.err)}). Publish the latest firestore.rules in the Firebase console.</div>`;
  if(!c.ready)return '<div class="cn">Loading messages...</div>';
  let h=c.more?'<div class="cn"><button class="btn ghost sm" data-ch="older">Load older messages</button></div>':'',pd='',pu='',pt=0;
- if(!list.length)h+='<div class="cn">No messages yet. Say hello to your team.</div>';
+ if(!list.length)h+='<div class="cn">No messages yet.</div>';
  list.forEach(m=>{
   const d=dl(m.at);if(d!==pd){h+=`<div class="cd"><span>${esc(d)}</span></div>`;pd=d;pu=''}
   const mine=m.u===me,grp=m.u===pu&&m.at-pt<3e5,r=roleOf(e,m.u);pu=m.u;pt=m.at;
@@ -231,12 +231,12 @@ function paint(eid,mode,nf){
  const j=$('cj');if(j)j.classList.toggle('hid',!c.below);
 }
 window.chatV=e=>{
- if(!e.cloud)return '<div class="card empty">Chat works in shared events. Tap Share with team above, then everyone who joins with the code can chat here.</div>';
- const c=ch(e.id),w=can(e,'write');
- return `<div class="card chat" id="chat"><div class="ch"><b>${esc(e.name)}</b> · ${Object.keys(e.members||{}).length} member(s). Type @ to tag someone. You can edit or delete your messages for 2 hours. The chat is deleted with the event.</div>
+ if(!e.cloud)return '<div class="card empty">Chat needs a shared event. Share it from the Details tab first.</div>';
+ const c=ch(e.id),w=can(e,'chat');
+ return `<div class="card chat" id="chat"><div class="ch"><b>${esc(e.name)}</b> · ${Object.keys(e.members||{}).length} member(s)</div>
  <div id="cm">${msgsHtml(e)}</div><button class="cj btn sm hid" id="cj" data-ch="jump">New messages</button>
  ${c.edit?'<div class="ce"><span>Editing message</span><button class="btn ghost sm" data-ch="cancel">Cancel</button></div>':''}
- ${w?`<div class="cc"><textarea id="cin" rows="1" maxlength="${MAXLEN}" placeholder="Message" aria-label="Message">${esc(c.draft)}</textarea><button class="btn ghost cat" data-ch="at" aria-label="Tag a member" title="Tag a member">@</button><button class="btn" data-ch="send">Send</button></div>`:'<div class="cc"><span class="meta">Viewers can read the chat but cannot send messages.</span></div>'}</div>`;
+ ${w?`<div class="cc"><textarea id="cin" rows="1" maxlength="${MAXLEN}" placeholder="Message" aria-label="Message">${esc(c.draft)}</textarea><button class="btn ghost cat" data-ch="at" aria-label="Tag a member" title="Tag a member">@</button><button class="btn" data-ch="send">Send</button></div>`:'<div class="cc"><span class="meta">You can read the chat but not send messages.</span></div>'}</div>`;
 };
 const grow=t=>{t.style.height='auto';t.style.height=Math.min(t.scrollHeight,120)+'px'};
 

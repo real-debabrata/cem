@@ -83,11 +83,10 @@ window.regDrop=()=>{Object.keys(rsUn).forEach(i=>{rsUn[i]();delete rsUn[i];delet
 window.signupV=function(e){
  if(!window.can||!can(e,'pay'))return '';
  const p=e.pay||{},on=!!p.reg,url=link(e);
- if(!e.cloud)return `<div class="card"><h3 style="margin-bottom:6px">Online registration</h3><p class="meta" style="margin:0">Let people register themselves with a public link. Share the event with your team first (Details tab, Share with team), then come back here.</p></div>`;
+ if(!e.cloud)return `<div class="card"><h3 style="margin-bottom:6px">Online registration</h3><p class="meta" style="margin:0">Share the event first (Details tab) to open online registration.</p></div>`;
  const sl=slugOf(e),pl=plainLink(e);
  if(!on)return `<div class="card"><div class="sh"><h3>Online registration</h3><div class="row"><button class="btn ghost sm" data-sg="cust" aria-expanded="${!!V.sgc}">${V.sgc?'Close':'Customize page and link'}</button><button class="btn sm" data-sg="on">Open online registration</button></div></div>
-  <p class="meta" style="margin:0">Give people a link where they register themselves with your registration form. You approve each application, duplicate College IDs are caught, and when the seats are full people join a waitlist. A ticket price, UPI and cash payment are optional.</p>
-  ${sl&&url?`<p class="meta" style="margin:8px 0 0;overflow-wrap:anywhere">Your link (live once you open registration): <b>${esc(url)}</b></p>`:''}${custV(e)}</div>`;
+  ${sl&&url?`<p class="meta" style="margin:8px 0 0;overflow-wrap:anywhere">Your link: <b>${esc(url)}</b></p>`:''}${custV(e)}</div>`;
  const subs=subsOf(e),pend=subs.filter(x=>x.s==='pending'),wl=subs.filter(x=>x.s==='waitlist'),done=subs.filter(x=>x.s==='approved'||x.s==='rejected');
  const taken=regsOf(e.id).length,left=Math.max(0,e.cap-taken),fee=Math.max(0,+p.fee||0),regs=regsOf(e.id);
  const row=x=>{
@@ -106,7 +105,6 @@ window.signupV=function(e){
    <div><label>Payee name</label><input name="p" maxlength="60" value="${esc(p.payee||'')}"></div>
    <div><label>When seats are full</label><label style="margin:0;font-weight:400"><input type="checkbox" name="wl" ${p.wl===0?'':'checked'}> Offer a waitlist</label></div>
    <div class="rw"><label>Message shown on the page (optional)</label><input name="m" maxlength="300" value="${esc(p.regmsg||'')}" placeholder="Bring your college ID card to the venue"></div></div>
-   <p class="meta" style="margin:8px 0 0">The questions on the page are your registration form (Edit event). The page closes at the end of the event day, or at the time you set under Customize page and link. Cash collectors are chosen in the Cash collectors card.</p>
    <div class="acts"><button class="btn" type="submit">Save</button><button type="button" class="btn ghost" data-sg="cfg">Cancel</button></div></form>`:'';
  const handledBox=done.length?`<div style="margin-top:10px"><button class="link" data-sg="hid" aria-expanded="${!!V.sgh}">${V.sgh?'Hide':'Show'} handled (${done.length})</button></div>${V.sgh?done.map(row).join(''):''}`:'';
  return `<div class="card"><div class="sh"><h3>Online registration <span class="pill ok">Open</span></h3><div class="row"><button class="btn ghost sm" data-sg="cust" aria-expanded="${!!V.sgc}">${V.sgc?'Close':'Customize page and link'}</button><button class="btn ghost sm" data-sg="cfg">${V.sgs?'Close settings':'Price and settings'}</button><button class="btn ghost sm del" data-sg="off">Close registration</button></div></div>
@@ -114,7 +112,7 @@ window.signupV=function(e){
    :'<div class="note" style="margin:0 0 8px">Set your public site address first (Payments tab, Link settings), then the registration link appears here.</div>'}
   ${custV(e)}${cfg}
   <p class="meta" style="margin:10px 0 0">${taken} of ${e.cap} seats taken${left?`, ${left} left`:', full'}${fee?`, ticket ₹${fee}`:', free'}. ${pend.length} waiting for approval${wl.length?`, ${wl.length} on the waitlist`:''}.</p></div>
-  <div class="card"><div class="sh"><h3>Applications to review (${pend.length})</h3></div>${pend.length?pend.map(row).join(''):'<p class="meta" style="margin:0">Nothing waiting. New applications appear here by themselves.</p>'}</div>
+  <div class="card"><div class="sh"><h3>Applications to review (${pend.length})</h3></div>${pend.length?pend.map(row).join(''):'<p class="meta" style="margin:0">Nothing waiting.</p>'}</div>
   ${wl.length?`<div class="card"><div class="sh"><h3>Waitlist (${wl.length})</h3>${left>0?'<button class="btn sm" data-sg="pn">Promote next</button>':'<span class="meta">Promote people when a seat frees up</span>'}</div>${wl.map(row).join('')}</div>`:''}
   ${handledBox?`<div class="card" style="padding-top:8px">${handledBox}</div>`:''}`;
 };
@@ -125,7 +123,7 @@ function custV(e){
  const r=rp(e),t=theme(e),b=base(),sl=slugOf(e);
  return `<form id="sgc" class="fp" style="margin-top:12px"><h3 style="margin-bottom:8px;font-size:15px">Customize the registration page</h3><div class="rg">
   <div class="rw"><label for="sg_slug">Link name</label><div class="row" style="flex-wrap:nowrap"><span class="meta" style="white-space:nowrap">${esc(b?b+'r/':'.../r/')}</span><input id="sg_slug" name="slug" maxlength="40" autocapitalize="none" autocomplete="off" spellcheck="false" value="${esc(sl)}" placeholder="techfest-2026" style="flex:1;min-width:0"></div>
-   <p class="meta" style="margin:4px 0 0">3 to 40 letters, digits or hyphens, for example <b>techfest-2026</b>. Each name can be used by one event only. Leave it empty to use the plain code link.</p></div>
+   <p class="meta" style="margin:4px 0 0">3 to 40 letters, digits or hyphens, for example <b>techfest-2026</b>.</p></div>
   <div class="rw"><label for="sg_hd">Headline (default: the event name)</label><input id="sg_hd" name="hd" maxlength="80" value="${esc(t.hd)}" placeholder="${esc(e.name||'')}"></div>
   <div class="rw"><label for="sg_in">Welcome text under the headline</label><textarea id="sg_in" name="in" rows="3" maxlength="400" placeholder="Who should come, what to bring, any rules...">${esc(t.in)}</textarea></div>
   <div><label for="sg_ac">Accent colour</label><input id="sg_ac" name="ac" type="color" value="${esc(t.ac)}" style="height:42px;padding:3px"></div>
@@ -135,7 +133,6 @@ function custV(e){
   <div class="rw"><label for="sg_ty">Thank-you message after sending</label><input id="sg_ty" name="ty" maxlength="200" value="${esc(t.ty)}" placeholder="See you at the event!"></div>
   <div class="rw"><label for="sg_bn">Banner image link (optional, must start with https://)</label><input id="sg_bn" name="bn" maxlength="300" value="${esc(t.bn)}" placeholder="https://..."></div>
   <div class="rw"><label style="margin:0;font-weight:400"><input type="checkbox" name="ss" ${t.ss?'checked':''}> Show how many seats are left</label></div></div>
-  <p class="meta" style="margin:8px 0 0">Without a closing time the page closes at the end of the event day. Changes go live a moment after you save.</p>
   <div class="acts"><button class="btn" type="submit">Save</button><button type="button" class="btn ghost" data-sg="cust">Cancel</button></div></form>`;
 }
 // A link name is claimed in regslugs/{name}. Only a staff member of the event can create, keep or delete it, so a name already used by another event is refused by the rules.

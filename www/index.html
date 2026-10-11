@@ -68,7 +68,7 @@ const mk=p=>PRESETS[p].map(f=>({id:uid(),label:f[0],type:f[1],req:!!f[2],opts:f[
 const d=n=>{const x=new Date();x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)};
 let S={events:[],regs:[]};
 try{const r=localStorage.getItem('campus-events-v1');if(r)S=JSON.parse(r)}catch(e){}
-const ensure=e=>{e.team=e.team||[];e.groups=e.groups||[];e.tasks=e.tasks||[];e.teams=e.teams||[];e.don=e.don||[];e.forms=e.forms||[];e.payments=e.payments||[];e.bud=e.bud||[];e.ven=e.ven||[];e.exp=e.exp||[];e.itm=e.itm||[];e.spn=e.spn||[];e.pay=e.pay||{upi:'',payee:'',fee:0};return e};
+const ensure=e=>{e.croles=e.croles||[];e.team=e.team||[];e.groups=e.groups||[];e.tasks=e.tasks||[];e.teams=e.teams||[];e.don=e.don||[];e.forms=e.forms||[];e.payments=e.payments||[];e.bud=e.bud||[];e.ven=e.ven||[];e.exp=e.exp||[];e.itm=e.itm||[];e.spn=e.spn||[];e.pay=e.pay||{upi:'',payee:'',fee:0};return e};
 S.events.forEach(ensure);
 let V={dt:'info',qr:0,tab:'dash',eid:null,filter:'All',q:'',draft:null};
 const save=()=>{try{localStorage.setItem('campus-events-v1',JSON.stringify(S))}catch(e){}window.onSave&&window.onSave()};
@@ -77,7 +77,7 @@ const ev=id=>S.events.find(e=>e.id===id);
 const regsOf=id=>S.regs.filter(r=>r.eid===id);
 const fmt=e=>new Date(e.date+'T'+(e.time||'00:00')).toLocaleString([], {weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
 const go=(t,eid=null)=>{V.tab=t;V.eid=eid;if(t==='new'&&!V.draft)V.draft=newDraft();render();scrollTo(0,0)};
-function newDraft(){return{id:null,name:'',type:'Seminar',date:d(7),time:'10:00',venue:'',cap:100,desc:'',fields:mk('Seminar'),team:[],groups:[],tasks:[],teams:[],don:[],forms:[],payments:[],bud:[],ven:[],exp:[],itm:[],spn:[],pay:{upi:'',payee:'',fee:0}}}
+function newDraft(){return{id:null,name:'',type:'Seminar',date:d(7),time:'10:00',venue:'',cap:100,desc:'',fields:mk('Seminar'),team:[],groups:[],tasks:[],teams:[],don:[],forms:[],payments:[],bud:[],ven:[],exp:[],itm:[],spn:[],croles:[],pay:{upi:'',payee:'',fee:0}}}
 
 function render(){
  const nav=[['dash','Dashboard'],['events','Events'],['mine','My tasks'+(window.mineCount?mineCount():'')],['new','New event']];
@@ -132,7 +132,6 @@ function form(){
  <label>Venue or meeting link</label><input name="venue" value="${esc(x.venue)}">
  <label>Description</label><textarea name="desc" rows="3">${esc(x.desc)}</textarea>
  <h3 style="margin-top:20px">Registration form</h3>
- <p class="meta">Pick a type to load a ready-made form, then add, remove or rename questions.</p>
  <div class="row" style="margin-bottom:8px"><button type="button" class="btn ghost sm" data-preset="1">Load form for this type</button></div>
  ${x.fields.map((f,i)=>`<div class="fld"><input data-fl="label" data-i="${i}" value="${esc(f.label)}" aria-label="Question">
  <select data-fl="type" data-i="${i}" aria-label="Answer type">${['text','select','checkbox'].map(t=>`<option value="${t}" ${f.type===t?'selected':''}>${{text:'Short text',select:'Dropdown',checkbox:'Tick box'}[t]}</option>`).join('')}</select>
@@ -173,7 +172,7 @@ document.addEventListener('submit',e=>{
  e.preventDefault();const f=e.target;
  if(f.id==='reg'){
   const ev1=ev(f.dataset.eid),fd=new FormData(f),data={};
-  if(!ev1||(window.can&&!can(ev1,'write')))return;
+  if(!ev1||(window.can&&!can(ev1,'addreg')))return;
   ev1.fields.forEach(q=>{data[q.id]=q.type==='checkbox'?(fd.get('f_'+q.id)?'Yes':'No'):fd.get('f_'+q.id)||''});
   const cid=window.cidOf?cidOf(ev1,data):'';
   if(regsOf(ev1.id).length>=ev1.cap)return toast('All '+ev1.cap+' seats are taken');
@@ -209,6 +208,7 @@ render();
 <script src="payment.js"></script>
 <script src="import.js"></script>
 <script src="calc.js"></script>
+<script src="help.js"></script>
 <script src="ui.js"></script>
 <script src="splash.js"></script>
 </body></html>

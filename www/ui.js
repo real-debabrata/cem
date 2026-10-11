@@ -1,6 +1,6 @@
 /* Campus Events: menu bar, UI polish, app version control. Loads after sync.js/app2.js; no core code is modified. */
 (function(){
-const APP_VERSION='3.6.0',BUILD='2026-10-11';   // bump these on every release
+const APP_VERSION='3.6.1',BUILD='2026-10-11';   // bump these on every release
 const $=s=>document.querySelector(s),LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const root=document.documentElement;
 let theme=localStorage.getItem('campus-theme')||'auto',CFG=LS('campus-ver',null);
@@ -99,7 +99,7 @@ function about(){
 function openUM(){
  const u=window.firebase&&firebase.apps.length?firebase.auth().currentUser:null;
  um.innerHTML=`<div class="uh"><b>${esc(window.MYNAME||'Guest')}</b><span>${esc(u?u.email:'Not signed in')}</span></div>
- <button data-u="acct">Account, alerts & join event</button><button data-u="theme">Theme <small>${theme}</small></button>
+ <button data-u="acct">Account, alerts & join event</button><button data-u="help">Help & guides</button><button data-u="theme">Theme <small>${theme}</small></button>
  <button data-u="about">About & updates <small>v${APP_VERSION}</small></button>${u?'<button data-u="out" class="dg">Sign out</button>':''}`;
  um.classList.toggle('hid');
 }
@@ -111,6 +111,7 @@ document.addEventListener('click',e=>{
  const u=t&&t.dataset.u;if(!u)return;um.classList.add('hid');
  if(u==='acct'){const p=$('#tp');if(tb&&(!p||p.classList.contains('hid')))tb.click()}   // open (never toggle shut) the account / alerts / join panel
  else if(u==='theme'){theme={auto:'light',light:'dark',dark:'auto'}[theme];localStorage.setItem('campus-theme',theme);applyTheme();toast('Theme: '+theme)}
+ else if(u==='help'){if(window.openHelp)openHelp();else toast('Help did not load. Reload the app.')}
  else if(u==='about')about();
  else if(u==='chk')check(true);
  else if(u==='upd')update();

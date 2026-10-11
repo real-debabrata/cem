@@ -29,7 +29,7 @@ window.cashSetupV=function(e){
    <div class="act"><button class="btn ghost sm del" data-cs="rm" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.n)} from cash collectors">Remove</button></div></div>`;
  };
  return `<div class="card"><div class="sh"><h3>Cash collectors</h3><span class="meta">${cs.length} selected</span></div>
-  <p class="lead" style="margin-bottom:${cs.length?6:12}px">${fee>0?'People who may receive cash from attendees. When at least one is selected, Cash appears on the registration form and the attendee picks who they pay.':'Set a ticket price first (Price and settings, or the Income tab). Then choose who can receive cash.'}</p>
+  ${fee>0?'':'<p class="meta" style="margin:0 0 10px">Set a ticket price first (Price and settings, or the Income tab).</p>'}
   ${cs.map(row).join('')}
   <form id="csf" class="row" style="margin-top:10px"><select name="u" aria-label="Add a collector from the event team" style="flex:1;min-width:170px"><option value="">Add from the event team</option>${avail.map(p=>`<option value="${esc(p.id)}">${esc(p.n)} (${esc((window.LBL||{})[p.r]||p.r||'')})</option>`).join('')}</select><button class="btn sm" type="submit">Add</button></form>
   <form id="csn" class="row" style="margin-top:8px"><input name="n" maxlength="40" placeholder="Or type a name, e.g. Faculty coordinator" aria-label="Collector name" style="flex:1;min-width:170px"><button class="btn ghost sm" type="submit">Add name</button></form></div>`;
@@ -48,7 +48,7 @@ window.cashSummaryV=function(e){
  return `<div class="card"><div class="sh"><h3>Cash and UPI at a glance</h3><span class="meta">Ticket ₹${fee}</span></div>
   <div class="li"><div class="main"><div class="ttl">UPI</div><div class="sub">${ug} paid (${R(ug*fee)}), ${upi.length-ug} still to confirm (${R((upi.length-ug)*fee)})</div></div></div>
   ${rows?`<p class="meta" style="margin:10px 0 0"><b>Cash, by collector</b></p>${rows}`:''}
-  <p class="meta" style="margin:8px 0 0">Tick Paid on the attendee (the ... menu) after the cash is in hand. ${cash.filter(r=>!r.paid).length?`<button class="btn ghost sm" data-rf="cash" style="margin-left:6px">Show unpaid cash (${cash.filter(r=>!r.paid).length})</button>`:''}</p></div>`;
+  ${cash.filter(r=>!r.paid).length?`<p class="meta" style="margin:8px 0 0"><button class="btn ghost sm" data-rf="cash">Show unpaid cash (${cash.filter(r=>!r.paid).length})</button></p>`:''}</div>`;
 };
 
 /* ---------- block inside the in-app "Register attendee" form ---------- */
@@ -57,7 +57,7 @@ window.payBlockV=function(e){
  const cs=list(e),recv=window.can&&can(e,'regs');
  return `<div class="rw payb"><label for="pmode">Ticket fee ₹${fee}: how is it paid?</label>
   <select id="pmode" name="p_mode"><option value="">Not paid yet</option><option value="cash">Cash</option><option value="upi">UPI</option></select>
-  <div data-pcash class="hid"><label for="pcc">Paid to, or will pay to${cs.length?' *':''}</label>${cs.length?`<select id="pcc" name="p_cc"><option value="">Choose who collects the cash</option>${cs.map(c=>`<option value="${esc(c.id)}">${esc(c.n)}</option>`).join('')}</select>`:'<p class="meta" style="margin:0">No cash collectors chosen yet. Add them under Cash collectors.</p>'}</div>
+  <div data-pcash class="hid"><label for="pcc">Paid to, or will pay to${cs.length?' *':''}</label>${cs.length?`<select id="pcc" name="p_cc"><option value="">Choose who collects the cash</option>${cs.map(c=>`<option value="${esc(c.id)}">${esc(c.n)}</option>`).join('')}</select>`:'<p class="meta" style="margin:0">No cash collectors yet.</p>'}</div>
   <div data-pupi class="hid"><label for="putr">UTR / reference (optional)</label><input id="putr" name="p_utr" maxlength="40" autocomplete="off" autocapitalize="characters"></div>
   ${recv?'<label class="chk" data-prcv style="display:none"><input type="checkbox" name="p_recv"> Payment received now</label>':''}</div>`;
 };

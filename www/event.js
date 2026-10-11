@@ -1,4 +1,4 @@
-/* CEM 3.4.0: the event page. 3.6.0: calculator button in the header; Attendees tab gets Import attendees (import.js), Cash collectors and Cash and UPI at a glance (payment.js),
+/* CEM 3.4.0: the event page. 3.6.1: the guidance paragraphs moved to Help & guides (profile icon menu, help.js); Details has a note that says where to find it; roles come from app2.js (built-in and custom). 3.6.0: calculator button in the header; Attendees tab gets Import attendees (import.js), Cash collectors and Cash and UPI at a glance (payment.js),
    a payment block in the Register form, payment tags and a "Cash due" filter. 3.5.0: Income tab, Scan tickets and Ticket (QR) buttons, Online registration panel (signup.js), Export card (income.js),
    duplicate College ID check, and team changes need the attendee-edit permission (check-in level), matching firestore.rules.
 
@@ -21,7 +21,7 @@ const hm=t=>new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})
 
 // per-event view state; cleared whenever another event is opened
 window.resetEv=function(){
- Object.assign(V,{av:'list',rf:'all',rq:'',rgt:false,rmo:null,tf:'all',ta:null,tg:false,pad:false,prl:false,pfl:'all',pnw:false,pst:false,
+ Object.assign(V,{av:'list',rf:'all',rq:'',rgt:false,rmo:null,tf:'all',ta:null,tg:false,pad:false,crd:null,pfl:'all',pnw:false,pst:false,
   xv:'budget',xa:false,xc:null,xq:null,xp:null,xb:null,xw:false,xvp:'',xsp:null,ia:false,te:null,sgs:false,sgc:false,sgh:false,spa:false,spe:null,ibs:'',imp:null});
 };
 
@@ -60,9 +60,8 @@ function infoV(e){
  const venue=/^https?:\/\//i.test(e.venue||'')?`<a href="${esc(e.venue)}" target="_blank" rel="noopener noreferrer">${esc(e.venue)}</a>`:(esc(e.venue)||'<span class="meta">Not set</span>');
  const past=e.date&&e.date<loc();
  const share=e.cloud?`<div class="code"><b aria-label="Event code">${esc(e.id)}</b><button class="btn ghost sm" data-copy="${esc(e.id)}">Copy code</button></div>
-   <p class="meta" style="margin:8px 0 0">${Object.keys(e.members||{}).length} member(s). People join from the top bar (join-team icon) or Account > Join an event, using this code.<br>ntfy topic: ntfy.sh/${esc(e.ntfy||'')}</p>`
+   <p class="meta" style="margin:8px 0 0">${Object.keys(e.members||{}).length} member(s). ntfy topic: ntfy.sh/${esc(e.ntfy||'')}</p>`
   :(window.shareBar?shareBar(e):'');
- const info=(window.ROLEINFO||{})[mr]||'';
  return `<div class="card" style="border-left:6px solid ${TYPES[e.type]||'#2f4bd8'}">
   <div class="sh" style="margin-bottom:0"><div class="row"><span class="tag" style="color:${TYPES[e.type]}">${esc(e.type)}</span>${past?'<span class="pill">Past event</span>':''}</div>${mgr?`<button class="btn ghost sm" data-edit="${e.id}">Edit event</button>`:''}</div>
   <h2 style="margin-top:6px">${esc(e.name)}</h2>
@@ -75,7 +74,7 @@ function infoV(e){
   <button class="gl" data-dt="people"><b>${window.peopleOf?peopleOf(e).length:0}</b><span>People</span></button>
   ${mb?`<button class="gl ${mb.over?'warn':''}" data-dt="exp"><b>${mb.plan?R(Math.abs(mb.left)):'-'}</b><span>${mb.plan?(mb.over?'Over budget':'Budget left'):'No budget set'}</span></button>`:''}</div>
  ${share?`<div class="card"><h3 style="margin-bottom:10px">Invite your team</h3>${share}</div>`:''}
- <div class="card"><h3 style="margin-bottom:6px">Your role: ${esc(LBL[mr]||mr)}</h3><p class="meta" style="margin:0">${esc(info)}</p></div>
+ <div class="card"><div class="sh" style="margin:0"><div style="flex:1 1 220px"><h3 style="margin-bottom:2px">Your role: ${esc(window.roleLabel?roleLabel(e,mr):mr)}</h3><p class="meta" style="margin:0">Need help or a guide? Tap your profile icon (the circle with your initial, top right), then <b>Help &amp; guides</b>.</p></div><button class="btn ghost sm" data-u="help">Open Help &amp; guides</button></div></div>
  ${window.exportV?exportV(e):''}
  ${mgr||e.cloud?`<div class="row" style="justify-content:center;margin-top:6px"><button class="btn ghost sm del" data-del="${e.id}">${mr==='owner'?'Delete event':'Leave event'}</button></div>`:''}`;
 }
@@ -92,7 +91,7 @@ function regRows(e){
  if(!list.length)return '<div class="empty">No one matches. Clear the search or pick another filter.</div>';
  return list.map(r=>{
   const sub=e.fields.slice(1,4).map(x=>{const v=r.data&&r.data[x.id];return x.type==='checkbox'?(v==='Yes'?x.label:''):(v||'')}).filter(Boolean).join(', ');
-  const tk=can(e,'write'),sec=(fee&&canReg)||canRm||tk,more=V.rmo===r.id&&sec;
+  const tk=can(e,'addreg'),sec=(fee&&canReg)||canRm||tk,more=V.rmo===r.id&&sec;
   const tags=(r.in?`<span class="pill ok">Checked in${r.inAt?' '+hm(r.inAt):''}</span> `:'')+(r.src==='form'?'<span class="pill acc">Online</span> ':r.src==='import'?'<span class="pill acc">Imported</span> ':'')+(fee?(r.paid?'<span class="pill ok">Paid</span> ':'<span class="pill warn">Unpaid</span> ')+(window.payTagV?payTagV(r):''):'');
   return `<div class="li"><div class="main"><div class="ttl">${esc(r.name)}</div>${tags||sub?`<div class="sub">${tags}${esc(sub)}</div>`:''}</div>
    <div class="act">${canReg?`<button class="btn sm${r.in?' ghost':''}" data-ci="${r.id}">${r.in?'Undo':'Check in'}</button>`:''}${sec?`<button class="btn ghost sm" data-rmo="${r.id}" aria-expanded="${more}" aria-label="More actions for ${esc(r.name)}" title="More">&hellip;</button>`:''}</div>
@@ -100,7 +99,7 @@ function regRows(e){
  }).join('');
 }
 function listPanel(e){
- const w=can(e,'write'),canScan=can(e,'regs'),rs=regsOf(e.id),n=rs.length,ci=rs.filter(r=>r.in).length,full=n>=e.cap,fee=!!(e.pay&&e.pay.fee);
+ const w=can(e,'addreg'),canScan=can(e,'regs'),rs=regsOf(e.id),n=rs.length,ci=rs.filter(r=>r.in).length,full=n>=e.cap,fee=!!(e.pay&&e.pay.fee);
  const pc=Math.min(100,Math.round(n/Math.max(1,e.cap)*100)),f=V.rf||'all';
  const cd=rs.filter(r=>r.pm==='cash'&&!r.paid).length;
  const chips=[['all','All',n],['out','Not checked in',n-ci],['in','Checked in',ci]].concat(fee?[['unpaid','Unpaid',rs.filter(r=>!r.paid).length]]:[]).concat(cd?[['cash','Cash due',cd]]:[]);
@@ -120,8 +119,7 @@ function listPanel(e){
 function teamsPanel(e){
  const w=can(e,'regs'),rs=regsOf(e.id),free=rs.filter(r=>!e.teams.some(t=>t.id===r.team));
  const head=`<div class="card"><div class="sh"><h3>Participant teams</h3><span class="meta">${e.teams.length} team${e.teams.length===1?'':'s'}, ${free.length} attendee${free.length===1?'':'s'} not in a team</span></div>
-  <p class="lead" style="margin-bottom:${w?12:0}px">Group registered attendees for contests or activities.</p>
-  ${!rs.length?'<p class="meta" style="margin:0">Register attendees first, then group them into teams.</p>':w?`<form id="tnf" class="row"><input name="n" required maxlength="40" placeholder="Team name" style="flex:1;min-width:160px" aria-label="Team name"><button class="btn" type="submit">Create team</button></form>
+  ${!rs.length?'<p class="meta" style="margin:8px 0 0">Register attendees first.</p>':w?`<form id="tnf" class="row" style="margin-top:12px"><input name="n" required maxlength="40" placeholder="Team name" style="flex:1;min-width:160px" aria-label="Team name"><button class="btn" type="submit">Create team</button></form>
   <form id="atf" class="row" style="margin-top:10px"><label style="margin:0">Or auto-build teams of</label><input name="s" type="number" min="2" value="4" style="width:80px" aria-label="Team size"><button class="btn ghost" type="submit">Split unassigned attendees</button></form>`:''}</div>`;
  const cards=e.teams.length?`<div class="grid">${e.teams.map(t=>{const ms=rs.filter(r=>r.team===t.id);
   return `<div class="card"><div class="sh"><h3>${esc(t.n)} <span class="pill">${ms.length}</span></h3>${w?`<button class="btn ghost sm del" data-tdel="${t.id}">Delete</button>`:''}</div>

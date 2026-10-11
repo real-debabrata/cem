@@ -1,4 +1,4 @@
-/* Campus Events 3.5.0 (3.4.0 layout + income, break-even): event page layout.
+/* Campus Events 3.6.1 (custom role form at the end of the file); 3.5.0 (3.4.0 layout + income, break-even): event page layout.
    Tabs, list rows, status pills, forms and the Expenses & Budget cards.
    Uses the colour tokens defined in index.html (--bg --card --ink --mute --line --acc --ok --bad). */
 :root{--warn:#a4610a}
@@ -156,3 +156,12 @@ a{color:var(--acc)}
 .mlg .ba,.mlg .bb,.mlg .bc,.mlg .bd{display:inline-block}
 .card input[readonly]{font-size:13px}
 button[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ---------- custom roles (3.6.1) ---------- */
+.pkg{border:1px solid var(--line);border-radius:12px;margin:10px 0 0;padding:6px 12px 10px;background:var(--card)}
+.pkg legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);padding:0 6px}
+label.pk{display:flex;align-items:flex-start;gap:10px;margin:8px 0 0;font-weight:400;cursor:pointer}
+label.pk input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:var(--acc)}
+label.pk b{display:block;font-weight:600;font-size:14px}
+label.pk small{display:block;color:var(--mute);font-size:13px;line-height:1.35}
+.rchips{display:flex;flex-wrap:wrap;gap:4px}
