@@ -65,6 +65,7 @@ function show(r){
  const when=new Date(r.date+'T'+(r.time||'00:00')),okd=!isNaN(when);
  const dt=okd?when.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long',year:'numeric'})+(r.time?', '+when.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):''):esc(r.date||'');
  const fee=+r.fee||0,upi=r.upi||'';
+ const nameF=fields.find(f=>f.type!=='checkbox'&&f.type!=='select'&&/\bname\b/i.test(f.label||'')&&!/college|school|team|club|father|mother|parent|guardian|company|org/i.test(f.label||''));
  const inp=f=>{const n='f_'+esc(f.id),req=f.req?' *':'';
   if(f.type==='checkbox')return `<label class="chk"><input type="checkbox" name="${n}"> ${esc(f.label)}</label>`;
   if(f.type==='select')return `<label for="${n}">${esc(f.label)}${req}</label><select id="${n}" name="${n}"><option value="">Select</option>${String(f.opts||'').split(',').map(o=>`<option>${esc(o.trim())}</option>`).join('')}</select>`;
@@ -77,6 +78,7 @@ function show(r){
   <p style="margin:12px 0 0">${full?'<span class="pill warn">Event is full: you can join the waitlist</span>':`<span class="pill ok">${left} seat${left===1?'':'s'} left</span>`} ${fee>0?`<span class="pill">Ticket ₹${fee}</span>`:'<span class="pill">Free</span>'}</p>
   ${r.msg?`<p class="meta" style="margin:10px 0 0">${esc(r.msg)}</p>`:''}</div>
  <div class="card" id="fc"><p class="step"><i>1</i> ${full?'Join the waitlist':'Your details'}</p>
+  ${nameF?'':'<label for="nm">Full name *</label><input id="nm" maxlength="80" autocomplete="name">'}
   ${fields.map(inp).join('')}
   ${cidF?'':'<label for="cid">College ID *</label><input id="cid" maxlength="24" autocapitalize="characters" autocomplete="off">'}
   <label for="em">Email</label><input id="em" type="email" maxlength="100" autocomplete="email">
@@ -99,7 +101,7 @@ function show(r){
   if(missing)return er.textContent='Please fill in: '+missing+'.';
   const cid=norm(cidF?vals[cidF.id]:$('cid').value);
   if(cid.length<3||cid.length>24)return er.textContent='Enter your College ID (3 to 24 letters or digits).';
-  const first=fields[0],n=String((first&&vals[first.id])||'').trim();
+  const n=String(nameF?vals[nameF.id]:$('nm').value).trim();
   if(!n)return er.textContent='Please enter your name.';
   const em=$('em').value.trim(),ph=$('ph').value.trim();
   if(!em&&!ph)return er.textContent='Enter an email or a phone number.';

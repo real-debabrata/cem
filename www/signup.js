@@ -112,7 +112,7 @@ function approve(E,sub,paid,quiet){
  if(regs.length>=E.cap){if(sub.s!=='waitlist')setSub(E.id,sub.id,{s:'waitlist'});if(!quiet)toast('All '+E.cap+' seats are taken, so this person is on the waitlist');return false}
  let vals={};try{vals=JSON.parse(sub.x||'{}')}catch(x){}
  const data={};(E.fields||[]).forEach(f=>{const v=vals[f.id];data[f.id]=f.type==='checkbox'?(v==='Yes'?'Yes':'No'):String(v==null?'':v).slice(0,200)});
- const first=(E.fields||[])[0],r={id:rid(),eid:E.id,data,name:String((first&&data[first.id])||sub.n||'Guest').slice(0,80),cid:sub.cid,in:false,at:Date.now(),src:'form',by:window.MYUID};
+ const first=(E.fields||[])[0],r={id:rid(),eid:E.id,data,name:String(sub.n||(first&&data[first.id])||'Guest').slice(0,80),cid:sub.cid,in:false,at:Date.now(),src:'form',by:window.MYUID};
  if(sub.em)r.em=sub.em;if(sub.ph)r.ph=sub.ph;if(sub.utr)r.utr=sub.utr;
  if(paid&&(+(E.pay||{}).fee||0)>0){r.paid=true;r.pt=Date.now()}
  S.regs.push(r);sv();setSub(E.id,sub.id,{s:'approved',ri:r.id});
