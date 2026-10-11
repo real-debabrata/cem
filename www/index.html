@@ -180,6 +180,8 @@ document.addEventListener('submit',e=>{
   if(cid&&regsOf(ev1.id).some(r=>window.regCid&&regCid(ev1,r)===cid))return toast('This College ID is already registered');   // 3.5.0: duplicate check
   const r1={id:rid(),eid:ev1.id,data,name:data[ev1.fields[0].id]||'Guest',in:false,at:Date.now(),src:'manual'};
   if(cid)r1.cid=cid;
+  const pe=window.regPayFrom?regPayFrom(ev1,fd,r1):'';   // 3.6.0: cash or UPI, and who collects the cash
+  if(pe)return toast(pe);
   S.regs.push(r1);
   save();render();toast('Registered')}
  else if(f.id==='evf'){
@@ -203,6 +205,10 @@ render();
 <script src="signup.js"></script>
 <script src="scan.js"></script>
 <script src="income.js"></script>
+<script src="sheet.js"></script>
+<script src="payment.js"></script>
+<script src="import.js"></script>
+<script src="calc.js"></script>
 <script src="ui.js"></script>
 <script src="splash.js"></script>
 </body></html>

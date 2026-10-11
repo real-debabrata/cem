@@ -70,17 +70,17 @@ function attendeesCsv(e){
  const fee=feeOf(e),fl=e.fields||[],used={};
  const labels=fl.map(f=>{let l=f.label||'Question';if(used[l]){used[l]++;l+=' ('+used[l]+')'}else used[l]=1;return l});
  const hasCid=!!(window.cidField&&cidField(e));   // when the form already asks for the College ID, do not repeat it
- const head=['Ticket ID','Name'].concat(hasCid?[]:['College ID'],labels,['Email','Phone','Checked in','Checked in at','Checked in by','Fee (INR)','Paid','UTR','Team','Source','Registered at']);
+ const head=['Ticket ID','Name'].concat(hasCid?[]:['College ID'],labels,['Email','Phone','Checked in','Checked in at','Checked in by','Fee (INR)','Paid','Payment mode','Cash collector','UTR','Team','Source','Registered at']);
  const rows=regsOf(e.id).slice().sort((a,b)=>(a.at||0)-(b.at||0)).map(r=>{const t=(e.teams||[]).find(x=>x.id===r.team);
-  return [r.id,r.name].concat(hasCid?[]:[regCid(e,r)],fl.map(f=>r.data&&r.data[f.id]),[r.em||'',r.ph||'',r.in?'Yes':'No',dt(r.inAt),r.inBy||'',fee,r.paid?'Yes':'No',r.utr||'',t?t.n:'',r.src==='form'?'Online form':'Entered by team',dt(r.at)])});
+  return [r.id,r.name].concat(hasCid?[]:[regCid(e,r)],fl.map(f=>r.data&&r.data[f.id]),[r.em||'',r.ph||'',r.in?'Yes':'No',dt(r.inAt),r.inBy||'',fee,r.paid?'Yes':'No',r.pm==='cash'?'Cash':r.pm==='upi'?'UPI':'',r.pm==='cash'?(r.cn||''):'',r.utr||'',t?t.n:'',r.src==='form'?'Online form':r.src==='import'?'Imported from file':'Entered by team',dt(r.at)])});
  return toCsv(head,rows);
 }
 const ST={pending:'To check',verified:'Verified',rejected:'Rejected'};
 function paymentsCsv(e){
- const fee=feeOf(e),rows=(window.payRowsOf?payRowsOf(e):[]).map(p=>[p.title,p.n,p.a,p.utr,ST[p.s]||p.s,dt(p.at)]);
- if(fee>0)regsOf(e.id).filter(r=>r.paid).forEach(r=>rows.push(['Attendee fee (marked paid)',r.name,fee,r.utr||'','Paid',dt(r.pt||r.at)]));
+ const fee=feeOf(e),rows=(window.payRowsOf?payRowsOf(e):[]).map(p=>[p.title,p.n,p.a,p.utr,ST[p.s]||p.s,dt(p.at),'UPI','']);
+ if(fee>0)regsOf(e.id).filter(r=>r.paid).forEach(r=>rows.push(['Attendee fee (marked paid)',r.name,fee,r.utr||'','Paid',dt(r.pt||r.at),r.pm==='cash'?'Cash':r.pm==='upi'?'UPI':'',r.pm==='cash'?(r.cn||''):'']));
  rows.sort((a,b)=>String(b[5]).localeCompare(String(a[5])));
- return toCsv(['Source','Name','Amount (INR)','UTR / reference','Status','Date'],rows);
+ return toCsv(['Source','Name','Amount (INR)','UTR / reference','Status','Date','Mode','Cash collector'],rows);
 }
 function billsCsv(e){
  const rows=(e.exp||[]).slice().sort((a,b)=>(a.at||0)-(b.at||0)).map(x=>{const v=(e.ven||[]).find(z=>z.id===x.v),c=(e.bud||[]).find(b=>b.id===x.c);
@@ -166,7 +166,7 @@ window.incV=function(e){
   ${price}
   <p class="meta" style="margin:4px 0 0">${R(f.price)} x ${f.cap} seats = ${R(f.tFull)}, plus sponsorship ${R(f.spAll)} = <b>${R(f.full)}</b> against costs of <b>${R(f.cost)}</b>.</p>
   ${breakEven(f)}
-  <p class="meta" style="margin:12px 0 0">Attendees paid: ${f.paidN} of ${f.rs.length} registered (${R(f.tIn)} received, ${R(f.tDue)} still to collect).</p></div>
+  <p class="meta" style="margin:12px 0 0">Attendees paid: ${f.paidN} of ${f.rs.length} registered (${R(f.tIn)} received, ${R(f.tDue)} still to collect).${(()=>{const pc=f.rs.filter(r=>r.paid&&r.pm==='cash').length,pu=f.rs.filter(r=>r.paid&&r.pm==='upi').length;return pc||pu?` Of the paid: ${pc} by cash (${R(pc*f.price)}), ${pu} by UPI (${R(pu*f.price)}).`:''})()}</p></div>
  <div class="card"><div class="sh"><h3>Sponsors and other income (${spn.length})</h3>${V.spe?'':`<button class="btn sm" data-ic="spa">${V.spa?'Close form':'+ Add'}</button>`}</div>
   <p class="lead" style="margin-bottom:6px">Record what each sponsor committed, what has arrived, and what you promised in return.</p>
   ${V.spa&&!V.spe?spForm(e):''}${list||(open?'':'<p class="meta" style="margin:0">No sponsors yet. Tap + Add.</p>')}</div>

@@ -135,6 +135,9 @@ async function migrate(id,d){
  }catch(x){migrated[id]=0;if(x.code!=='permission-denied')err(x)}
 }
 async function purgeSubs(ref){
+ // 3.6.0: give the custom link name back (regslugs/{name}) before the page document that remembers it is deleted
+ try{const pg=await ref.get({source:'server'}),sl=pg.exists&&pg.data().slug;if(sl)await db.collection('regslugs').doc(sl).delete()}
+ catch(x){if(x.code!=='permission-denied'&&x.code!=='not-found')throw x}
  try{for(let i=0;i<200;i++){const sn=await ref.collection('subs').limit(400).get({source:'server'});if(sn.empty)break;const b=db.batch();sn.docs.forEach(d=>b.delete(d.ref));await b.commit()}}
  catch(x){if(x.code!=='permission-denied')throw x}
  await ref.delete().catch(x=>{if(x.code!=='permission-denied'&&x.code!=='not-found')throw x});

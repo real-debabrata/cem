@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Campus Events</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;font:15px/1.5 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#fff;background:linear-gradient(135deg,#0a0f2e,#16205c 60%,#2a1f6e)}
+.c{max-width:420px;background:#fff;color:#14213d;border-radius:18px;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.4)}
+h1{font-size:22px;margin:0 0 6px}p{margin:0;color:#5b6678}a{color:#4f6bff;font-weight:600}
+</style></head><body>
+<div class="c" id="c"><h1>Opening...</h1><p>One moment.</p></div>
+<script>
+/* CEM 3.6.0: short registration links.  https://your-site/r/techfest-2026  ->  register.html?r=techfest-2026
+   GitHub Pages serves this file for any address that does not exist, so /r/<name> lands here and is passed on to the registration page.
+   Anything else shows a plain "page not found". It works under a sub-folder too (https://you.github.io/repo/r/name). */
+(function(){
+ var m=location.pathname.match(/^(.*\/)r\/([A-Za-z0-9-]{3,40})\/?$/);
+ if(m){location.replace(m[1]+'register.html?r='+encodeURIComponent(m[2].toLowerCase()));return}
+ var b=location.pathname.replace(/[^\/]*$/,'');
+ document.getElementById('c').innerHTML='<h1>Page not found</h1><p>This address does not exist. <a href="'+b+'">Go to Campus Events</a></p>';
+})();
+</script></body></html>

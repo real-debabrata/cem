@@ -5,9 +5,9 @@
 <link rel="stylesheet" href="splash.css">
 <title>Register</title>
 <style>
-:root{box-sizing:border-box;--ink:#14213d;--mute:#5b6678;--line:#d9e0ea;--acc:#4f6bff}
+:root{box-sizing:border-box;--ink:#14213d;--mute:#5b6678;--line:#d9e0ea;--acc:#4f6bff;--pg:#fff}
 *,*:before,*:after{box-sizing:inherit}
-body{margin:0;min-height:100vh;font:15px/1.5 'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#fff;padding:max(16px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom));
+body{margin:0;min-height:100vh;font:15px/1.5 'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--pg);padding:max(16px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom));
 background:radial-gradient(800px 480px at 8% 0%,rgba(123,147,255,.45),transparent 60%),radial-gradient(700px 500px at 100% 100%,rgba(255,122,184,.35),transparent 60%),linear-gradient(135deg,#0a0f2e,#16205c 60%,#2a1f6e)}
 main{max-width:440px;margin:0 auto}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;margin:6px 0 16px}
@@ -21,7 +21,7 @@ label{display:block;font-weight:600;font-size:13px;margin:12px 0 4px}
 input,select{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:#fff}
 input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 14px;cursor:pointer}
-.go{width:100%;margin-top:16px;background:linear-gradient(135deg,#4f6bff,#9b5cff);color:#fff}.go:disabled{opacity:.6}
+.go{width:100%;margin-top:16px;background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 65%,#ff7ab8));color:#fff}.go:disabled{opacity:.6}
 .alt{background:#eef1fb;color:var(--ink);padding:8px 12px;font-size:13px}
 .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .err{color:#c2331f;min-height:18px;font-size:13px;margin:8px 0 0}
@@ -29,6 +29,11 @@ button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 14p
 .pill{display:inline-block;font-size:12px;font-weight:700;padding:1px 10px;border-radius:20px;background:#eef1fb;color:var(--ink)}.pill.warn{background:#fff1d6;color:#8a5200}.pill.ok{background:#dff5ec;color:#12805c}
 .chk{display:flex;gap:8px;align-items:center;font-weight:500}.chk input{width:auto}
 .ok{text-align:center}.ok b{font-size:44px;display:block;color:#12805c}
+.hid{display:none!important}
+.bn{display:block;width:calc(100% + 44px);max-width:none;margin:-22px -22px 14px;border-radius:18px 18px 0 0;max-height:190px;object-fit:cover}
+.pm{display:flex;gap:10px;margin:6px 0 4px}.pm label{flex:1;display:flex;gap:8px;align-items:center;justify-content:center;margin:0;padding:10px;border:1px solid var(--line);border-radius:10px;font-weight:700;cursor:pointer}
+.pm input{width:auto}.pm label:has(input:checked){border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,#fff)}
+.opts{display:grid;gap:6px;margin:8px 0 0}.opts label{display:flex;gap:8px;align-items:center;margin:0;font-weight:500}.opts input{width:auto}
 </style></head><body>
 <div id="splash" role="status" aria-label="Loading Campus Events"><div class="sp-logo"><i class="sp-ring"></i><div class="sp-mark"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lgs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b93ff"/><stop offset="1" stop-color="#ff7ab8"/></linearGradient></defs><rect width="40" height="40" fill="url(#lgs)"/><path d="M11 15h18v4a2 2 0 0 0 0 4v4H11v-4a2 2 0 0 0 0-4z" fill="#fff"/></svg></div></div><div class="sp-name">Campus Events</div><div class="sp-sub">Getting your events ready</div><div class="sp-bar"><i></i></div></div>
 <main>
@@ -47,51 +52,78 @@ button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 14p
    The document id is the College ID, so each College ID can apply once per event; firestore.rules enforce it. */
 const $=id=>document.getElementById(id),root=$('root');
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const code=(new URLSearchParams(location.search).get('e')||'').trim().toUpperCase(),C=window.FB_CONFIG||{};
+const qs=new URLSearchParams(location.search),C=window.FB_CONFIG||{};
+const slug=(qs.get('r')||'').trim().toLowerCase();let code=(qs.get('e')||'').trim().toUpperCase();
 const norm=s=>String(s==null?'':s).toUpperCase().replace(/[^A-Z0-9]/g,'');
 const fail=(t,m)=>{root.innerHTML='<div class="card"><h1>'+esc(t)+'</h1><p class="meta">'+esc(m)+'</p></div>';window.splashDone&&splashDone()};
-if(!/^[A-Z]{6}$/.test(code)||!window.firebase||!C.apiKey||/YOUR_/.test(C.apiKey))fail('Registration unavailable','This registration link is incomplete or not set up.');
-else{
- firebase.initializeApp(C);const db=firebase.firestore();
- db.collection('regpages').doc(code).get().then(d=>d.exists?show(d.data()):fail('Registration unavailable','This registration page does not exist or has been removed.'))
+const loadPage=()=>firebase.firestore().collection('regpages').doc(code).get().then(d=>d.exists?show(d.data()):fail('Registration unavailable','This registration page does not exist or has been removed.'))
   .catch(x=>fail('Registration closed',x&&x.code==='permission-denied'?'Registration for this event is closed. Ask the organizers if you think this is a mistake.':'Could not load this page. Check your connection and try again.'));
+if(!window.firebase||!C.apiKey||/YOUR_/.test(C.apiKey)||(!slug&&!/^[A-Z]{6}$/.test(code)))fail('Registration unavailable','This registration link is incomplete or not set up.');
+else{
+ firebase.initializeApp(C);
+ if(slug){   // a custom link name such as /r/techfest-2026 points to the event code through regslugs/{name}
+  if(!/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(slug))fail('Registration unavailable','This registration link is not valid.');
+  else firebase.firestore().collection('regslugs').doc(slug).get().then(d=>{
+   const c=d.exists?String((d.data()||{}).eid||'').toUpperCase():'';
+   if(!/^[A-Z]{6}$/.test(c))return fail('Registration unavailable','This registration link does not exist or has been removed.');
+   code=c;return loadPage();
+  }).catch(()=>fail('Registration unavailable','Could not load this page. Check your connection and try again.'));
+ }else loadPage();
 }
 const CID_RE=/college\s*id|student\s*id|roll\s*(no|number)|enrol|registration\s*(no|number|id)|reg\.?\s*(no|number)/i;
+const BG={indigo:'radial-gradient(800px 480px at 8% 0%,rgba(123,147,255,.45),transparent 60%),radial-gradient(700px 500px at 100% 100%,rgba(255,122,184,.35),transparent 60%),linear-gradient(135deg,#0a0f2e,#16205c 60%,#2a1f6e)',
+ sunset:'linear-gradient(135deg,#2b0f3a,#7a1f5c 55%,#d9482b)',ocean:'linear-gradient(135deg,#031d3a,#0b4f8a 60%,#0e8a8a)',forest:'linear-gradient(135deg,#06210f,#145a32 60%,#2e8b3d)',
+ graphite:'linear-gradient(135deg,#111418,#232a33 60%,#3a4350)',light:'#eef2f7'};
+function applyTheme(t){   // t comes from the organizer's page document; every value is checked again here
+ t=t||{};const ac=/^#[0-9a-f]{6}$/i.test(t.ac||'')?t.ac:'#4f6bff',bg=BG[t.bg]?t.bg:'indigo';
+ document.documentElement.style.setProperty('--acc',ac);
+ document.body.style.background=BG[bg];document.body.style.setProperty('--pg',bg==='light'?'#14213d':'#fff');
+}
 function show(r){
  if(!r.open||(r.until&&Date.now()>r.until))return fail('Registration closed','Registration for this event is closed.');
+ const th=r.th||{};applyTheme(th);
  document.title='Register: '+r.name;setTimeout(()=>window.splashDone&&splashDone(),0);
  const fields=r.fields||[],cidF=fields.find(f=>f.type!=='checkbox'&&CID_RE.test(f.label||'')),full=(+r.taken||0)>=(+r.cap||0),left=Math.max(0,(+r.cap||0)-(+r.taken||0));
  if(full&&!r.wl)return fail('This event is full','All '+r.cap+' seats are taken and there is no waitlist. Ask the organizers if more seats open up.');
  const when=new Date(r.date+'T'+(r.time||'00:00')),okd=!isNaN(when);
  const dt=okd?when.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long',year:'numeric'})+(r.time?', '+when.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):''):esc(r.date||'');
- const fee=+r.fee||0,upi=r.upi||'';
- const nameF=fields.find(f=>f.type!=='checkbox'&&f.type!=='select'&&/\bname\b/i.test(f.label||'')&&!/college|school|team|club|father|mother|parent|guardian|company|org/i.test(f.label||''));
+ const fee=+r.fee||0,upi=r.upi||'',cashL=(fee>0&&!full&&Array.isArray(r.cash))?r.cash.filter(c=>c&&c.id&&c.n):[],cashOn=cashL.length>0;
  const inp=f=>{const n='f_'+esc(f.id),req=f.req?' *':'';
   if(f.type==='checkbox')return `<label class="chk"><input type="checkbox" name="${n}"> ${esc(f.label)}</label>`;
   if(f.type==='select')return `<label for="${n}">${esc(f.label)}${req}</label><select id="${n}" name="${n}"><option value="">Select</option>${String(f.opts||'').split(',').map(o=>`<option>${esc(o.trim())}</option>`).join('')}</select>`;
   return `<label for="${n}">${esc(f.label)}${req}</label><input id="${n}" name="${n}" maxlength="200" autocomplete="off">`};
  const link='upi://pay?pa='+encodeURIComponent(upi)+'&pn='+encodeURIComponent(r.payee||'')+'&am='+fee+'&cu=INR&tn='+encodeURIComponent('Registration: '+r.name);
  let svg='';if(fee>0&&upi&&!full){try{const q=qrcode(0,'M');q.addData(link);q.make();svg=q.createSvgTag(8,4)}catch(e){}}
- root.innerHTML=`<div class="card"><p class="meta">${esc(r.type||'')}</p><h1>${esc(r.name)}</h1>
+ const upiOn=!!svg,both=upiOn&&cashOn,how=both?'UPI or cash':upiOn?'UPI':cashOn?'cash':'';
+ const banner=/^https:\/\/[^\s"'<>]{4,290}$/i.test(th.bn||'')?`<img class="bn" src="${esc(th.bn)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:'';
+ const head=th.hd||r.name,showSeats=th.ss!==0,btn=th.bt||'Send registration';
+ const payHtml=fee>0&&!full?`<p class="step" style="margin-top:18px"><i>2</i> Ticket fee${how?': pay by '+how:''} (you can also pay later)</p>
+   ${both?`<div class="pm" role="radiogroup" aria-label="How will you pay?"><label><input type="radio" name="pm" value="upi" checked> UPI</label><label><input type="radio" name="pm" value="cash"> Cash</label></div>`:''}
+   ${upiOn?`<div id="pu"><div class="amt">₹${fee}</div><div class="qr">${svg}</div><div class="row"><button class="alt" id="cp" type="button">Copy UPI ID</button></div><div class="det">Pay to: <b>${esc(r.payee||'')}</b><br>UPI ID: <b>${esc(upi)}</b></div>
+    <label for="utr">UTR / reference number (if you already paid)</label><input id="utr" maxlength="40" autocapitalize="characters" autocomplete="off"><p class="meta" style="margin:4px 0 0">You can leave this empty and pay later; the organizers will tell you how.</p></div>`:''}
+   ${cashOn?`<div id="pc" class="${upiOn?'hid':''}"><div class="amt">₹${fee}</div><label for="cc">Who will you pay the cash to? *</label><select id="cc"><option value="">Choose a person</option>${cashL.map(c=>`<option value="${esc(c.id)}">${esc(c.n)}</option>`).join('')}</select>
+    <div class="opts"><label><input type="radio" name="cp" value="0" checked> I will pay later</label><label><input type="radio" name="cp" value="1"> I have already paid this person</label></div>
+    <p class="meta" style="margin:6px 0 0">Your registration is confirmed once the organizers have checked the payment with the person you chose.</p></div>`:''}
+   ${!upiOn&&!cashOn?`<p class="meta">The ticket fee is ₹${fee}. The organizers will tell you how to pay after they approve your registration.</p>`:''}`:'';
+ root.innerHTML=`<div class="card">${banner}<p class="meta">${esc(r.type||'')}</p><h1>${esc(head)}</h1>
   <p class="meta">${dt}${r.venue&&!/^https?:/i.test(r.venue)?'<br>'+esc(r.venue):''}</p>
+  ${th.in?`<p style="margin:10px 0 0;white-space:pre-wrap">${esc(th.in)}</p>`:''}
   ${r.desc?`<p style="margin:10px 0 0;white-space:pre-wrap">${esc(r.desc)}</p>`:''}
-  <p style="margin:12px 0 0">${full?'<span class="pill warn">Event is full: you can join the waitlist</span>':`<span class="pill ok">${left} seat${left===1?'':'s'} left</span>`} ${fee>0?`<span class="pill">Ticket ₹${fee}</span>`:'<span class="pill">Free</span>'}</p>
+  <p style="margin:12px 0 0">${full?'<span class="pill warn">Event is full: you can join the waitlist</span>':showSeats?`<span class="pill ok">${left} seat${left===1?'':'s'} left</span>`:''} ${fee>0?`<span class="pill">Ticket ₹${fee}</span>`:'<span class="pill">Free</span>'}</p>
   ${r.msg?`<p class="meta" style="margin:10px 0 0">${esc(r.msg)}</p>`:''}</div>
  <div class="card" id="fc"><p class="step"><i>1</i> ${full?'Join the waitlist':'Your details'}</p>
-  ${nameF?'':'<label for="nm">Full name *</label><input id="nm" maxlength="80" autocomplete="name">'}
   ${fields.map(inp).join('')}
   ${cidF?'':'<label for="cid">College ID *</label><input id="cid" maxlength="24" autocapitalize="characters" autocomplete="off">'}
   <label for="em">Email</label><input id="em" type="email" maxlength="100" autocomplete="email">
   <label for="ph">Phone / WhatsApp</label><input id="ph" type="tel" maxlength="20" inputmode="tel" autocomplete="tel">
   <p class="meta" style="margin:4px 0 0">Give at least one of email or phone so the organizers can send your ticket.</p>
-  ${fee>0&&!full?`<p class="step" style="margin-top:18px"><i>2</i> Pay the ticket fee (optional now)</p>
-   ${svg?`<div class="amt">₹${fee}</div><div class="qr">${svg}</div><div class="row"><button class="alt" id="cp" type="button">Copy UPI ID</button></div><div class="det">Pay to: <b>${esc(r.payee||'')}</b><br>UPI ID: <b>${esc(upi)}</b></div>
-   <label for="utr">UTR / reference number (if you already paid)</label><input id="utr" maxlength="40" autocapitalize="characters" autocomplete="off"><p class="meta" style="margin:4px 0 0">You can leave this empty and pay later; the organizers will tell you how.</p>`
-   :`<p class="meta">The ticket fee is ₹${fee}. The organizers will tell you how to pay after they approve your registration.</p>`}`:''}
+  ${payHtml}
   ${full?'<p class="meta" style="margin-top:12px">All seats are taken. If a seat frees up the organizers will promote you from the waitlist and contact you.</p>':''}
   <div class="hp" aria-hidden="true"><label>Leave empty<input id="hp" tabindex="-1" autocomplete="off"></label></div>
-  <p class="err" id="er" role="alert"></p><button class="go" id="go">${full?'Join waitlist':'Send registration'}</button></div>`;
+  <p class="err" id="er" role="alert"></p><button class="go" id="go">${full?'Join waitlist':esc(btn)}</button></div>`;
  const cp=$('cp');if(cp)cp.onclick=()=>{try{navigator.clipboard.writeText(upi);cp.textContent='Copied'}catch(e){}};
+ const mode=()=>{const m=document.querySelector('input[name="pm"]:checked');return m?m.value:(upiOn?'upi':cashOn?'cash':'')};
+ document.querySelectorAll('input[name="pm"]').forEach(x=>x.onchange=()=>{const c=mode()==='cash';$('pu')&&$('pu').classList.toggle('hid',c);$('pc')&&$('pc').classList.toggle('hid',!c)});
  $('go').onclick=()=>{
   const er=$('er'),vals={};let missing='';
   if($('hp').value)return;
@@ -101,19 +133,25 @@ function show(r){
   if(missing)return er.textContent='Please fill in: '+missing+'.';
   const cid=norm(cidF?vals[cidF.id]:$('cid').value);
   if(cid.length<3||cid.length>24)return er.textContent='Enter your College ID (3 to 24 letters or digits).';
-  const n=String(nameF?vals[nameF.id]:$('nm').value).trim();
+  const first=fields[0],n=String((first&&vals[first.id])||'').trim();
   if(!n)return er.textContent='Please enter your name.';
   const em=$('em').value.trim(),ph=$('ph').value.trim();
   if(!em&&!ph)return er.textContent='Enter an email or a phone number.';
   if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return er.textContent='That email address does not look right.';
-  const ut=$('utr')?norm($('utr').value):'';
+  const pmv=fee>0&&!full?mode():'';
+  const ut=pmv==='upi'&&$('utr')?norm($('utr').value):'';
   if(ut&&ut.length<6)return er.textContent='The UTR must be at least 6 characters, or leave it empty.';
+  let cc='',cpd=false;
+  if(pmv==='cash'){cc=$('cc').value;if(!cc)return er.textContent='Choose who you will pay the cash to.';cpd=(document.querySelector('input[name="cp"]:checked')||{}).value==='1'}
   const x=JSON.stringify(vals);if(x.length>3000)return er.textContent='Some answers are too long.';
   const doc={n:n.slice(0,80),cid,x,s:full?'waitlist':'pending',at:Date.now()};
   if(em)doc.em=em;if(ph)doc.ph=ph;if(ut)doc.utr=ut;
+  if(pmv){doc.pm=pmv;if(pmv==='cash'){doc.cc=cc;doc.cp=cpd}}
   er.textContent='';$('go').disabled=true;
   firebase.firestore().collection('regpages').doc(code).collection('subs').doc(cid).set(doc)
-   .then(()=>{$('fc').innerHTML=`<div class="ok"><b>&#10003;</b><h1>${full?'You are on the waitlist':'Thank you, '+esc(n)}</h1><p class="meta">${full?'We will contact you if a seat opens up.':'The organizers will check your registration and send your ticket to the email or phone you gave.'}</p><p class="meta">Your reference: <b>${esc(cid)}</b></p></div>`})
+   .then(()=>{const ty=th.ty?`<p style="margin:10px 0 0;white-space:pre-wrap">${esc(th.ty)}</p>`:'';
+    const pay=pmv==='cash'?`<p class="meta">Cash: ${cpd?'you said you paid':'please pay'} <b>${esc((cashL.find(c=>c.id===cc)||{}).n||'')}</b>${cpd?'':' before the event'}.</p>`:'';
+    $('fc').innerHTML=`<div class="ok"><b>&#10003;</b><h1>${full?'You are on the waitlist':'Thank you, '+esc(n)}</h1><p class="meta">${full?'We will contact you if a seat opens up.':'The organizers will check your registration and send your ticket to the email or phone you gave.'}</p>${pay}${ty}<p class="meta">Your reference: <b>${esc(cid)}</b></p></div>`})
    .catch(x=>{$('go').disabled=false;er.textContent=x.code==='permission-denied'?'This College ID has already registered for this event, or registration has just closed. If it is a mistake, ask the organizers.':'Could not send. Please try again.'});
  };
 }
