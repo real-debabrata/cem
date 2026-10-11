@@ -485,3 +485,71 @@ Re-publish the 3.4.0 rules (they are in the repository history) and restore the 
 | "Scanner problem" on first scan | Google's scanner component is still downloading or the phone has no Google Play services. Connect to the internet and tap Scan next ticket, or use the typing box. |
 | Camera does not start on the website | The browser blocked the camera or the site is not on https. Allow camera access, or type the ticket code. |
 | Break-even says "Add a budget or some costs" | Add budget categories or bills in Expenses, or switch the cost basis to Spent + to pay. |
+
+
+## Upgrade to 3.6.0: spreadsheet import, custom registration link, cash or UPI, calculator
+
+3.6.0 needs **one change in Firebase** (republish the rules) and new files. There is nothing to convert, no new npm package, no change to the workflows, the Worker or the signing key. Free plans only. Allow about 10 minutes.
+
+**Read this first**
+- **Old apps keep working** with the new rules (they only add things), but they do not show the new features. The registration page works for everyone as soon as the website is redeployed.
+- **Order:** upload files, publish the rules, deploy the website. Do the rules before you test the link name or cash payments, because the new `regslugs` collection and the cash fields are refused by the 3.5.0 rules.
+
+### Files
+In the repo root replace: `firestore.rules`, `package.json`, `README.md`, `SETUP.md`.
+In `www/` replace: `index.html`, `event.js`, `signup.js`, `register.html`, `income.js`, `sync.js`, `ui.js`.
+In `www/` add (new): `sheet.js`, `import.js`, `payment.js`, `calc.js`, `404.html`.
+Not changed: `.github/` (nothing there changes), `scripts/`, `worker/`, `app2.js`, `expenses.js`, `chat.js`, `scan.js`, `login.html`, `pay.html`, `ticket.html`, `firebase-config.js`, `event.css`, `vendor/`.
+
+### Steps
+1. **Upload the files** above to GitHub and commit to `main`. Pushing starts **Build APK** by itself.
+2. **Publish the new rules.** Firebase console > Firestore Database > **Rules** > select everything > paste the new `firestore.rules` > **Publish**. Check there are no red error markers before you publish. If the editor shows an error, do not publish; paste the whole file again and tell whoever maintains the project what the marker says.
+3. **Deploy the website.** Actions > **Deploy web version** > Run workflow. Wait for the green tick, open the site, refresh once, and check account menu > About & updates shows **v3.6.0**. The deploy publishes the `www` folder, so `404.html` goes live with it. That file is what makes `https://your-site/r/<name>` work.
+4. **Install the new APK** over the old one if you use the app (Actions > Build APK). Optionally set `latest` to `3.6.0` in Firestore > `appconfig` > `version`. Do **not** raise `min`: 3.5.0 apps still work.
+5. **Run the test checklist below** on a test event.
+
+### Test checklist (15 minutes, test event, a second device or a private window)
+1. **Link name.** Attendees > Online registration > **Customize page and link**. Enter a link name, a headline, pick an accent colour and a background, **Save**. Open **Open online registration**. Open the short link (`https://your-site/r/<name>`) in a private window: it shows your headline, colours and button text. Also open the **Backup link**. Open `register.html?e=<event code>`: it still works.
+2. **Names are unique.** On a second event try the same link name: "already used by another event". Rename the first event's link: the old address stops working (page says it does not exist), the new one works.
+3. **Closing time.** Set a closing time a few minutes ahead. After it passes the page says registration is closed (this is checked by the rules too: a saved copy of the page cannot submit).
+4. **Cash collectors.** Set a ticket price and a UPI ID (Price and settings). In **Cash collectors** add one person from the team and one typed name. Open the public page in a private window: you can choose **UPI** or **Cash**; Cash shows a drop-down with both names and "I will pay later / I have already paid this person".
+5. **Cash application.** Apply with Cash, a collector and "already paid". In Applications to review you see "Cash: <name> (says already paid)" and **Approve and mark paid**. Approve it: the attendee shows **Paid** and the tag **Cash: <name>**. Apply with UPI and a UTR and approve it: tag **UPI**.
+6. **Rules check for cash.** Open the page's source or use the browser console to send a registration with a collector id that is not in the list (for example `cc: "zzzzz"`): the database must refuse it (the page then says the College ID has already registered or registration is closed). A normal cash application must work.
+7. **Register attendee in the app.** Open the form: there is a Payment block. Choose Cash without a collector: it asks for one. Choose Cash with a collector and tick **Payment received now**: the attendee is saved as paid.
+8. **Cash and UPI at a glance.** The card shows each collector with received and still-to-collect. **Show unpaid cash** filters the list. In an attendee's ... menu change the payment mode and collector.
+9. **Import.** Make a small test sheet (or press **Download blank template** and fill it in Excel or Google Sheets): five people, one with an empty name, one College ID twice, one already registered. Import as `.xlsx` and again as CSV. Check the summary lists the skipped rows with reasons, **Download skipped rows** works, and the imported people show **Imported**. Import the same file again: nothing is ready (no duplicates). Try an old `.xls`: it should tell you to save as `.xlsx` or CSV.
+10. **Calculator.** Open it from the header on the Attendees tab. `200 + 10 %` shows 220. In **Change**: price 150, quantity 3, tap +500: change 50. In **Cash count** enter some notes and use **Use cash received so far**: it shows matches, short or over.
+11. **Delete.** Delete the test event: in Firestore > Data its `regpages/{code}` page and the `regslugs/<name>` document are gone.
+12. **On a phone (APK).** Choose a spreadsheet from Drive or the phone's files with **Choose spreadsheet**. If the file chooser does not open on your phone model, tell the maintainer; the website works in the phone's browser meanwhile.
+
+### How it works
+- **Spreadsheet import** runs entirely on the device (`sheet.js`). An `.xlsx` or `.ods` file is a ZIP of XML files; the reader finds the ZIP directory, inflates only the sheets, shared strings and styles it needs with the browser's built-in `DecompressionStream`, and never runs formulas or macros. Attendees are written like hand-registered ones: one `regs.<id>` entry each, with `src: "import"`.
+- **Link names.** `regslugs/{name}` holds `{eid, by, at}`. The public page reads that one document (anyone may read one name, nobody may list them), then loads `regpages/{event code}`. The rules allow creating a name only to a staff member of the event it points to, and changing or deleting it only to staff of that event. The name is also stored in the page document (`slug`) so deleting the event can free it.
+- **Page settings** (headline, colours, closing time...) live in the event's payment settings (`pay.rp`) and are copied to the public page document (`th`, `until`) whenever they change. The closing time is the `until` field the rules already used.
+- **Cash and UPI.** Collectors are `pay.cashiers = [{id, n, u?}]`. The public page document carries their ids and names (`cash`, `cids`). An application may carry `pm` (`upi` or `cash`), `cc` (collector id, must be in `cids`) and `cp` (the applicant says they paid). The attendee keeps `pm`, `cc`, `cn` (collector name at that time), `paid`, `pt` and `utr`.
+
+### Free-plan budget (Spark: 50,000 reads, 20,000 writes, 20,000 deletes per day)
+- Opening the public page by link name is **one extra read** (the name document) on top of the page document.
+- Claiming or releasing a link name is 1 to 2 writes. Saving page settings is 1 write to the event and 1 to the public page.
+- An import of 300 attendees is **one** write to the event document (all new entries go in one update), plus the usual seats-taken update of the public page.
+- Cash fields add a few bytes to each application and attendee.
+
+### Rolling back
+Re-publish the 3.5.0 rules and restore the 3.5.0 files. Attendees keep their extra fields (`pm`, `cc`, `cn`), which 3.5.0 ignores. Link names stay in `regslugs` and can be deleted in the console; links with `/r/` stop working because the old `register.html` does not know them, but `register.html?e=<code>` works.
+
+### Troubleshooting
+| What you see | Cause and fix |
+| --- | --- |
+| "Could not claim that link name" | The 3.6.0 rules are not published yet (step 2), or you are not organizer, manager or treasurer of this event. |
+| "That link name is already used by another event" | Another event in your project holds it. Pick another name, or delete the document in Firebase console > Firestore > `regslugs` if it is left over from an event you no longer need. |
+| `/r/<name>` shows "Page not found" | `404.html` was not uploaded to `www/`, the website was not redeployed, or the name has a typo (letters, digits and hyphens only). Use the **Backup link** meanwhile. |
+| `/r/<name>` works on the website but is slow to open | It loads the short address first and then redirects, which is normal. The backup link opens directly. |
+| The public page shows the old colours or text | Settings are copied a moment after Save. Refresh the page. If it stays old, open the event once on an organizer device while online (it re-sends the page). |
+| Cash is not offered on the public page | There must be a ticket price, at least one cash collector, and the page must be re-synced (open the event once as organizer). With only a UPI ID and no collectors the page offers UPI only. |
+| Cash application fails with "already registered or closed" | The collector was removed from the list after the page was loaded, or the 3.6.0 rules are not published. Refresh the page and choose again. |
+| Import says "This file has only one row" | The first row is the heading. Add at least one attendee row, or untick "First row has column names" if the sheet has no headings. |
+| Import shows everyone as skipped, "Name is empty" | The name column was matched to the wrong column. Change the match for the first form question at the top of the list. |
+| Phone numbers lose a leading 0 or show as 9.8765E+09 | The sheet stored them as numbers. Format that column as Text in Excel or Sheets before saving, or ignore the leading 0 (WhatsApp links use the digits). |
+| "This is an old Excel (.xls) file" | Open it in Excel or Google Sheets and use Save as / Download as `.xlsx` or CSV. |
+| "This browser cannot open Excel files" | The browser is too old to unzip (needs Chrome / Edge 103+, Firefox 113+, Safari 16.4+). Update it or save the sheet as CSV. |
+| Calculator button missing | `calc.js` was not uploaded, or the old page is cached. Redeploy and refresh. |

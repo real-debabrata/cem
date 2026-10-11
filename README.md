@@ -1,9 +1,48 @@
-# Campus Events (CEM) 3.5.0
+# Campus Events (CEM) 3.6.0
 
 Plan campus events with your team: registrations, tasks, roles, UPI payment links, a chat inside every event, a budget with bills and vendors, public self-registration, QR tickets with scan-to-check-in, and an income and sponsor tracker.
 Runs as an Android app (APK built by GitHub, no installs) and as a website. Everything fits in the free plans of GitHub and Firebase (Spark).
 
-## What's new in 3.5.0: safer data, self-registration, QR tickets, sponsors
+## What's new in 3.6.0: spreadsheet import, custom registration link, cash or UPI, calculator
+Everything stays free (no new service, no new npm package, no Cloud Functions). **This release adds two collections to `firestore.rules`, so republish the rules** (SETUP.md > Upgrade to 3.6.0, about 10 minutes, nothing to convert).
+
+### 1. Import pre-registered attendees from CSV, Excel or a spreadsheet (`sheet.js`, `import.js`)
+Attendees tab > **Import pre-registered attendees** (organizer, manager, treasurer, team lead).
+- **Formats:** CSV, TSV, Excel `.xlsx` / `.xlsm`, OpenDocument `.ods`. CSV can use commas, semicolons, tabs or pipes, UTF-8, UTF-16 or Windows-1252 (what Excel writes in India and Europe), and Excel's `sep=;` line. The old binary `.xls` is **not** supported (the app says so and asks for Save as `.xlsx` or CSV); neither are password-protected files.
+- **Private and library-free.** The file is read on the phone or computer, never uploaded, and the reader is about 220 lines in `www/sheet.js` (no SheetJS or other package to download or patch). Only stored values are read: formulas and macros are never run. Limits: 8 MB, 5,000 rows, 60 columns.
+- **Column matching.** The app matches your columns to the registration form by name (it knows "Roll No", "Mobile", "Dept", "E-mail ID", and similar), you can change every match, and it shows a sample value next to each. Extra columns it understands: **Email, Phone, Paid, Payment mode, Cash collected by, UTR**. "Download blank template" gives a CSV with the right headings.
+- **Checks before anything is written:** name and every required question filled in; no College ID (or, when there is none, no email or phone) twice, neither against attendees already registered nor inside the file; seats never exceeded. The result is shown first ("38 ready, 7 skipped: Already registered (3), Name is empty (2)...") and **Download skipped rows** gives a CSV with the reason in the first columns, so you can fix the sheet and import again. Numbers keep their digits (phone numbers, roll numbers), dates become `YYYY-MM-DD`, and the leading `'` that our own CSV export adds to cells starting with `+ = - @` is removed again.
+- Imported people are tagged **Imported**, get a QR ticket like everyone else, and show as "Imported from file" in the attendee CSV.
+
+### 2. Fully customisable registration link and page (`signup.js`, `register.html`, `404.html`)
+Attendees tab > Online registration > **Customize page and link** (available even before you open registration).
+- **Link name:** `techfest-2026` gives `https://your-site/r/techfest-2026`. Names are first come, first served across your whole Firebase project, are claimed in a new public collection `regslugs`, and cannot be taken over by another event (enforced by the rules; renaming frees the old name, deleting the event frees it too). `www/404.html` turns `/r/<name>` into `register.html?r=<name>` (GitHub Pages serves it for unknown addresses; it also works under `https://you.github.io/repo/r/<name>`). The **backup link** `register.html?r=<name>` always works, and the old `register.html?e=CODE` links keep working.
+- **Page look:** headline, welcome text, button text, thank-you message, accent colour, six background themes (Indigo night, Sunset, Ocean, Forest, Graphite, Light), optional banner image link (https only), show or hide seats left.
+- **Closing time:** pick the date and time registration closes (default is the end of the event day). It is enforced by the database rules, not just the page.
+- **Preview page** opens the live page in a new tab. Share and QR image use the short link.
+
+### 3. Cash or UPI in the registration form, and who collects the cash (`payment.js`)
+- **Cash collectors** (Attendees tab, organizer / manager / treasurer): pick people from the event team, or type a name for someone outside the app (for example a faculty coordinator). Up to 20.
+- **Public page:** when the ticket has a price, the applicant chooses **UPI** (QR, optional UTR, as before) or **Cash**. For cash they pick the collector from a drop-down and say **"I will pay later"** or **"I have already paid this person"**. If only one method is available the choice is not shown. The rules check that the collector is one of the published ones.
+- **Register attendee (inside the app):** a Payment block with Not paid yet / Cash / UPI, the collector drop-down (required when collectors exist), a UTR box, and "Payment received now" for people who may mark paid.
+- **Applications to review** show "Cash: Meera (pays later)" or "UPI"; **Approve and mark paid** appears when the person says they already paid cash or gave a UTR. Nothing is marked paid on the applicant's word alone: you tick it after checking with the collector or your UPI app.
+- **Attendees:** a tag shows the mode and collector; the ... menu changes the mode and collector later; a new **Cash due** filter lists unpaid cash.
+- **Cash and UPI at a glance:** for each collector, how many attendees chose them, what is received and what is still to collect. The Income tab and the CSV exports (attendees and payments) now include payment mode and collector.
+- **Who can tick "Paid":** organizer, manager, treasurer and team lead (the existing rule). A collector with the plain Member role cannot; give the people who collect cash the **Treasurer** role if they should tick it themselves.
+
+### 4. Calculator for the event desk (`calc.js`)
+The calculator button next to the event name (every tab). Four tools: **Calculator** (+ - x / % and brackets, tape of results, keyboard works; `200 + 10%` = 220 like a shop calculator; its own small parser, never `eval`), **Change** (price x quantity, tap the notes received, change to give back), **Cash count** (notes and coins in the box, total, and difference against the cash the system says was received, for all collectors or one) and **Split** (share a bill, rounded up to the rupee). Values stay on the device so a count is not lost if you are interrupted; nothing is sent anywhere.
+
+### Known limits of 3.6.0 (please read)
+- **The new rules could not be run against the Firebase emulator when this release was prepared.** The app logic was tested against a mock database (import, link names, applications, the public page, the calculator) and the rules were checked by reading, not by running. Run the test checklist in SETUP.md > Upgrade to 3.6.0 on a test event first.
+- A custom link name changes the **address**, not what the page contains: the public page document still holds the event code (as in 3.5.0), and anyone with the link can see it.
+- A first-come link name can be claimed by any organizer, manager or treasurer of any event in your project. Names cannot be reserved for a future event.
+- The banner image is loaded from the address you give, so that site sees visitors' IP addresses. Leave it empty if that matters.
+- Cash "already paid" is the applicant's claim. The collector cannot confirm inside the app unless they can tick Paid (see above).
+- Spreadsheet import: no `.xls` (old Excel) and no password-protected files. Import adds attendees; it never changes or deletes existing ones. More than about 800 attendees per event: see the 3.5.0 note below (Firestore indexes up to 40,000 entries per document; 1,500 is the hard stop in the rules).
+- Not tested on a real phone: the file picker inside the APK (it uses the system file chooser; the website path was tested).
+
+## What was new in 3.5.0: safer data, self-registration, QR tickets, sponsors
 Everything stays on the free plans (GitHub, Firebase Spark, no Cloud Functions, no card). **This upgrade needs new `firestore.rules` and converts old events once, so read SETUP.md > Upgrade to 3.5.0 before you start** (about 20 minutes).
 
 ### 1. Permissions fixed (`firestore.rules`)
@@ -124,7 +163,7 @@ The tab bar scrolls sideways on a phone and shows small counters: attendees, ope
 
 ## Build the APK
 ### Option A: no installs, GitHub builds it for you
-1. Create a new GitHub repository and upload everything in this folder (keep the .github and scripts folders).
+1. Create a new GitHub repository and upload everything in this folder (keep the .github and scripts folders; the 3.6.0 files are all under www/ and need no workflow change).
 2. **One time only:** create the permanent signing key (see "APK updates and signing" below). Without it the build stops with a clear error.
 3. Open the Actions tab, pick "Build APK", click Run workflow (it also runs on every push to main).
 4. When it finishes (about 5 minutes), download "campus-events-apk" from the run page and unzip it.
@@ -186,11 +225,16 @@ Follow **SETUP.md** (Firebase project, rules, GitHub Pages, and the upgrade step
 | --- | --- |
 | www/index.html | Main app shell: dashboard, event list, event form, registration actions |
 | www/event.js | The event page: header, tab bar, Details, Attendees and the Team maker (3.4.0); Income tab, Scan and Ticket buttons (3.5.0) |
-| www/signup.js | Online registration, organizer side: open/close, link and QR, review applications, approve, waitlist (new in 3.5.0) |
-| www/register.html | The public self-registration page (new in 3.5.0) |
+| www/signup.js | Online registration, organizer side: open/close, link and QR, review applications, approve, waitlist (new in 3.5.0). 3.6.0: custom link name, page customisation, cash/UPI on applications |
+| www/register.html | The public self-registration page (new in 3.5.0). 3.6.0: link names, themes, UPI or cash with collector drop-down |
 | www/scan.js | QR tickets, ticket window and the ticket scanner (new in 3.5.0) |
 | www/ticket.html | A person's QR ticket page, opened from a link (new in 3.5.0) |
 | www/income.js | Income tab, sponsors, break-even, CSV and ZIP export (new in 3.5.0) |
+| www/sheet.js | Reads CSV, TSV, XLSX and ODS files in the browser, no library (new in 3.6.0) |
+| www/import.js | Import pre-registered attendees: column matching, checks, skipped-rows CSV (new in 3.6.0) |
+| www/payment.js | Cash or UPI, cash collectors, "Cash and UPI at a glance", payment block of the Register form (new in 3.6.0) |
+| www/calc.js | Calculator, change, cash count and split for the event desk (new in 3.6.0) |
+| www/404.html | Turns short registration links `/r/<name>` into `register.html?r=<name>` (new in 3.6.0) |
 | www/vendor/jsQR.js | QR decoder for browsers without BarcodeDetector. Apache-2.0, see vendor/jsQR.LICENSE.txt (new in 3.5.0) |
 | www/event.css | Styles for the event page: tabs, lists, status pills, budget cards (new in 3.4.0) |
 | www/sync.js | Firebase sign-in, live sync, alerts. 3.5.0: staff-only money document, one entry per attendee, one-time conversion of old events |
@@ -211,7 +255,7 @@ Follow **SETUP.md** (Firebase project, rules, GitHub Pages, and the upgrade step
 | scripts/patch-scanner.sh | Adds the camera permission and the scanner meta-data to the generated Android manifest (new in 3.5.0) |
 | scripts/patch-android.sh | Writes the signing key path and an ever-increasing versionCode into the generated Android project |
 | signing/debug.keystore.gpg | Your encrypted permanent key. Never delete it |
-| firestore.rules | Security rules (3.5.0: field limits per role, staff-only money document, public registration pages; 3.3.0: only confirmed emails). Paste into Firebase console > Firestore > Rules |
+| firestore.rules | Security rules (3.6.0: link names in `regslugs`, cash fields on applications; 3.5.0: field limits per role, staff-only money document, public registration pages; 3.3.0: only confirmed emails). Paste into Firebase console > Firestore > Rules |
 
 ## Notes
 - **Google sign-in and the confirmed-email rule (3.3.0).** `firestore.rules` has one switch, `requireVerifiedEmail()`, set to `true`. Leave it on. Turning it off while Firebase's public sign-up is on lets bots create accounts that can use your free Firestore quota.

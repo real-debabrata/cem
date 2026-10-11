@@ -269,7 +269,7 @@ service cloud.firestore {
       match /subs/{sid} {
         // The document id is the normalised College ID, so one College ID can apply only once per event (a second create becomes an
         // update, which the public cannot do). The answers travel as one JSON string 'x' (max 3000 characters) so a spammer cannot send huge documents.
-        allow create: if request.resource.data.keys().hasOnly(['n','cid','x','em','ph','s','at','utr'])
+        allow create: if request.resource.data.keys().hasOnly(['n','cid','x','em','ph','s','at','utr','pm','cc','cp'])
           && request.resource.data.n is string
           && request.resource.data.n.size() > 0 && request.resource.data.n.size() <= 80
           && request.resource.data.cid is string
@@ -281,6 +281,14 @@ service cloud.firestore {
           && (!('utr' in request.resource.data) || (request.resource.data.utr is string && request.resource.data.utr.matches('[A-Z0-9]{6,40}')))
           && request.resource.data.s in ['pending','waitlist']
           && request.resource.data.at is number
+          // v3.6.0: how the applicant will pay. pm is 'upi' or 'cash'. For cash, cc must be the id of one of the cash collectors the organizer
+          // published on the page (cids) and cp says whether they claim to have paid already. Neither can be sent without pm.
+          && (!('pm' in request.resource.data) || request.resource.data.pm in ['upi','cash'])
+          && (!('cc' in request.resource.data)
+              || (request.resource.data.get('pm', '') == 'cash'
+                  && request.resource.data.cc is string
+                  && request.resource.data.cc in get(/databases/$(database)/documents/regpages/$(eid)).data.get('cids', [])))
+          && (!('cp' in request.resource.data) || (request.resource.data.get('pm', '') == 'cash' && request.resource.data.cp is bool))
           && exists(/databases/$(database)/documents/regpages/$(eid))
           && liveReg(get(/databases/$(database)/documents/regpages/$(eid)).data);
         allow get, list: if signedIn() && isStaff(eid);
@@ -289,6 +297,25 @@ service cloud.firestore {
           && request.resource.data.s in ['pending','waitlist','approved','rejected'];
         allow delete: if signedIn() && isStaff(eid);
       }
+    }
+
+    // v3.6.0: custom registration link names. regslugs/{name} -> { eid, by, at }. Anyone can read one name (that is how register.html finds the event),
+    // nobody can list them. A name can be created only by a staff member of the event it points to; a name that exists can only be kept or deleted by staff
+    // of the event it points to, so another event cannot take it over.
+    match /regslugs/{slug} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if signedIn()
+        && slug.matches('[a-z0-9][a-z0-9-]{1,38}[a-z0-9]')
+        && request.resource.data.keys().hasOnly(['eid','by','at'])
+        && request.resource.data.eid is string
+        && request.resource.data.by == request.auth.uid
+        && request.resource.data.at is number
+        && isStaff(request.resource.data.eid);
+      allow update: if signedIn()
+        && isStaff(resource.data.eid)
+        && request.resource.data.eid == resource.data.eid;
+      allow delete: if signedIn() && isStaff(resource.data.eid);
     }
 
     // App version control: everyone can read, nobody can write from the app. Edit this doc in the Firebase console.
