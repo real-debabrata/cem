@@ -65,7 +65,7 @@ function showTicket(eid,rid){
    <button class="btn ghost sm" data-tka="png">Save QR image</button>
    ${url&&wa?`<a class="btn ghost sm" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}">WhatsApp</a>`:''}
    ${url&&r.em?`<a class="btn ghost sm" style="text-decoration:none" href="mailto:${esc(r.em)}?subject=${encodeURIComponent('Your ticket: '+e.name)}&body=${encodeURIComponent(msg)}">Email</a>`:''}</div>
-  ${url?'':'<p class="meta" style="margin:10px 0 0">Set your public site address (Payments tab, Link settings) to get a shareable ticket link.</p>'}</div>`;
+  ${url?'':'<p class="meta" style="margin:10px 0 0">Set your public site address (Income tab, Link settings) to get a shareable ticket link.</p>'}</div>`;
  m._u=url;m._m=msg;m._n=r.name;
 }
 const closeTk=()=>{const m=$('tk');if(m)m.remove()};

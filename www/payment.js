@@ -1,13 +1,12 @@
-/* CEM 3.6.0: Cash or UPI for every attendee, and the people who collect the cash.
-   - Cash collectors: owner, manager and treasurer pick who may receive cash (Attendees > Cash collectors). Pick people from the event team,
-     or type a name for someone outside the app (for example a faculty coordinator). Stored in the event's payment settings: pay.cashiers = [{id, n, u?}].
-   - Public registration page (register.html): when the ticket has a price, the applicant chooses UPI or Cash. For cash they pick the collector
-     from a drop-down (the collectors above) and say whether they have already paid or will pay later. UPI works as before (QR + optional UTR).
+/* Cash or UPI for every attendee, and the people who collect the cash.
+   - Cash collectors (Attendees > Registration, organizer / manager / treasurer): pick people from the event team, or type a name for someone outside the app
+     (for example a faculty coordinator). Stored in the event's payment settings: pay.cashiers = [{id, n, u?}].
+   - Public registration page (register.html): when the ticket has a price, the applicant chooses UPI or Cash. For cash they pick the collector from a drop-down
+     and say whether they have already paid or will pay later. UPI works as before (QR + optional UTR).
    - Register attendee (inside the app): a "Payment" block with the same choices.
    - Each attendee stores  pm = 'cash' | 'upi',  cc = collector id,  cn = collector name,  paid, pt (paid time), utr.
-     A cash payment is only marked paid by someone who can mark paid (organizer, manager, treasurer, team lead): the person who collected tells them, or they
-     tick it after counting. Tip: give the collectors the Treasurer role if they should tick "paid" themselves.
-   - "Cash and UPI at a glance" shows, for each collector, how many attendees chose them, what has been received and what is still to collect. */
+     A cash payment is only marked paid by someone who can mark paid (organizer, manager, treasurer, team lead, or a role with Attendees and check-in).
+   - "Cash and UPI at a glance" (Income tab) shows, for each collector, how many attendees chose them, what has been received and what is still to collect. */
 (function(){
 const R=n=>window.inr?inr(n):'₹'+n;
 const feeOf=e=>Math.max(0,+(e.pay||{}).fee||0);
@@ -29,7 +28,7 @@ window.cashSetupV=function(e){
    <div class="act"><button class="btn ghost sm del" data-cs="rm" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.n)} from cash collectors">Remove</button></div></div>`;
  };
  return `<div class="card"><div class="sh"><h3>Cash collectors</h3><span class="meta">${cs.length} selected</span></div>
-  ${fee>0?'':'<p class="meta" style="margin:0 0 10px">Set a ticket price first (Price and settings, or the Income tab).</p>'}
+  ${fee>0?'':'<p class="meta" style="margin:0 0 10px">Set a ticket price first (Price and settings, above).</p>'}
   ${cs.map(row).join('')}
   <form id="csf" class="row" style="margin-top:10px"><select name="u" aria-label="Add a collector from the event team" style="flex:1;min-width:170px"><option value="">Add from the event team</option>${avail.map(p=>`<option value="${esc(p.id)}">${esc(p.n)} (${esc((window.LBL||{})[p.r]||p.r||'')})</option>`).join('')}</select><button class="btn sm" type="submit">Add</button></form>
   <form id="csn" class="row" style="margin-top:8px"><input name="n" maxlength="40" placeholder="Or type a name, e.g. Faculty coordinator" aria-label="Collector name" style="flex:1;min-width:170px"><button class="btn ghost sm" type="submit">Add name</button></form></div>`;
@@ -37,7 +36,7 @@ window.cashSetupV=function(e){
 
 /* ---------- Cash and UPI at a glance ---------- */
 window.cashSummaryV=function(e){
- const fee=feeOf(e);if(!fee||!window.can||!can(e,'regs'))return '';
+ const fee=feeOf(e);if(!fee||!window.can||!(can(e,'exp')||can(e,'regs')))return '';
  const rs=regsOf(e.id),cs=list(e),cash=rs.filter(r=>r.pm==='cash'),upi=rs.filter(r=>r.pm==='upi');
  if(!cash.length&&!upi.length&&!cs.length)return '';
  const by={};cs.forEach(c=>by[c.id]={n:c.n,due:0,got:0});

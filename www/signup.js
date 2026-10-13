@@ -1,23 +1,9 @@
-/* CEM 3.6.0 additions (this file):
-   - Custom link: a link name such as  techfest-2026  gives  https://your-site/r/techfest-2026  (404.html turns it into register.html?r=techfest-2026).
-     The name is claimed in the public collection regslugs/{name} -> {eid}; the rules let only a staff member of that event create, keep or delete it, so no one can take
-     a name that is already used. The old code link (register.html?e=CODE) keeps working.
-   - Customize page: headline, intro, button text, thank-you message, accent colour, background, optional banner image link, show/hide seats left, and a closing time.
-     Stored in the event's payment settings (pay.rp) and copied to the public page document (th, slug, until). Available before registration is opened.
-   - Cash or UPI: the applicant's choice, and for cash the collector picked from the drop-down (payment.js), is shown on each application and carried into the attendee.
-   CEM 3.5.0: public self-registration, organizer side (the public page is register.html).
-   Same idea as payment links (pay.html): a public form  ->  "pending"  ->  an organizer approves it.
-   - The organizer switches online registration on in Attendees. That writes a small public document regpages/{event code} with the
-     event name, date, seats taken, the form questions and (optionally) the ticket price and UPI details.
-   - A person opens register.html?e=CODE, fills the form and sends it. It lands in regpages/{code}/subs/{COLLEGE ID} as "pending".
-     The document id is the College ID, so the same College ID cannot apply twice (enforced by firestore.rules).
-   - If the seats shown on the page are all taken the application is stored as "waitlist" instead.
-   - Owner, manager and treasurer see the applications here and tap Approve. Approving re-checks the seats and the College ID against the
-     attendees already registered, then adds the person to the attendee list (a QR ticket is created for them). Reject keeps them out.
-   - A waitlisted person is promoted with Approve (or "Promote next") once a seat is free.
-   - Fee: if a ticket price is set, the public page shows the UPI QR (optional payment). A UTR typed by the applicant is shown here; "Approve and mark paid"
-     records the fee as paid after you have checked your UPI app.
-   Free-plan cost: one read per application per organizer device, one write per application, a handful of writes when seats change. */
+/* Online registration, organizer side (the public page is register.html). Shown in Attendees > Registration, together with the cash collectors.
+   - Open online registration writes a small public document regpages/{event code}: event name, date, seats taken, the form questions and, if set, the ticket price and UPI details.
+   - A person opens the link, fills the form and sends it. It lands in regpages/{code}/subs/{COLLEGE ID} as "pending", so the same College ID cannot apply twice (enforced by firestore.rules).
+   - When the seats are full the application is stored as "waitlist". Approve (or Promote) re-checks the seats and the College ID, then adds the person as an attendee with a QR ticket.
+   - Customize page and link: link name (regslugs/{name}), headline, welcome text, colours, banner, closing time. Price and settings: ticket price, UPI ID, payee, waitlist, message.
+   - Cash or UPI: the applicant's choice, and the cash collector they picked (payment.js), is shown on each application and carried into the attendee. */
 (function(){
 const RSUBS=window.RSUBS=window.RSUBS||{},rsUn={},RPSENT={};
 const fb=()=>!!(window.firebase&&firebase.apps&&firebase.apps.length&&window.MYUID);
@@ -82,13 +68,20 @@ window.regDrop=()=>{Object.keys(rsUn).forEach(i=>{rsUn[i]();delete rsUn[i];delet
 /* ---------- the panel at the top of Attendees ---------- */
 window.signupV=function(e){
  if(!window.can||!can(e,'pay'))return '';
- const p=e.pay||{},on=!!p.reg,url=link(e);
- if(!e.cloud)return `<div class="card"><h3 style="margin-bottom:6px">Online registration</h3><p class="meta" style="margin:0">Share the event first (Details tab) to open online registration.</p></div>`;
+ const p=e.pay||{},on=!!p.reg,url=link(e),fee=Math.max(0,+p.fee||0);
+ const cfg=V.sgs?`<form id="sgf" class="fp"><div class="rg"><div><label>Ticket price in ₹ (0 = free)</label><input name="fee" type="number" min="0" step="1" inputmode="numeric" value="${fee||0}"></div>
+   <div><label>UPI ID for the fee (optional)</label><input name="u" value="${esc(p.upi||'')}" placeholder="name@bank"></div>
+   <div><label>Payee name</label><input name="p" maxlength="60" value="${esc(p.payee||'')}"></div>
+   <div><label>When seats are full</label><label style="margin:0;font-weight:400"><input type="checkbox" name="wl" ${p.wl===0?'':'checked'}> Offer a waitlist</label></div>
+   <div class="rw"><label>Message shown on the page (optional)</label><input name="m" maxlength="300" value="${esc(p.regmsg||'')}" placeholder="Bring your college ID card to the venue"></div></div>
+   <div class="acts"><button class="btn" type="submit">Save</button><button type="button" class="btn ghost" data-sg="cfg">Cancel</button></div></form>`:'';
+ const cfgBtn=`<button class="btn ghost sm" data-sg="cfg">${V.sgs?'Close settings':'Price and settings'}</button>`;
+ if(!e.cloud)return `<div class="card"><div class="sh"><h3>Online registration</h3>${cfgBtn}</div><p class="meta" style="margin:0">Share the event first (Details tab) to open online registration.</p>${cfg}</div>`;
  const sl=slugOf(e),pl=plainLink(e);
- if(!on)return `<div class="card"><div class="sh"><h3>Online registration</h3><div class="row"><button class="btn ghost sm" data-sg="cust" aria-expanded="${!!V.sgc}">${V.sgc?'Close':'Customize page and link'}</button><button class="btn sm" data-sg="on">Open online registration</button></div></div>
-  ${sl&&url?`<p class="meta" style="margin:8px 0 0;overflow-wrap:anywhere">Your link: <b>${esc(url)}</b></p>`:''}${custV(e)}</div>`;
+ if(!on)return `<div class="card"><div class="sh"><h3>Online registration</h3><div class="row"><button class="btn ghost sm" data-sg="cust" aria-expanded="${!!V.sgc}">${V.sgc?'Close':'Customize page and link'}</button>${cfgBtn}<button class="btn sm" data-sg="on">Open online registration</button></div></div>
+  ${sl&&url?`<p class="meta" style="margin:8px 0 0;overflow-wrap:anywhere">Your link: <b>${esc(url)}</b></p>`:''}${custV(e)}${cfg}</div>`;
  const subs=subsOf(e),pend=subs.filter(x=>x.s==='pending'),wl=subs.filter(x=>x.s==='waitlist'),done=subs.filter(x=>x.s==='approved'||x.s==='rejected');
- const taken=regsOf(e.id).length,left=Math.max(0,e.cap-taken),fee=Math.max(0,+p.fee||0),regs=regsOf(e.id);
+ const taken=regsOf(e.id).length,left=Math.max(0,e.cap-taken),regs=regsOf(e.id);
  const row=x=>{
   const ex=regs.find(r=>regCid(e,r)===x.cid),dupU=x.utr&&subs.some(y=>y.id!==x.id&&y.utr===x.utr);
   const handled=x.s==='approved'||x.s==='rejected',mine=regs.find(r=>r.id===x.ri);
@@ -100,16 +93,10 @@ window.signupV=function(e){
    :`<button class="btn sm" data-sg="ap" data-id="${esc(x.id)}" ${noSeat?'disabled title="All seats are taken"':''}>${x.s==='waitlist'?'Promote':'Approve'}</button>${fee>0&&(x.utr||(x.pm==='cash'&&x.cp))?`<button class="btn ghost sm" data-sg="apd" data-id="${esc(x.id)}" ${noSeat?'disabled':''}>Approve and mark paid</button>`:''}<button class="btn ghost sm del" data-sg="rj" data-id="${esc(x.id)}">Reject</button>`;
   return `<div class="li"><div class="main"><div class="ttl">${esc(x.n)}</div><div class="sub">${tags}${info}</div></div><div class="act">${acts}</div></div>`;
  };
- const cfg=V.sgs?`<form id="sgf" class="fp"><div class="rg"><div><label>Ticket price in ₹ (0 = free)</label><input name="fee" type="number" min="0" step="1" inputmode="numeric" value="${fee||0}"></div>
-   <div><label>UPI ID for the fee (optional)</label><input name="u" value="${esc(p.upi||'')}" placeholder="name@bank"></div>
-   <div><label>Payee name</label><input name="p" maxlength="60" value="${esc(p.payee||'')}"></div>
-   <div><label>When seats are full</label><label style="margin:0;font-weight:400"><input type="checkbox" name="wl" ${p.wl===0?'':'checked'}> Offer a waitlist</label></div>
-   <div class="rw"><label>Message shown on the page (optional)</label><input name="m" maxlength="300" value="${esc(p.regmsg||'')}" placeholder="Bring your college ID card to the venue"></div></div>
-   <div class="acts"><button class="btn" type="submit">Save</button><button type="button" class="btn ghost" data-sg="cfg">Cancel</button></div></form>`:'';
  const handledBox=done.length?`<div style="margin-top:10px"><button class="link" data-sg="hid" aria-expanded="${!!V.sgh}">${V.sgh?'Hide':'Show'} handled (${done.length})</button></div>${V.sgh?done.map(row).join(''):''}`:'';
- return `<div class="card"><div class="sh"><h3>Online registration <span class="pill ok">Open</span></h3><div class="row"><button class="btn ghost sm" data-sg="cust" aria-expanded="${!!V.sgc}">${V.sgc?'Close':'Customize page and link'}</button><button class="btn ghost sm" data-sg="cfg">${V.sgs?'Close settings':'Price and settings'}</button><button class="btn ghost sm del" data-sg="off">Close registration</button></div></div>
+ return `<div class="card"><div class="sh"><h3>Online registration <span class="pill ok">Open</span></h3><div class="row"><button class="btn ghost sm" data-sg="cust" aria-expanded="${!!V.sgc}">${V.sgc?'Close':'Customize page and link'}</button>${cfgBtn}<button class="btn ghost sm del" data-sg="off">Close registration</button></div></div>
   ${url?`<input readonly value="${esc(url)}" onclick="this.select()" aria-label="Registration link"><div class="row" style="margin-top:8px"><button class="btn sm" data-sg="cp">Copy link</button><button class="btn ghost sm" data-sg="sh">Share</button><button class="btn ghost sm" data-sg="qr">Save QR image</button><button class="btn ghost sm" data-sg="pv">Preview page</button></div>${pl?`<p class="meta" style="margin:8px 0 0;overflow-wrap:anywhere">Backup link that always works: ${esc(pl)} <button class="link" data-sg="cpp">Copy</button></p>`:''}<div id="sgqr" style="margin-top:8px">${qrSvg(url)}</div>`
-   :'<div class="note" style="margin:0 0 8px">Set your public site address first (Payments tab, Link settings), then the registration link appears here.</div>'}
+   :(window.siteFormV?siteFormV():'')}
   ${custV(e)}${cfg}
   <p class="meta" style="margin:10px 0 0">${taken} of ${e.cap} seats taken${left?`, ${left} left`:', full'}${fee?`, ticket ₹${fee}`:', free'}. ${pend.length} waiting for approval${wl.length?`, ${wl.length} on the waitlist`:''}.</p></div>
   <div class="card"><div class="sh"><h3>Applications to review (${pend.length})</h3></div>${pend.length?pend.map(row).join(''):'<p class="meta" style="margin:0">Nothing waiting.</p>'}</div>

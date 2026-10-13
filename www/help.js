@@ -33,7 +33,7 @@ function rolesHtml(){
  `<h4>What each permission allows</h4>`+CAT.map(g=>`<p class="hgm" style="margin:8px 0 2px"><b>${esc(g[0])}</b></p>`+L(g[1].map(k=>`<b>${esc(k[1])}</b>: ${esc(k[2])}`))).join('')+
  `<h4>What cannot be handed out</h4>`+L([
   'Changing roles and making custom roles, deleting the event, and the event\'s ntfy topic stay with the Organizer (and, for roles, Managers).',
-  'These limits are enforced by the database rules (<code>firestore.rules</code>), not only by hiding buttons. Publish the 3.6.1 rules or the new roles will not work.'])+cust;
+  'These limits are enforced by the database rules (<code>firestore.rules</code>), not only by hiding buttons. Publish the latest rules from the repository or the newer roles will not work.'])+cust;
 }
 
 /* ---------- the sections ---------- */
@@ -53,10 +53,9 @@ const SECS=()=>[
  L(['<b>Register attendee</b> opens a short form and is ready for the next person after each save. A College ID that is already registered is refused, and so is a full event.',
   '<b>Search and filters:</b> All, Not checked in, Checked in, and (when there is a fee) Unpaid and Cash due. <b>Check in</b> is one tap; <b>Undo</b> reverses it.',
   'The <b>&hellip;</b> menu on an attendee: <b>Ticket (QR)</b>, Mark paid, change the payment mode and collector, and Remove registration (needs the Edit event permission).',
-  '<b>Ticket (QR):</b> share the ticket link, copy it, save the QR image, or send it by WhatsApp or email. A shareable link needs your public site address (Payments &gt; Link settings).',
+  '<b>Ticket (QR):</b> share the ticket link, copy it, save the QR image, or send it by WhatsApp or email. A shareable link needs your public site address (Income &gt; Link settings).',
   '<b>Scan tickets:</b> in the Android app it uses Google\'s scanner screen; on the website it uses the camera, or you can type a ticket code or College ID. A ticket already used shows when and by whom, and an unpaid fee shows a one-tap <b>Mark as paid</b>. Open the event once with internet before the gate opens: scanning then works offline and check-ins are sent when the connection returns.',
-  '<b>Teams:</b> switch between Attendees and Teams at the top. Create teams by name, or split unassigned attendees into teams of a size you choose.',
-  '<b>Who can do what:</b> roles with Attendees and check-in (Organizer, Manager, Treasurer, Team lead, Coordinator, Registration desk) check in, scan, mark paid, import and make teams. Team member basics can add attendees but not check them in.'])+
+    '<b>Who can do what:</b> roles with Attendees and check-in (Organizer, Manager, Treasurer, Team lead, Coordinator, Registration desk) check in, scan, mark paid, import and make teams (teams are in the People tab). Team member basics can add attendees but not check them in.'])+
  `<h4>Import pre-registered attendees</h4>`+L([
   'Attendees tab &gt; <b>Import pre-registered attendees</b>. Choose a CSV, TSV, Excel (<code>.xlsx</code>, <code>.xlsm</code>) or OpenDocument (<code>.ods</code>) file. Old <code>.xls</code> files: open them in Excel and Save as .xlsx first. Password-protected files are not supported.',
   'The file is read on your device and never uploaded. The first row should hold the column names (you can switch this off). Limits: 8 MB, 5,000 rows, 60 columns.',
@@ -65,19 +64,19 @@ const SECS=()=>[
   'Imported people show an <b>Imported</b> tag and get a QR ticket like everyone else. Importing only adds attendees; it never changes or deletes existing ones.',
   'More than about 800 attendees in one event: see the README note on document size (1,500 is the hard limit).'])],
 ['online','Online registration',
- L(['Attendees tab &gt; <b>Online registration</b> &gt; <b>Open online registration</b>. Needs a shared event and your public site address (Payments &gt; Link settings). Needs the Payments and online registration permission (Organizer, Manager, Treasurer).',
+ L(['Attendees tab &gt; <b>Registration</b> (the second button at the top) &gt; <b>Open online registration</b>. Needs a shared event and your public site address (you can type it right there, or under Income &gt; Link settings). Needs the Payments and online registration permission (Organizer, Manager, Treasurer).',
   'Share the link or QR image, <b>Copy link</b>, <b>Share</b>, <b>Save QR image</b>, or <b>Preview page</b>. The <b>Backup link</b> always works. People need no account.',
   'The page shows your registration form questions (change them with Edit event) and, if you wish, the seats left. The page closes at the end of the event day unless you set a closing time. This is checked by the database as well as the page.',
   '<b>Customize page and link</b> (works even before you open registration): link name (3 to 40 letters, digits or hyphens, for example <code>techfest-2026</code> gives <code>your-site/r/techfest-2026</code>), headline, welcome text, accent colour, six background themes, button text, thank-you message, an optional banner image (https only; that site sees visitors\' IP addresses) and a closing time. A link name can be used by one event only, first come first served in your whole project. Renaming frees the old name. Changes go live a moment after you save.',
-  '<b>Price and settings:</b> ticket price (0 is free), UPI ID and payee name for the fee, waitlist on or off, and a message on the page.',
+  '<b>Price and settings</b> (available before you open registration too): ticket price (0 is free; this is the only place the ticket price is set), UPI ID and payee name for the fee, waitlist on or off, and a message on the page.',
   '<b>Applications to review:</b> <b>Approve</b> or <b>Reject</b>. The same College ID cannot apply twice. When seats are full people join a <b>waitlist</b>; <b>Promote</b> (or <b>Promote next</b>) moves them in, and approval re-checks the seats so the event is never overbooked. <b>Approve and mark paid</b> appears when the person gave a UTR or says they paid cash; use it only after you checked your UPI app or the collector.'])],
 ['cash','Cash or UPI, and cash collectors',
- L(['Set a ticket price first (Price and settings, or the Income tab).',
-  'In the <b>Cash collectors</b> card (Attendees tab) pick people from the event team, or type a name for someone outside the app, such as a faculty coordinator. Up to 20.',
+ L(['Set a ticket price first (Attendees &gt; Registration &gt; Price and settings).',
+  'In the <b>Cash collectors</b> card (Attendees &gt; Registration, right under online registration) pick people from the event team, or type a name for someone outside the app, such as a faculty coordinator. Up to 20.',
   'When at least one collector is chosen, <b>Cash</b> appears on the registration page next to UPI. The applicant picks who they pay and says &ldquo;I will pay later&rdquo; or &ldquo;I have already paid this person&rdquo;. If only one method is available the choice is not shown.',
   'Nothing is marked paid on the applicant\'s word alone. Tick <b>Paid</b> on the attendee (&hellip; menu) after the cash is in hand or the UTR is confirmed.',
   '<b>Who can tick Paid:</b> roles with Attendees and check-in. If the people who collect cash should tick it themselves, give them the Treasurer, Registration desk or a custom role with that permission.',
-  '<b>Cash and UPI at a glance</b> shows, for each collector, how many attendees chose them, what was received and what is still to collect. <b>Show unpaid cash</b> filters the list. The Income tab and the CSV exports include payment mode and collector.'])],
+  '<b>Cash and UPI at a glance</b> (Income tab) shows, for each collector, how many attendees chose them, what was received and what is still to collect. <b>Show unpaid cash</b> opens the attendee list filtered to unpaid cash. The CSV exports include payment mode and collector.'])],
 ['tasks','Tasks and items to buy',
  L(['<b>Task groups</b> keep tasks tidy. Use <b>+ New group</b> or <b>Add standard groups</b> (Logistics, Marketing, Finance, Hospitality, Tech and AV).',
   '<b>+ Add task:</b> a title, who it is for, an optional due date and an optional <b>Brief</b> (steps, links, deadlines). Tap <b>Brief</b> on a task to open or close it. Tick the box when it is done.',
@@ -89,14 +88,16 @@ const SECS=()=>[
  L(['Everyone who joins with the event code appears in the People tab and can be given tasks.',
   '<b>+ Add person</b> is for people who do not use the app, such as volunteers. Give a name, a title and a phone number, and say who they report to. They can be given tasks and items to buy.',
   'Removing someone makes their tasks unassigned.',
+  '<b>Participant teams</b> (below the roles): create a team by name, or split the attendees who are not in a team into teams of a size you choose. Add or remove members on each team card.',
   'Roles and custom roles are explained under <b>Roles and permissions</b>.'])],
 ['roles','Roles and permissions',rolesHtml()],
-['pay','Payments (money coming in)',
- L(['<b>+ New link</b> creates a payment link for a registration fee or a donation: a title, an optional amount (blank means any amount), a UPI ID, a payee name and a note. Anyone with the link can pay by scanning the QR code and then send their name and UTR on the page. They need no account. Needs a shared event and your public site address.',
-  '<b>Every link belongs to its event.</b> It stops working at the end of the event day. Under <b>Link settings</b> you can keep links open for up to 30 extra days. Expired links say so, and deleting the event deletes its links and the payments sent through them.',
+['pay','Payments and payment links',
+ L(['Payment links are in the <b>Income</b> tab (below the sponsors). The <b>Payments</b> tab lists what people have paid.',
+  '<b>+ New link</b> creates a payment link for a registration fee or a donation: a title, an optional amount (blank means any amount), a UPI ID, a payee name and a note. Anyone with the link can pay by scanning the QR code and then send their name and UTR on the page. They need no account. Needs a shared event and your public site address.',
+  '<b>Every link belongs to its event.</b> It stops working at the end of the event day. Under <b>Link settings</b> (Income tab) you can keep links open for up to 30 extra days. Expired links say so, and deleting the event deletes its links and the payments sent through them.',
   '<b>Payments received:</b> check each one against your bank or UPI app, then <b>Verify</b> or <b>Reject</b>. Filter by To check, Verified or Rejected. The red number on the tab counts payments waiting to be checked.',
-  '<b>Who can do what:</b> anyone with Team member basics can create a link. Verifying payments and the link settings need the Payments and online registration permission.',
-  '<b>Site address:</b> payment links, tickets and registration open pages on your website. Save its address once under Link settings, for example <code>https://yourname.github.io/your-repo/</code>.'])],
+  '<b>Who can do what:</b> payment links are made in the Income tab, which needs the Money permission. Verifying payments and the link settings need the Payments and online registration permission.',
+  '<b>Site address:</b> payment links, tickets and registration open pages on your website. Save its address once (Income &gt; Link settings, or in Attendees &gt; Registration), for example <code>https://yourname.github.io/your-repo/</code>.'])],
 ['money','Expenses and Income',
  L(['These two tabs are for roles with the <b>Money</b> permission (Organizer, Manager, Treasurer, Sponsorship lead and custom roles with it).'])+
  `<h4>Expenses (money going out)</h4>`+L([
@@ -107,8 +108,10 @@ const SECS=()=>[
   'Bills still to pay count in your budget as money about to go out. Items to buy count too (see Tasks).'])+
  `<h4>Income</h4>`+L([
   'Ticket fees and sponsors, compared with what the event costs.',
+  '<b>Cash and UPI at a glance:</b> how much attendee money came in by cash (per collector) and by UPI.',
   '<b>Sponsors and other income:</b> for each one record what was committed, what has arrived, what you promised in return and whether it is delivered.',
-  '<b>Break-even:</b> ticket price x seats plus sponsorship, against the cost (your budget, or what you have spent plus still have to pay; one tap switches). It tells you how many tickets you need, or that even a full house falls short.',
+  '<b>Break-even:</b> ticket price x seats plus sponsorship, against the cost (your budget, or what you have spent plus still have to pay; one tap switches). It tells you how many tickets you need, or that even a full house falls short. The ticket price comes from Attendees &gt; Registration &gt; Price and settings.',
+  '<b>Payment links</b> are made and shared here.',
   '<b>Export data</b> is also here.'])],
 ['chat','Chat',
  L(['Chat works in shared events. Everyone with at least one permission can write; a Viewer, or a custom role with nothing ticked, can read only.',
@@ -138,12 +141,12 @@ const SECS=()=>[
 
 /* ---------- panel ---------- */
 const css=document.createElement('style');
-css.textContent=`#hg{position:fixed;inset:0;z-index:45;display:grid;place-items:center;background:rgba(8,12,30,.55);backdrop-filter:blur(4px);padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
-#hg .hgb{position:relative;background:var(--card);color:var(--ink);border-radius:18px;width:min(720px,100%);max-height:100%;display:flex;flex-direction:column;box-shadow:0 24px 70px rgba(0,0,0,.45);outline:0}
-#hg .hgh{display:flex;align-items:center;gap:10px;padding:16px 18px 10px}#hg .hgh h3{flex:1;font-size:18px}
+css.textContent=`#hg{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(8,12,30,.55);backdrop-filter:blur(4px);padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
+#hg .hgb{position:relative;background:var(--card);color:var(--ink);border-radius:18px;width:min(720px,100%);max-height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.45);outline:0}
+#hg .hgh,#hg .hgs{flex:none}#hg .hgh{display:flex;align-items:center;gap:10px;padding:16px 18px 10px}#hg .hgh h3{flex:1;font-size:18px}
 #hg .hgx{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:var(--card);color:var(--ink);font:700 15px/1 system-ui,sans-serif;cursor:pointer}
 #hg .hgs{padding:0 18px 10px}#hg .hgs input{width:100%}
-#hg .hgc{overflow:auto;padding:0 18px 18px;-webkit-overflow-scrolling:touch}
+#hg .hgc{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:0 18px 18px;-webkit-overflow-scrolling:touch}
 #hg details{border:1px solid var(--line);border-radius:12px;margin:0 0 8px;background:var(--bg)}
 #hg summary{cursor:pointer;font-weight:600;padding:12px 14px;list-style:none;display:flex;justify-content:space-between;gap:8px}
 #hg summary::-webkit-details-marker{display:none}#hg summary:after{content:'+';color:var(--mute);font-weight:700}#hg details[open] summary:after{content:'\\2212'}
@@ -164,11 +167,11 @@ function fill(open){
 }
 window.openHelp=function(sec){
  if(!box)build();
- fill(sec||'');$('hgq').value='';box.classList.remove('hid');
+ fill(sec||'');$('hgq').value='';box.classList.remove('hid');document.documentElement.style.overflow='hidden';
  const t=sec&&$('hg_'+sec);if(t)setTimeout(()=>t.scrollIntoView({block:'start'}),0);
  box.querySelector('.hgb').focus();
 };
-function close(){if(box)box.classList.add('hid')}
+function close(){if(box)box.classList.add('hid');document.documentElement.style.overflow=''}
 document.addEventListener('click',e=>{
  if(!box||box.classList.contains('hid'))return;
  if(e.target===box||e.target.closest('[data-hgx]'))close();

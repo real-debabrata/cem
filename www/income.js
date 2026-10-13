@@ -1,10 +1,11 @@
-/* CEM 3.5.0: Income tab (sponsors, ticket income, break-even) and CSV export. Plain client-side code, nothing to install, no new service.
+/* Income tab (ticket income, break-even, cash and UPI at a glance, sponsors, payment links) and the CSV export. Plain client-side code, nothing to install, no new service.
    Who: owner, manager and treasurer (the same people who see Expenses). Sponsors are stored in the staff-only document events/{id}/fin/data, field spn.
    Sponsor entry: { id, n: name, k: Sponsor | Donation | Other, cm: amount committed, rc: amount received, pr: what you promised them,
                     dl: 1 when the promises are delivered, ct: contact, at }.
    Break-even:  income if every seat sells = ticket price x seats + sponsorship (received + still expected)
                 cost = the budget, or what you have spent plus still to pay (your choice)
                 tickets needed = (cost - sponsorship) / ticket price, rounded up.
+   The ticket price is set in Attendees > Registration > Price and settings.
    Export:  attendees, payments, bills and sponsors as CSV (UTF-8 with a BOM, so Excel opens rupee signs and accents correctly), or all in one ZIP.
             Cells that start with = + - @ get a leading ' so a spreadsheet never runs them as a formula. */
 (function(){
@@ -126,7 +127,7 @@ function breakEven(f){
  if(f.cost<=0)return '<p class="meta" style="margin:10px 0 0">Add a budget or some costs in Expenses to see the break-even point.</p>';
  let t;
  if(f.gap<=0)t=`Sponsorship alone covers the cost of ${R(f.cost)}. Every ticket sold is extra.`;
- else if(f.price<=0)t=`Costs are ${R(f.cost)} and sponsorship covers ${R(f.spAll)}. The ticket price is not set, so ${R(f.gap)} is not covered yet. Set a ticket price above.`;
+ else if(f.price<=0)t=`Costs are ${R(f.cost)} and sponsorship covers ${R(f.spAll)}. The ticket price is not set, so ${R(f.gap)} is not covered yet. Set it in Attendees > Registration > Price and settings.`;
  else if(f.need>f.cap)t=`Even a full house does not cover the costs: you would be ${R(f.cost-f.full)} short. Raise the price, add sponsors or cut costs.`;
  else t=`You break even at ${f.need} ticket${f.need===1?'':'s'} (${Math.round(f.need/Math.max(1,f.cap)*100)}% of ${f.cap} seats). ${f.rs.length>=f.need?`You already have ${f.rs.length} registered, so the costs are covered once they pay.`:`${f.need-f.rs.length} more registration${f.need-f.rs.length===1?'':'s'} to go (${f.rs.length} registered).`}`;
  const mx=Math.max(f.cost,f.full,1),w=v=>Math.max(0,Math.min(100,v/mx*100)).toFixed(2),cp=Math.min(99,f.cost/mx*100).toFixed(2);
@@ -157,17 +158,17 @@ window.incV=function(e){
  if(!can(e,'exp'))return '<div class="empty">You do not have access to this section.</div>';
  const f=figures(e),spn=e.spn||[],tin=f.tIn+f.spIn,exp=f.tDue+f.spOut;
  const surplus=f.full-f.cost;
- const price=`<form id="ipf" class="row" style="margin:0 0 4px"><label style="margin:0" for="ipr">Ticket price ₹</label><input id="ipr" name="fee" type="number" min="0" step="1" inputmode="numeric" value="${f.price||0}" style="width:110px"><button class="btn sm" type="submit">Save</button><span class="meta">0 means free. Also used by online registration.</span></form>`;
  const open=V.spa||V.spe;
  const list=spn.slice().sort((a,b)=>(a.at||0)-(b.at||0)).map(s=>V.spe===s.id?spForm(e,s):spRow(e,s)).join('');
  return `<div class="stats"><div class="stat"><b>${R(tin)}</b><span>Received so far</span></div><div class="stat"><b>${R(exp)}</b><span>Still expected</span></div><div class="stat"><b>${R(f.cost)}</b><span>${f.basis==='plan'?'Budget (cost)':'Spent and to pay (cost)'}</span></div><div class="stat"><b class="${surplus<0?'xo':''}" style="${surplus<0?'-webkit-text-fill-color:var(--bad)':''}">${surplus<0?'-':''}${R(Math.abs(surplus))}</b><span>${surplus<0?'Shortfall':'Surplus'} if every seat sells</span></div></div>
  <div class="card"><div class="sh"><h3>Break-even</h3><div class="seg" style="margin:0;min-width:230px" role="group" aria-label="Cost to compare with"><button class="${f.basis==='plan'?'on':''}" data-ic="bas" data-v="plan">Budget</button><button class="${f.basis==='act'?'on':''}" data-ic="bas" data-v="act">Spent + to pay</button></div></div>
-  ${price}
   <p class="meta" style="margin:4px 0 0">${R(f.price)} x ${f.cap} seats = ${R(f.tFull)}, plus sponsorship ${R(f.spAll)} = <b>${R(f.full)}</b> against costs of <b>${R(f.cost)}</b>.</p>
   ${breakEven(f)}
   <p class="meta" style="margin:12px 0 0">Attendees paid: ${f.paidN} of ${f.rs.length} registered (${R(f.tIn)} received, ${R(f.tDue)} still to collect).${(()=>{const pc=f.rs.filter(r=>r.paid&&r.pm==='cash').length,pu=f.rs.filter(r=>r.paid&&r.pm==='upi').length;return pc||pu?` Of the paid: ${pc} by cash (${R(pc*f.price)}), ${pu} by UPI (${R(pu*f.price)}).`:''})()}</p></div>
+ ${window.cashSummaryV?cashSummaryV(e):''}
  <div class="card"><div class="sh"><h3>Sponsors and other income (${spn.length})</h3>${V.spe?'':`<button class="btn sm" data-ic="spa">${V.spa?'Close form':'+ Add'}</button>`}</div>
   ${V.spa&&!V.spe?spForm(e):''}${list||(open?'':'<p class="meta" style="margin:0">No sponsors yet.</p>')}</div>
+ ${window.linksV?linksV(e):''}
  ${exportV(e)}`;
 };
 
@@ -191,13 +192,9 @@ document.addEventListener('change',x=>{
  if(s&&can(E,'exp')){if(x.target.checked)s.dl=1;else delete s.dl;sv()}
 });
 document.addEventListener('submit',x=>{
- const f=x.target;if(f.id!=='spf'&&f.id!=='ipf')return;
+ const f=x.target;if(f.id!=='spf')return;
  x.preventDefault();const E=cur();if(!E||!can(E,'exp'))return;
  const fd=new FormData(f),g=k=>(fd.get(k)||'').toString().replace(/\s+/g,' ').trim();
- if(f.id==='ipf'){
-  E.pay=Object.assign({upi:'',payee:'',fee:0},E.pay||{},{fee:Math.max(0,Math.round(+g('fee')||0))});
-  sv();window.regPubSync&&regPubSync(E);toast('Ticket price saved');return;
- }
  const n=g('n').slice(0,60);if(!n)return;
  const o={n,k:KINDS.includes(g('k'))?g('k'):'Sponsor',cm:num(g('cm')),rc:num(g('rc')),pr:(fd.get('pr')||'').toString().replace(/\r/g,'').trim().slice(0,500),ct:g('ct').slice(0,100)};
  const id=f.dataset.i;

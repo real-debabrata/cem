@@ -16,14 +16,14 @@ window.ROLEINFO={
  desk:'Staffs the registration desk: registers walk-ins, checks in, scans tickets and marks fees paid.',
  logi:'Plans logistics: task groups, tasks and items to buy, given to anyone.',
  spons:'Handles sponsors and the money side: income, budget, bills and vendors.',
- member:'Ticks their own tasks, adds people who report to them, creates payment links and registers attendees.',
+ member:'Ticks their own tasks, adds people who report to them and registers attendees.',
  vol:'Ticks off the tasks given to them and joins the chat.',
  viewer:'Reads the event but cannot change it.'};
 // What each permission opens, grouped as the tick-boxes of the custom role form. [key, short name, what it allows]
 const PCAT=[
- ['Everyday work',[['tick','Tick off own tasks','Mark the tasks given to them as done.'],['write','Team member basics','Tick own tasks, add people who report to them, create payment links and register attendees (no check-in).']]],
+ ['Everyday work',[['tick','Tick off own tasks','Mark the tasks given to them as done.'],['write','Team member basics','Tick own tasks, add people who report to them and register attendees (no check-in).']]],
  ['Running the event',[['tasks','Manage tasks','Create task groups and tasks and give them to anyone.'],['items','Items to buy','Add items to buy and give them to people.'],['people','Volunteer list','Add and remove people without an account and set who reports to whom.'],['regs','Attendees and check-in','Register, check in, scan tickets, mark fees paid, import a list and make participant teams.']]],
- ['Admin',[['event','Edit event and registrations','Edit the event details, remove registrations and delete any chat message.'],['pay','Payments and online registration','Verify payments, payment links, UPI settings, online registration and cash collectors.'],['exp','Money','See and manage the budget, vendors, bills, sponsors and the Income and Expenses tabs.']]]];
+ ['Admin',[['event','Edit event and registrations','Edit the event details, remove registrations and delete any chat message.'],['pay','Payments and online registration','Verify payments, payment link settings, UPI settings, online registration and cash collectors.'],['exp','Money','See and manage the budget, vendors, bills, sponsors and the Income and Expenses tabs.']]]];
 const PN=PCAT.flatMap(g=>g[1]),ALLP=PN.map(k=>k[0]);
 // Permission list of every built-in role. The five newest (coord, desk, logi, spons, vol) are repeated in firestore.rules (permsOf): keep them identical.
 const BASE={owner:[...ALLP,'roles'],manager:[...ALLP,'roles'],treasurer:['tick','write','items','regs','pay','exp'],lead:['tick','write','tasks','items','regs'],
@@ -132,7 +132,7 @@ window.peopleV=function(e){
  const boss=can(e,'people')?`<div><label>Reports to</label><select name="b"><option value="">Nobody (top level)</option>${all.map(p=>`<option value="${p.id}">${esc(p.n)}</option>`).join('')}</select></div>`:'';
  const form=w&&V.pad?`<form id="mbf" class="fp"><div class="rg"><div><label>Name *</label><input name="n" required maxlength="40"></div><div><label>Title</label><input name="r" maxlength="40" placeholder="Volunteer, Designer"></div><div><label>Phone</label><input name="p" maxlength="20" inputmode="tel"></div>${boss}</div><div class="acts"><button class="btn" type="submit">Add person</button><button type="button" class="btn ghost" data-pad="0">Cancel</button></div></form>`:'';
  return `<div class="card"><div class="sh"><h3>People (${all.length})</h3>${w?`<button class="btn sm" data-pad="${V.pad?0:1}">${V.pad?'Close form':'+ Add person'}</button>`:''}</div>
-  ${form}${all.length?`<div>${all.map(li).join('')}</div>`:'<p class="meta">No one yet.</p>'}</div>${rolesCard(e)}`;
+  ${form}${all.length?`<div>${all.map(li).join('')}</div>`:'<p class="meta">No one yet.</p>'}</div>${rolesCard(e)}${window.teamsV?teamsV(e):''}`;
 };
 
 /* ---------- Payments tab (money coming in) ---------- */
@@ -150,15 +150,26 @@ window.siteBase=payBase;   // public site address (pay.html, register.html, tick
 // every payment shown in the Payments tab as plain rows, for the CSV export
 window.payRowsOf=e=>{const d=payData(e);return d.rows.map(p=>({title:((d.fs.find(f=>f.id===p.fid)||{}).title)||'Earlier payment',n:p.n,a:p.a,utr:p.utr||'',s:p.s,at:p.at}))};
 window.payV2=function(e){
- const {base,mgr,fs,rows}=payData(e),w=can(e,'newlink'),f=V.pfl||'all';
+ const {mgr,fs,rows}=payData(e),f=V.pfl||'all';
  const sum=s=>rows.filter(p=>p.s===s).reduce((t,p)=>t+p.a,0),old=mgr?(e.don||[]).reduce((t,x)=>t+x.a,0):0,pend=rows.filter(p=>p.s==='pending').length;
- const until=window.untilOf?untilOf(e):0,over=!!until&&Date.now()>until,grace=Math.max(0,Math.min(30,+((e.pay||{}).grace)||0));
- const dts=t=>new Date(t).toLocaleDateString([],{day:'numeric',month:'short',year:'numeric'}),link=x=>base+'pay.html?f='+x.id;
  const shown=rows.filter(p=>f==='all'||p.s===f);
  const rcv=shown.map(p=>{const fm=fs.find(q=>q.id===p.fid),ok=p.pub?true:mgr,pre=p.pub?'s':'p';
   return `<div class="li"><div class="main"><div class="ttl">${esc(p.n)}</div><div class="sub">${esc(fm?fm.title:'Earlier payment')}, ${new Date(p.at).toLocaleDateString([],{day:'numeric',month:'short'})}${p.utr?', UTR '+esc(p.utr):''}</div></div>
    <span class="amt">₹${p.a}</span><span class="pill ${STC[p.s]||''}">${ST[p.s]||esc(p.s)}</span>
    ${ok?`<div class="act">${p.s!=='verified'?`<button class="btn sm" data-act="${pre}v" data-id="${p.key}">Verify</button>`:''}${p.s!=='rejected'?`<button class="btn ghost sm" data-act="${pre}r" data-id="${p.key}">Reject</button>`:''}<button class="btn ghost sm del" data-act="${pre}d" data-id="${p.key}">Delete</button></div>`:''}</div>`}).join('');
+ return `<div class="stats"><div class="stat"><b>₹${sum('verified')+old}</b><span>Verified</span></div><div class="stat"><b>₹${sum('pending')}</b><span>Waiting to be checked</span></div><div class="stat"><b>${rows.length}</b><span>Submissions</span></div></div>
+ <div class="card"><div class="sh"><h3>Payments received (${rows.length})</h3>${pend?`<span class="pill warn">${pend} to check</span>`:''}</div>
+  ${rows.length?`<div class="chips" style="margin:0 0 6px">${[['all','All'],['pending','To check'],['verified','Verified'],['rejected','Rejected']].map(c=>`<button class="chip ${f===c[0]?'on':''}" data-pfl="${c[0]}">${c[1]}</button>`).join('')}</div>${rcv||'<p class="meta">Nothing in this filter.</p>'}`:'<p class="meta" style="margin:0">No payments yet.</p>'}</div>`;
+};
+
+/* Payment links: create, share and settings. Shown in the Income tab (income.js). */
+window.siteFormV=function(){
+ return `<div class="note"><b>Set your public site address first.</b><form id="pbf" class="row" style="margin-top:8px"><input name="b" required placeholder="https://yourname.github.io/your-repo/" style="flex:1;min-width:200px" aria-label="Public site address"><button class="btn" type="submit">Save</button></form></div>`;
+};
+window.linksV=function(e){
+ const {base,mgr,fs}=payData(e),w=can(e,'newlink');
+ const until=window.untilOf?untilOf(e):0,over=!!until&&Date.now()>until,grace=Math.max(0,Math.min(30,+((e.pay||{}).grace)||0));
+ const dts=t=>new Date(t).toLocaleDateString([],{day:'numeric',month:'short',year:'numeric'}),link=x=>base+'pay.html?f='+x.id;
  const canNew=w&&e.cloud&&!over;
  const form=canNew&&V.pnw?`<form id="pfc" class="fp"><div class="rg"><div><label>Title *</label><input name="t" required placeholder="Registration fee, Donation"></div><div><label>Amount in ₹ (blank for any)</label><input name="a" type="number" min="1"></div><div><label>UPI ID *</label><input name="u" required value="${esc((e.pay||{}).upi||'')}" placeholder="name@bank"></div><div><label>Payee name *</label><input name="p" required value="${esc((e.pay||{}).payee||'')}"></div><div class="rw"><label>Note shown to payers</label><input name="n"></div></div><div class="acts"><button class="btn" type="submit">Create link</button><button type="button" class="btn ghost" data-pnw="0">Cancel</button></div></form>`:'';
  const lnote=!e.cloud?'<p class="meta" style="margin:0">Share the event first (Details tab) to create payment links.</p>':(w&&over?'<p class="meta" style="margin:0">This event is over, so a new link would already be expired.</p>':'');
@@ -169,10 +180,7 @@ window.payV2=function(e){
  const settings=V.pst?`<div class="fp">${e.cloud&&mgr?`<form id="pgf" class="row"><label style="margin:0">Keep links open</label><input name="g" type="number" min="0" max="30" value="${grace}" style="width:80px" aria-label="Extra days"><span class="meta">extra days after the event</span><button class="btn sm" type="submit">Save</button></form>
 `:''}
    ${base?`<form id="pbf" class="row" style="margin-top:12px"><label style="margin:0">Site address</label><input name="b" required value="${esc(base)}" style="flex:1;min-width:200px" aria-label="Public site address"><button class="btn sm" type="submit">Save</button></form>`:''}</div>`:'';
- return `<div class="stats"><div class="stat"><b>₹${sum('verified')+old}</b><span>Verified</span></div><div class="stat"><b>₹${sum('pending')}</b><span>Waiting to be checked</span></div><div class="stat"><b>${rows.length}</b><span>Submissions</span></div><div class="stat"><b>${fs.length}</b><span>Payment links</span></div></div>
- ${base?'':`<div class="note"><b>Set your public site address first.</b><form id="pbf" class="row" style="margin-top:8px"><input name="b" required placeholder="https://yourname.github.io/your-repo/" style="flex:1;min-width:200px" aria-label="Public site address"><button class="btn" type="submit">Save</button></form></div>`}
- <div class="card"><div class="sh"><h3>Payments received (${rows.length})</h3>${pend?`<span class="pill warn">${pend} to check</span>`:''}</div>
-  ${rows.length?`<div class="chips" style="margin:0 0 6px">${[['all','All'],['pending','To check'],['verified','Verified'],['rejected','Rejected']].map(c=>`<button class="chip ${f===c[0]?'on':''}" data-pfl="${c[0]}">${c[1]}</button>`).join('')}</div>${rcv||'<p class="meta">Nothing in this filter.</p>'}`:'<p class="meta" style="margin:0">No payments yet.</p>'}</div>
+ return `${base?'':siteFormV()}
  <div class="card"><div class="sh"><h3>Payment links (${fs.length})</h3>${canNew?`<button class="btn sm" data-pnw="${V.pnw?0:1}">${V.pnw?'Close form':'+ New link'}</button>`:''}</div>${form}${lnote}${cards||(canNew&&!V.pnw?'<p class="meta" style="margin:0">No links yet.</p>':'')}</div>
  ${(e.cloud&&mgr)||base?`<div style="margin-bottom:16px"><button class="link" data-pst="${V.pst?0:1}" aria-expanded="${!!V.pst}">${V.pst?'Hide link settings':'Link settings'}</button>${settings}</div>`:''}`;
 };

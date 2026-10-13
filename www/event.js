@@ -1,12 +1,9 @@
-/* CEM 3.4.0: the event page. 3.6.1: the guidance paragraphs moved to Help & guides (profile icon menu, help.js); Details has a note that says where to find it; roles come from app2.js (built-in and custom). 3.6.0: calculator button in the header; Attendees tab gets Import attendees (import.js), Cash collectors and Cash and UPI at a glance (payment.js),
-   a payment block in the Register form, payment tags and a "Cash due" filter. 3.5.0: Income tab, Scan tickets and Ticket (QR) buttons, Online registration panel (signup.js), Export card (income.js),
-   duplicate College ID check, and team changes need the attendee-edit permission (check-in level), matching firestore.rules.
-
-   - A slim header (back, name, type) and one scrollable tab strip. The big header card that used to repeat on every tab is gone.
-   - Details tab (new): date, venue, description, event code, your role, edit / delete.
-   - Attendees tab: search, filters, quick check-in, and the participant Team maker (moved here from People).
-   Tasks, People and Payments are drawn by app2.js, Expenses and Items to buy by expenses.js, Chat by chat.js.
-   Nothing here changes how data is stored or synced. */
+/* The event page.
+   - A slim header (back, name, calculator) and one scrollable tab strip.
+   - Details: date, venue, description, event code, your role, export, edit / delete.
+   - Attendees: two views. "Attendees" (search, filters, check-in, import) and "Registration" (online registration and cash collectors).
+   - People: the team, roles and the participant team maker (teamsV below).
+   Tasks, People and Payments are drawn by app2.js, Expenses and Items to buy by expenses.js, Income by income.js, Chat by chat.js. */
 (function(){
 const R=n=>window.inr?inr(n):'₹'+n;
 const loc=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -115,7 +112,7 @@ function listPanel(e){
   <div id="rlist" style="margin-top:6px">${regRows(e)}</div></div>`;
 }
 
-/* ---------- participant teams (moved here from People) ---------- */
+/* ---------- participant teams (drawn inside the People tab) ---------- */
 function teamsPanel(e){
  const w=can(e,'regs'),rs=regsOf(e.id),free=rs.filter(r=>!e.teams.some(t=>t.id===r.team));
  const head=`<div class="card"><div class="sh"><h3>Participant teams</h3><span class="meta">${e.teams.length} team${e.teams.length===1?'':'s'}, ${free.length} attendee${free.length===1?'':'s'} not in a team</span></div>
@@ -128,9 +125,14 @@ function teamsPanel(e){
   :(rs.length?'<div class="empty">No teams yet. Create one above or auto-build them.</div>':'');
  return head+cards;
 }
+window.teamsV=function(e){
+ if(!can(e,'regs')&&!e.teams.length)return '';
+ return teamsPanel(e);
+};
 function regsV(e){
- const teams=V.av==='teams';
- return `<div class="seg" role="group" aria-label="Attendees view"><button class="${teams?'':'on'}" data-av="list">Attendees<em>${regsOf(e.id).length}</em></button><button class="${teams?'on':''}" data-av="teams">Teams<em>${e.teams.length}</em></button></div>${teams?teamsPanel(e):(window.signupV?signupV(e):'')+(window.cashSetupV?cashSetupV(e):'')+(window.cashSummaryV?cashSummaryV(e):'')+(window.importV?importV(e):'')+listPanel(e)}`;
+ const reg=V.av==='reg'&&can(e,'pay'),pn=window.regPendingN?regPendingN(e):0;
+ const seg=can(e,'pay')?`<div class="seg" role="group" aria-label="Attendees view"><button class="${reg?'':'on'}" data-av="list">Attendees<em>${regsOf(e.id).length}</em></button><button class="${reg?'on':''}" data-av="reg">Registration${pn?`<em class="hot">${pn}</em>`:''}</button></div>`:'';
+ return seg+(reg?(window.signupV?signupV(e):'')+(window.cashSetupV?cashSetupV(e):''):(window.importV?importV(e):'')+listPanel(e));
 }
 
 /* ---------- actions ---------- */
@@ -138,7 +140,7 @@ document.addEventListener('click',x=>{
  const t=x.target.closest('button');if(!t||V.tab!=='detail')return;const D=t.dataset,E=cur();if(!E)return;
  if(D.dt){V.dt=D.dt;render();scrollTo(0,0)}
  else if(D.av){V.av=D.av;render()}
- else if(D.rf){V.rf=D.rf;render()}
+ else if(D.rf){V.rf=D.rf;if(V.dt!=='regs'){V.dt='regs';V.av='list'}render();scrollTo(0,0)}
  else if(D.rgt){V.rgt=!V.rgt;render();const i=document.querySelector('#reg input:not([type=checkbox]),#reg select');if(V.rgt&&i)i.focus()}
  else if(D.rmo){V.rmo=V.rmo===D.rmo?null:D.rmo;render()}
  else if(D.paid){if(!can(E,'regs'))return;const r=S.regs.find(q=>q.id===D.paid);if(r){r.paid=!r.paid;sv()}}

@@ -1,4 +1,4 @@
-/* Campus Events 3.6.1 (custom role form at the end of the file); 3.5.0 (3.4.0 layout + income, break-even): event page layout.
+/* Event page layout.
    Tabs, list rows, status pills, forms and the Expenses & Budget cards.
    Uses the colour tokens defined in index.html (--bg --card --ink --mute --line --acc --ok --bad). */
 :root{--warn:#a4610a}
@@ -165,3 +165,9 @@ label.pk input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:var(
 label.pk b{display:block;font-weight:600;font-size:14px}
 label.pk small{display:block;color:var(--mute);font-size:13px;line-height:1.35}
 .rchips{display:flex;flex-wrap:wrap;gap:4px}
+
+/* ---------- no blue flash or text selection when tapping the interface ---------- */
+*{-webkit-tap-highlight-color:transparent}
+button,summary,label.pk,.tab,.chip,.gl,.seg,.ev,.stat,.eh,header,#bn,#mb,#um,.toast,.xch,.link{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable],.code b,.tdb,.about-d,.sub,.ttl{-webkit-user-select:text;user-select:text}
+button::selection,summary::selection{background:transparent}
