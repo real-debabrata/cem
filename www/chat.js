@@ -79,7 +79,7 @@ html.typing #bn{display:none!important}
 .cw.me .mt{color:inherit;background:rgba(255,255,255,.22);text-decoration:underline}
 .cw.ment .cb{box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 70%,transparent)}
 .cat{flex:none;padding:9px 12px}
-.cdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4d6d;margin-left:6px;vertical-align:middle}`;
+.cdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ffb547;margin-left:6px;vertical-align:middle}`;
 document.head.append(st);
 
 /* ---------- unread dot (one tiny listener per event while the chat is closed) ---------- */

@@ -21,7 +21,7 @@ const payload=(e,r)=>'CEM1:'+e.id+':'+r.id;
 const findReg=(eid,rid)=>S.regs.find(x=>x.eid===eid&&x.id===rid);
 
 const css=document.createElement('style');
-css.textContent=`#tk,#sc{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(8,12,30,.7);backdrop-filter:blur(4px);padding:14px;overflow:auto}
+css.textContent=`#tk,#sc{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(16,23,43,.7);backdrop-filter:blur(4px);padding:14px;overflow:auto}
 #tk .box,#sc .box{position:relative;background:var(--card);color:var(--ink);border-radius:18px;padding:20px;width:min(420px,100%);box-shadow:0 24px 70px rgba(0,0,0,.5)}
 #tk .tq{background:#fff;border-radius:14px;padding:10px;margin:12px auto;max-width:300px}#tk .tq svg{display:block;width:100%;height:auto}
 #tk .x{position:absolute;top:10px;right:10px;float:none;margin:0}

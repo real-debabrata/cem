@@ -35,7 +35,7 @@ function badge(e,k){
  if(k==='chat')return window.chatDot?chatDot(e):'';
  return '';
 }
-const header=e=>`<div class="eh" style="--tc:${TYPES[e.type]||'#2f4bd8'}"><button class="btn ghost sm" data-go="events" aria-label="Back to all events">${chev}Events</button><h2 title="${esc(e.name)}">${esc(e.name)}</h2><span class="tg">${esc(e.type)}</span>${window.calcBtnV||''}</div>`;
+const header=e=>`<div class="eh" style="--tc:${TYPES[e.type]||'#5948f5'}"><button class="btn ghost sm" data-go="events" aria-label="Back to all events">${chev}Events</button><h2 title="${esc(e.name)}">${esc(e.name)}</h2><span class="tg">${esc(e.type)}</span>${window.calcBtnV||''}</div>`;
 const tabs=e=>`<div class="tabs" role="tablist" aria-label="Event sections">${tabsFor(e).map(t=>`${t[0]==='tasks'||t[0]==='pay'||t[0]==='chat'?'<span class="tsp"></span>':''}<button class="tab ${V.dt===t[0]?'on':''}" role="tab" aria-selected="${V.dt===t[0]}" data-dt="${t[0]}">${t[1]}${badge(e,t[0])}</button>`).join('')}</div>`;
 function centerTab(){const c=document.querySelector('.tabs'),b=c&&c.querySelector('.tab.on');if(c&&b)c.scrollLeft=Math.max(0,b.offsetLeft-(c.clientWidth-b.offsetWidth)/2)}
 
@@ -59,7 +59,7 @@ function infoV(e){
  const share=e.cloud?`<div class="code"><b aria-label="Event code">${esc(e.id)}</b><button class="btn ghost sm" data-copy="${esc(e.id)}">Copy code</button></div>
    <p class="meta" style="margin:8px 0 0">${Object.keys(e.members||{}).length} member(s). ntfy topic: ntfy.sh/${esc(e.ntfy||'')}</p>`
   :(window.shareBar?shareBar(e):'');
- return `<div class="card" style="border-left:6px solid ${TYPES[e.type]||'#2f4bd8'}">
+ return `<div class="card" style="border-left:6px solid ${TYPES[e.type]||'#5948f5'}">
   <div class="sh" style="margin-bottom:0"><div class="row"><span class="tag" style="color:${TYPES[e.type]}">${esc(e.type)}</span>${past?'<span class="pill">Past event</span>':''}</div>${mgr?`<button class="btn ghost sm" data-edit="${e.id}">Edit event</button>`:''}</div>
   <h2 style="margin-top:6px">${esc(e.name)}</h2>
   <dl class="kv"><dt>Date</dt><dd>${dateTxt}</dd>${timeTxt?`<dt>Time</dt><dd>${timeTxt}</dd>`:''}<dt>Venue</dt><dd>${venue}</dd><dt>Seats</dt><dd>${e.cap} (${n} registered)</dd></dl>

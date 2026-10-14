@@ -1,14 +1,28 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10172B">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="description" content="Register online and get your QR ticket for check-in.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Campus Events">
+<meta property="og:title" content="Register for an event | Campus Events">
+<meta property="og:description" content="Register online and get your QR ticket for check-in.">
+<meta property="og:image" content="https://cem.deba.indevs.in/icons/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="splash.css">
 <title>Register</title>
 <style>
-:root{box-sizing:border-box;--ink:#14213d;--mute:#5b6678;--line:#d9e0ea;--acc:#4f6bff;--pg:#fff}
+:root{box-sizing:border-box;--ink:#10172b;--mute:#5b6380;--line:#e1e4ef;--acc:#5948f5;--pg:#fff}
 *,*:before,*:after{box-sizing:inherit}
 body{margin:0;min-height:100vh;font:15px/1.5 'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--pg);padding:max(16px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom));
-background:radial-gradient(800px 480px at 8% 0%,rgba(123,147,255,.45),transparent 60%),radial-gradient(700px 500px at 100% 100%,rgba(255,122,184,.35),transparent 60%),linear-gradient(135deg,#0a0f2e,#16205c 60%,#2a1f6e)}
+background:radial-gradient(800px 500px at 0% 0%,rgba(89,72,245,.42),transparent 62%),#10172b}
 main{max-width:440px;margin:0 auto}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;margin:6px 0 16px}
 .card{background:#fff;color:var(--ink);border-radius:18px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.4);margin-bottom:14px}
@@ -16,28 +30,28 @@ h1{font-size:22px;margin:0 0 4px}.meta{color:var(--mute);font-size:13px;margin:0
 .step{display:flex;gap:10px;align-items:center;font-weight:700;margin:0 0 10px}.step i{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--acc);color:#fff;font-style:normal;font-size:13px}
 .qr{text-align:center;margin:12px 0}.qr svg{max-width:240px;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;padding:6px;background:#fff}
 .amt{font-size:30px;font-weight:800;text-align:center}
-.det{background:#f2f5fa;border-radius:12px;padding:10px 12px;margin:10px 0;font-size:14px}.det b{word-break:break-all}
+.det{background:#eef0f7;border-radius:12px;padding:10px 12px;margin:10px 0;font-size:14px}.det b{word-break:break-all}
 label{display:block;font-weight:600;font-size:13px;margin:12px 0 4px}
 input,select{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:#fff}
 input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 14px;cursor:pointer}
-.go{width:100%;margin-top:16px;background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 65%,#ff7ab8));color:#fff}.go:disabled{opacity:.6}
-.alt{background:#eef1fb;color:var(--ink);padding:8px 12px;font-size:13px}
+.go{width:100%;margin-top:16px;background:var(--acc);color:#fff}.go:disabled{opacity:.6}
+.alt{background:#edeff8;color:var(--ink);padding:8px 12px;font-size:13px}
 .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .err{color:#c2331f;min-height:18px;font-size:13px;margin:8px 0 0}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-.pill{display:inline-block;font-size:12px;font-weight:700;padding:1px 10px;border-radius:20px;background:#eef1fb;color:var(--ink)}.pill.warn{background:#fff1d6;color:#8a5200}.pill.ok{background:#dff5ec;color:#12805c}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:1px 10px;border-radius:20px;background:#edeff8;color:var(--ink)}.pill.warn{background:#fff1d6;color:#8a5200}.pill.ok{background:#ddf7f0;color:#087a62}
 .chk{display:flex;gap:8px;align-items:center;font-weight:500}.chk input{width:auto}
-.ok{text-align:center}.ok b{font-size:44px;display:block;color:#12805c}
+.ok{text-align:center}.ok b{font-size:44px;display:block;color:#087a62}
 .hid{display:none!important}
 .bn{display:block;width:calc(100% + 44px);max-width:none;margin:-22px -22px 14px;border-radius:18px 18px 0 0;max-height:190px;object-fit:cover}
 .pm{display:flex;gap:10px;margin:6px 0 4px}.pm label{flex:1;display:flex;gap:8px;align-items:center;justify-content:center;margin:0;padding:10px;border:1px solid var(--line);border-radius:10px;font-weight:700;cursor:pointer}
 .pm input{width:auto}.pm label:has(input:checked){border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,#fff)}
 .opts{display:grid;gap:6px;margin:8px 0 0}.opts label{display:flex;gap:8px;align-items:center;margin:0;font-weight:500}.opts input{width:auto}
 </style><style>*{-webkit-tap-highlight-color:transparent}button,a.btn,summary,label{-webkit-user-select:none;user-select:none}input,textarea,select{-webkit-user-select:text;user-select:text}</style></head><body>
-<div id="splash" role="status" aria-label="Loading Campus Events"><div class="sp-logo"><i class="sp-ring"></i><div class="sp-mark"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lgs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b93ff"/><stop offset="1" stop-color="#ff7ab8"/></linearGradient></defs><rect width="40" height="40" fill="url(#lgs)"/><path d="M11 15h18v4a2 2 0 0 0 0 4v4H11v-4a2 2 0 0 0 0-4z" fill="#fff"/></svg></div></div><div class="sp-name">Campus Events</div><div class="sp-sub">Getting your events ready</div><div class="sp-bar"><i></i></div></div>
+<div id="splash" role="status" aria-label="Loading Campus Events"><div class="sp-logo"><i class="sp-ring"></i><div class="sp-mark"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></svg></div></div><div class="sp-name">Campus Events</div><div class="sp-sub">Getting your events ready</div><div class="sp-bar"><i></i></div></div>
 <main>
-<div class="brand"><svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b93ff"/><stop offset="1" stop-color="#ff7ab8"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#g)"/><path d="M11 15h18v4a2 2 0 0 0 0 4v4H11v-4a2 2 0 0 0 0-4z" fill="#fff"/></svg>Campus Events</div>
+<div class="brand"><svg width="30" height="30" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></svg>Campus Events</div>
 <div id="root"><div class="card"><p class="meta">Loading registration page...</p></div></div>
 </main>
 <script>window.SPLASH_HOLD=1</script>
@@ -71,13 +85,13 @@ else{
  }else loadPage();
 }
 const CID_RE=/college\s*id|student\s*id|roll\s*(no|number)|enrol|registration\s*(no|number|id)|reg\.?\s*(no|number)/i;
-const BG={indigo:'radial-gradient(800px 480px at 8% 0%,rgba(123,147,255,.45),transparent 60%),radial-gradient(700px 500px at 100% 100%,rgba(255,122,184,.35),transparent 60%),linear-gradient(135deg,#0a0f2e,#16205c 60%,#2a1f6e)',
+const BG={indigo:'radial-gradient(800px 500px at 0% 0%,rgba(89,72,245,.42),transparent 62%),#10172b',
  sunset:'linear-gradient(135deg,#2b0f3a,#7a1f5c 55%,#d9482b)',ocean:'linear-gradient(135deg,#031d3a,#0b4f8a 60%,#0e8a8a)',forest:'linear-gradient(135deg,#06210f,#145a32 60%,#2e8b3d)',
- graphite:'linear-gradient(135deg,#111418,#232a33 60%,#3a4350)',light:'#eef2f7'};
+ graphite:'linear-gradient(135deg,#111418,#232a33 60%,#3a4350)',light:'#f6f7fb'};
 function applyTheme(t){   // t comes from the organizer's page document; every value is checked again here
- t=t||{};const ac=/^#[0-9a-f]{6}$/i.test(t.ac||'')?t.ac:'#4f6bff',bg=BG[t.bg]?t.bg:'indigo';
+ t=t||{};const ac=/^#[0-9a-f]{6}$/i.test(t.ac||'')?t.ac:'#5948f5',bg=BG[t.bg]?t.bg:'indigo';
  document.documentElement.style.setProperty('--acc',ac);
- document.body.style.background=BG[bg];document.body.style.setProperty('--pg',bg==='light'?'#14213d':'#fff');
+ document.body.style.background=BG[bg];document.body.style.setProperty('--pg',bg==='light'?'#10172b':'#fff');
 }
 function show(r){
  if(!r.open||(r.until&&Date.now()>r.until))return fail('Registration closed','Registration for this event is closed.');

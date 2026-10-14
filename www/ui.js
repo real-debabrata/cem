@@ -1,6 +1,7 @@
-/* Campus Events: menu bar, UI polish, app version control. Loads after sync.js/app2.js; no core code is modified. */
+/* CEM 3.7.0: new brand (Indigo #5948F5, Amber, Midnight Navy, Cloud White, Fresh Mint) and new logo.
+   Campus Events: menu bar, UI polish, app version control. Loads after sync.js/app2.js; no core code is modified. */
 (function(){
-const APP_VERSION='3.6.1',BUILD='2026-10-11';   // bump these on every release
+const APP_VERSION='3.7.0',BUILD='2026-10-14';   // bump these on every release
 const $=s=>document.querySelector(s),LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const root=document.documentElement;
 let theme=localStorage.getItem('campus-theme')||'auto',CFG=LS('campus-ver',null);
@@ -25,15 +26,15 @@ header>.btn,#nav{display:none!important}
 #mb button:hover{color:var(--ink)}#mb button.on{background:var(--card);color:var(--acc);box-shadow:0 1px 4px rgba(0,0,0,.15)}
 svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 #mb em,#bn em{font-style:normal;background:var(--acc);color:var(--accink);border-radius:9px;font-size:11px;padding:0 6px;font-weight:700}
-#av{width:36px;height:36px;border-radius:50%;border:0;background:linear-gradient(135deg,#7b93ff,#ff7ab8);color:#fff;font-weight:800;cursor:pointer}
+#av{width:36px;height:36px;border-radius:50%;border:0;background:#5948f5;color:#fff;font-weight:800;cursor:pointer}
 #bn{display:none}
 @media(max-width:720px){#mb{display:none}#bn{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:15;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
 #bn button{flex:1;flex-direction:column;gap:2px;font-size:11px;padding:6px 2px}#bn button.on{color:var(--acc)}#bn em{position:absolute;top:0;right:22%}main{padding-bottom:96px}.toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important}}
 .card,.stat,.ev{border-radius:var(--r);box-shadow:var(--sh);border-color:transparent}
 .ev{transition:transform .18s,box-shadow .18s}.ev:hover{transform:translateY(-3px)}
-.stat b{background:linear-gradient(135deg,var(--acc),#ff7ab8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat b{color:var(--acc)}
 #app{animation:fi .25s ease}@keyframes fi{from{opacity:0;transform:translateY(6px)}}
-.btn{transition:.15s;border-radius:10px}.btn:not(.ghost){background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 60%,#9b5cff))}.btn:active{transform:scale(.97)}
+.btn{transition:.15s;border-radius:10px}.btn:not(.ghost){background:var(--acc)}.btn:active{transform:scale(.97)}
 input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent);outline:0}
 th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}.chip{transition:.15s}
 .empty{border:1px dashed var(--line);border-radius:var(--r)}.empty .btn{margin-top:10px}
@@ -41,14 +42,14 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute
 #um .uh{padding:10px 12px;border-bottom:1px solid var(--line);margin-bottom:4px}#um .uh b,#um .uh span{display:block}#um .uh span{color:var(--mute);font-size:12px}
 #um button{display:flex;justify-content:space-between;width:100%;border:0;background:none;color:var(--ink);font:inherit;padding:10px 12px;border-radius:9px;cursor:pointer;text-align:left}#um button:hover{background:var(--bg)}#um .dg{color:var(--bad)}#um small{color:var(--mute)}
 #tp{top:calc(62px + env(safe-area-inset-top,0px))!important;border-radius:14px!important}
-#vs,#vb,#js{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(8,12,30,.55);backdrop-filter:blur(4px);padding:16px}
+#vs,#vb,#js{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(16,23,43,.55);backdrop-filter:blur(4px);padding:16px}
 #vs .box,#vb .box,#js .box{background:var(--card);border-radius:18px;padding:22px;width:min(380px,100%);box-shadow:0 24px 70px rgba(0,0,0,.45)}
-#ub{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;padding:8px 14px;background:linear-gradient(135deg,#4f6bff,#9b5cff);color:#fff;font-size:14px}#ub button{border:0;border-radius:8px;padding:4px 10px;font:inherit;font-weight:700;cursor:pointer}
-#jt{display:flex;align-items:center;gap:6px;border:0;border-radius:10px;padding:8px 14px;background:linear-gradient(135deg,#1a73e8,#0b57d0);color:#fff;font:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px -4px rgba(26,115,232,.7);transition:.15s}#jt:hover{filter:brightness(1.1)}#jt:active{transform:scale(.97)}
+#ub{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;padding:8px 14px;background:#5948f5;color:#fff;font-size:14px}#ub button{border:0;border-radius:8px;padding:4px 10px;font:inherit;font-weight:700;cursor:pointer}
+#jt{display:flex;align-items:center;gap:6px;border:0;border-radius:10px;padding:8px 14px;background:#5948f5;color:#fff;font:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px -4px rgba(89,72,245,.6);transition:.15s}#jt:hover{filter:brightness(1.1)}#jt:active{transform:scale(.97)}
 #vs .box,#vb .box,#js .box{position:relative}
 .x{float:right;position:sticky;top:0;z-index:2;display:grid;place-items:center;width:32px;height:32px;margin:-6px -6px 0 8px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--card);color:var(--ink);font:700 15px/1 system-ui,sans-serif;cursor:pointer}.x:hover{background:var(--bg)}
 #js .x,#vs .x{position:absolute;float:none;top:10px;right:10px;margin:0}
-#js input{text-transform:uppercase;letter-spacing:.3em;text-align:center;font-size:20px;font-weight:700}#js .btn:not(.ghost){background:#1a73e8}#jmsg{color:var(--bad);min-height:20px;font-size:13px;margin:8px 0 0}
+#js input{text-transform:uppercase;letter-spacing:.3em;text-align:center;font-size:20px;font-weight:700}#js .btn:not(.ghost){background:var(--acc)}#jmsg{color:var(--bad);min-height:20px;font-size:13px;margin:8px 0 0}
 @media(max-width:400px){#jt span{display:none}#jt{padding:8px 10px}}
 `;document.head.append(css);
 

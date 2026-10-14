@@ -55,7 +55,7 @@ window.cemCalc=calc;
 
 /* ---------- styles ---------- */
 const css=document.createElement('style');
-css.textContent=`#cl{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(8,12,30,.7);backdrop-filter:blur(4px);padding:14px;overflow:auto}
+css.textContent=`#cl{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(16,23,43,.7);backdrop-filter:blur(4px);padding:14px;overflow:auto}
 #cl .box{position:relative;background:var(--card);color:var(--ink);border-radius:18px;padding:18px;width:min(380px,100%);max-height:calc(100vh - 28px);overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.5)}
 #cl .x{position:absolute;top:12px;right:12px;float:none;margin:0;background:none;border:0;color:var(--mute);font:inherit;font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px}
 #cl h3{font-size:16px;margin:0 28px 10px 0}

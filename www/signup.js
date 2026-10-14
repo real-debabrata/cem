@@ -18,8 +18,8 @@ const regUntil=e=>{const c=+rp(e).cl;if(c>0)return c;const t=new Date((e.date||'
 const base=()=>window.siteBase?siteBase():'';
 const link=e=>{const b=base();if(!b)return '';const s=slugOf(e);return s?b+'r/'+s:b+'register.html?e='+e.id};
 const plainLink=e=>{const b=base(),s=slugOf(e);return b&&s?b+'register.html?r='+s:''};   // always works, even without 404.html
-const BGS={indigo:'Indigo night',sunset:'Sunset',ocean:'Ocean',forest:'Forest',graphite:'Graphite',light:'Light'};
-const theme=e=>{const r=rp(e);return{ac:/^#[0-9a-f]{6}$/i.test(r.ac||'')?r.ac:'#4f6bff',bg:BGS[r.bg]?r.bg:'indigo',hd:String(r.hd||'').slice(0,80),in:String(r.in||'').slice(0,400),bt:String(r.bt||'').slice(0,30),ty:String(r.ty||'').slice(0,200),bn:/^https:\/\/[^\s"'<>]{4,290}$/i.test(r.bn||'')?r.bn:'',ss:r.ss===0?0:1}};
+const BGS={indigo:'Midnight',sunset:'Sunset',ocean:'Ocean',forest:'Forest',graphite:'Graphite',light:'Light'};
+const theme=e=>{const r=rp(e);return{ac:/^#[0-9a-f]{6}$/i.test(r.ac||'')?r.ac:'#5948f5',bg:BGS[r.bg]?r.bg:'indigo',hd:String(r.hd||'').slice(0,80),in:String(r.in||'').slice(0,400),bt:String(r.bt||'').slice(0,30),ty:String(r.ty||'').slice(0,200),bn:/^https:\/\/[^\s"'<>]{4,290}$/i.test(r.bn||'')?r.bn:'',ss:r.ss===0?0:1}};
 const dtl=t=>{if(!t)return '';const d=new Date(t),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())};
 const when=t=>new Date(t).toLocaleString([],{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
 window.regPendingN=e=>(e.cloud&&window.can&&can(e,'pay'))?subsOf(e).filter(x=>x.s==='pending').length:0;
@@ -199,7 +199,7 @@ document.addEventListener('submit',async x=>{
  if(cl&&cl<Date.now())return toast('Pick a closing time in the future. To stop registration now, use Close registration.');
  if(slug!==old){try{await claimSlug(E,slug,old)}catch(m){return toast(String(m))}}
  const ac=g('ac');
- E.pay=Object.assign({upi:'',payee:'',fee:0},E.pay||{},{rp:{slug,hd:g('hd').slice(0,80),in:g('in').slice(0,400),bt:g('bt').slice(0,30),ty:g('ty').slice(0,200),ac:/^#[0-9a-f]{6}$/i.test(ac)?ac:'#4f6bff',bg:BGS[g('bg')]?g('bg'):'indigo',bn,ss:fd.get('ss')?1:0,cl}});
+ E.pay=Object.assign({upi:'',payee:'',fee:0},E.pay||{},{rp:{slug,hd:g('hd').slice(0,80),in:g('in').slice(0,400),bt:g('bt').slice(0,30),ty:g('ty').slice(0,200),ac:/^#[0-9a-f]{6}$/i.test(ac)?ac:'#5948f5',bg:BGS[g('bg')]?g('bg'):'indigo',bn,ss:fd.get('ss')?1:0,cl}});
  V.sgc=false;sv();pubSync(E);toast(slug?'Saved. Your link: /r/'+slug:'Saved');
 });
 document.addEventListener('submit',x=>{

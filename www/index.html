@@ -1,15 +1,30 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F7FB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10172B" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="description" content="Registrations, tasks, tickets and check-in for your whole event team.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Campus Events">
+<meta property="og:title" content="Campus Events">
+<meta property="og:description" content="Registrations, tasks, tickets and check-in for your whole event team.">
+<meta property="og:image" content="https://cem.deba.indevs.in/icons/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="splash.css">
 <link rel="stylesheet" href="event.css">
 <title>Campus Events</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
---bg:#eef2f7;--card:#fff;--ink:#14213d;--mute:#5b6678;--line:#d9e0ea;--acc:#2f4bd8;--accink:#fff;--ok:#12805c;--bad:#c2331f}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1424;--card:#171f35;--ink:#e8ecf6;--mute:#9aa6bd;--line:#2a3552;--acc:#7b93ff;--accink:#0e1424;--ok:#4cd6a0;--bad:#ff8a78}}
-:root[data-theme="dark"]{--bg:#0e1424;--card:#171f35;--ink:#e8ecf6;--mute:#9aa6bd;--line:#2a3552;--acc:#7b93ff;--accink:#0e1424;--ok:#4cd6a0;--bad:#ff8a78}
+--bg:#f6f7fb;--card:#fff;--ink:#10172b;--mute:#5b6380;--line:#e1e4ef;--acc:#5948f5;--accink:#fff;--ok:#087a62;--okf:#35c9a5;--bad:#c2331f}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10172b;--card:#1a2240;--ink:#f6f7fb;--mute:#a5abc4;--line:#2b3558;--acc:#8f84ff;--accink:#10172b;--ok:#35c9a5;--okf:#35c9a5;--bad:#ff8a78;--tm:40%}}
+:root[data-theme="dark"]{--bg:#10172b;--card:#1a2240;--ink:#f6f7fb;--mute:#a5abc4;--line:#2b3558;--acc:#8f84ff;--accink:#10172b;--ok:#35c9a5;--okf:#35c9a5;--bad:#ff8a78;--tm:40%}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*:before,*:after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
@@ -29,7 +44,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .stat b{font:800 28px 'Poppins',sans-serif;display:block}.stat span{color:var(--mute);font-size:13px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
 .ev{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--tc);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
-.ev h3{font-size:18px}.tag{font-size:12px;font-weight:700;color:var(--tc)}
+.ev h3{font-size:18px}.tag{font-size:12px;font-weight:700;color:color-mix(in srgb,var(--tc),var(--ink) var(--tm,0%))}
 .meta{color:var(--mute);font-size:13px}
 .bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--tc)}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -48,11 +63,11 @@ input[type=checkbox]{width:auto}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:4px 12px;font:inherit;font-size:13px;cursor:pointer}.chip.on{background:var(--ink);color:var(--bg)}
 .qr{background:#fff;padding:8px;display:inline-block;border-radius:8px}.qr svg{display:block;max-width:100%;height:auto}
 </style><script src="qrcode.js"></script><style>.gate body{visibility:hidden}</style><script>document.documentElement.className="gate"</script></head><body>
-<div id="splash" role="status" aria-label="Loading Campus Events"><div class="sp-logo"><i class="sp-ring"></i><div class="sp-mark"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lgs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b93ff"/><stop offset="1" stop-color="#ff7ab8"/></linearGradient></defs><rect width="40" height="40" fill="url(#lgs)"/><path d="M11 15h18v4a2 2 0 0 0 0 4v4H11v-4a2 2 0 0 0 0-4z" fill="#fff"/></svg></div></div><div class="sp-name">Campus Events</div><div class="sp-sub">Getting your events ready</div><div class="sp-bar"><i></i></div></div>
-<header><h1 style="display:flex;align-items:center;gap:8px"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b93ff"/><stop offset="1" stop-color="#ff7ab8"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#lg2)"/><path d="M11 15h18v4a2 2 0 0 0 0 4v4H11v-4a2 2 0 0 0 0-4z" fill="#fff"/></svg>Campus Events</h1><nav id="nav"></nav></header>
+<div id="splash" role="status" aria-label="Loading Campus Events"><div class="sp-logo"><i class="sp-ring"></i><div class="sp-mark"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></svg></div></div><div class="sp-name">Campus Events</div><div class="sp-sub">Getting your events ready</div><div class="sp-bar"><i></i></div></div>
+<header><h1 style="display:flex;align-items:center;gap:8px"><svg width="26" height="26" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></svg>Campus Events</h1><nav id="nav"></nav></header>
 <main id="app"></main>
 <script>
-const TYPES={Fest:'#d9482b',Seminar:'#2f4bd8',Webinar:'#0e8a8a',Workshop:'#b7791f',Cultural:'#b02a82',Sports:'#2e8b3d'};
+const TYPES={Fest:'#d9482b',Seminar:'#5948f5',Webinar:'#0e8a8a',Workshop:'#a2650a',Cultural:'#b02a82',Sports:'#2e8b3d'};
 const PRESETS={
  Fest:[['Full name','text',1],['College ID','text',1],['Department','text',0],['Teams / events joining','text',0]],
  Seminar:[['Full name','text',1],['College ID','text',1],['Year of study','select',0,'1st,2nd,3rd,4th']],

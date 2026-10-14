@@ -141,7 +141,7 @@ const SECS=()=>[
 
 /* ---------- panel ---------- */
 const css=document.createElement('style');
-css.textContent=`#hg{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(8,12,30,.55);backdrop-filter:blur(4px);padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
+css.textContent=`#hg{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(16,23,43,.55);backdrop-filter:blur(4px);padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
 #hg .hgb{position:relative;background:var(--card);color:var(--ink);border-radius:18px;width:min(720px,100%);max-height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.45);outline:0}
 #hg .hgh,#hg .hgs{flex:none}#hg .hgh{display:flex;align-items:center;gap:10px;padding:16px 18px 10px}#hg .hgh h3{flex:1;font-size:18px}
 #hg .hgx{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:var(--card);color:var(--ink);font:700 15px/1 system-ui,sans-serif;cursor:pointer}

@@ -1,16 +1,16 @@
-/* CEM 2.0.0: animated logo loader shown while the app boots (shared by index, login and pay pages). */
+/* CEM 3.7.0: new logo, flat Midnight Navy background, Amber loading ring. (2.0.0: animated logo loader shown while the app boots (shared by index, login and pay pages).) */
 #splash{position:fixed;inset:0;z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:#fff;visibility:visible;opacity:1;
-background:radial-gradient(900px 500px at 8% 0%,rgba(123,147,255,.45),transparent 60%),radial-gradient(700px 500px at 100% 100%,rgba(255,122,184,.35),transparent 60%),linear-gradient(135deg,#0a0f2e,#16205c 60%,#2a1f6e);transition:opacity .5s ease,visibility .5s ease}
+background:radial-gradient(900px 520px at 0% 0%,rgba(89,72,245,.42),transparent 62%),#10172b;transition:opacity .5s ease,visibility .5s ease}
 #splash.out{opacity:0;visibility:hidden;pointer-events:none}
 .sp-logo{position:relative;width:96px;height:96px;display:grid;place-items:center;animation:sp-pop .8s cubic-bezier(.2,1.4,.4,1) both}
-.sp-ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 50%,#7b93ff,#ff7ab8,transparent);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));animation:sp-spin 1.3s linear infinite}
-.sp-mark{position:relative;width:68px;height:68px;border-radius:19px;overflow:hidden;box-shadow:0 12px 34px rgba(123,147,255,.55);animation:sp-float 2.4s ease-in-out .8s infinite}
+.sp-ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 50%,#8f84ff,#ffb547,transparent);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));animation:sp-spin 1.3s linear infinite}
+.sp-mark{position:relative;width:68px;height:68px;border-radius:23.4%;overflow:hidden;box-shadow:0 12px 34px rgba(89,72,245,.55);animation:sp-float 2.4s ease-in-out .8s infinite}
 .sp-mark svg{display:block;width:100%;height:100%}
 .sp-mark:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.6) 50%,transparent 65%);transform:translateX(-120%);animation:sp-shine 1.9s ease-in-out .6s infinite}
 .sp-name{font:800 22px Poppins,system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:.02em;animation:sp-fade .8s .25s both}
-.sp-sub{margin-top:-14px;color:#c9d2ff;font:500 13px Poppins,system-ui,sans-serif;animation:sp-fade .8s .45s both}
+.sp-sub{margin-top:-14px;color:#c6c9e0;font:500 13px Poppins,system-ui,sans-serif;animation:sp-fade .8s .45s both}
 .sp-bar{width:150px;height:4px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden;animation:sp-fade .8s .5s both}
-.sp-bar i{display:block;height:100%;width:42%;border-radius:4px;background:linear-gradient(90deg,#7b93ff,#ff7ab8);animation:sp-slide 1.15s ease-in-out infinite}
+.sp-bar i{display:block;height:100%;width:42%;border-radius:4px;background:#ffb547;animation:sp-slide 1.15s ease-in-out infinite}
 @keyframes sp-pop{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:scale(1)}}
 @keyframes sp-spin{to{transform:rotate(360deg)}}
 @keyframes sp-float{50%{transform:translateY(-4px)}}

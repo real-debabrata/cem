@@ -1,46 +1,60 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10172B">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="description" content="Registrations, tasks, tickets and check-in for your whole event team.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Campus Events">
+<meta property="og:title" content="Sign in | Campus Events">
+<meta property="og:description" content="Registrations, tasks, tickets and check-in for your whole event team.">
+<meta property="og:image" content="https://cem.deba.indevs.in/icons/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="splash.css">
 <title>Sign in | Campus Events</title>
 <style>
-:root{box-sizing:border-box;--ink:#14213d;--mute:#5b6678;--line:#d9e0ea;--bad:#c2331f}
+:root{box-sizing:border-box;--ink:#10172b;--mute:#5b6380;--line:#e1e4ef;--bad:#c2331f}
 *,*:before,*:after{box-sizing:inherit}
 body{margin:0;min-height:100vh;font:15px/1.5 'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#fff;display:grid;grid-template-columns:1.15fr 1fr;
-background:radial-gradient(900px 500px at 8% 0%,rgba(123,147,255,.45),transparent 60%),radial-gradient(700px 500px at 100% 100%,rgba(255,122,184,.35),transparent 60%),linear-gradient(135deg,#0a0f2e,#16205c 60%,#2a1f6e)}
+background:radial-gradient(900px 520px at 0% 0%,rgba(89,72,245,.42),transparent 62%),#10172b}
 .hero{padding:8vh 6vw;display:flex;flex-direction:column;justify-content:center;gap:16px}
 .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:22px}
 h1{font-size:clamp(30px,4.4vw,52px);line-height:1.05;margin:0}
-.hero p{color:#c9d2ff;max-width:46ch;margin:0}
+.hero p{color:#c6c9e0;max-width:46ch;margin:0}
 ul{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:10px}
-li{color:#e6eaff;padding-left:26px;position:relative}
-li:before{content:"";position:absolute;left:0;top:6px;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,#7b93ff,#ff7ab8)}
+li{color:#e6e8f5;padding-left:26px;position:relative}
+li:before{content:"";position:absolute;left:0;top:6px;width:12px;height:12px;border-radius:50%;background:#ffb547}
 .pane{display:flex;align-items:center;justify-content:center;padding:max(20px,env(safe-area-inset-top)) 20px max(20px,env(safe-area-inset-bottom))}
 .glass{width:min(400px,100%);background:#fff;color:var(--ink);border-radius:20px;padding:26px;box-shadow:0 24px 70px rgba(0,0,0,.45)}
 h2{margin:0;font-size:22px}.meta{color:var(--mute);font-size:13px;margin:4px 0 0}
-.seg{display:grid;grid-template-columns:1fr 1fr;background:#eef2f7;border-radius:10px;padding:4px;margin:14px 0 6px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:#f6f7fb;border-radius:10px;padding:4px;margin:14px 0 6px}
 .seg button{border:0;background:none;color:var(--mute);font:inherit;font-weight:700;padding:8px;border-radius:8px;cursor:pointer}
 .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.2)}
 label{display:block;font-weight:600;font-size:13px;margin:12px 0 4px}
 input{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:#fff}
-input:focus-visible,button:focus-visible{outline:2px solid #4f6bff;outline-offset:2px}
+input:focus-visible,button:focus-visible{outline:2px solid #5948f5;outline-offset:2px}
 .pw{position:relative}.pw button{position:absolute;right:6px;top:5px;background:none;border:0;color:var(--mute);font-size:13px;font-weight:600;cursor:pointer;padding:6px}
-.go{width:100%;margin-top:12px;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#4f6bff,#9b5cff);color:#fff;font:inherit;font-weight:700;cursor:pointer}.go:disabled{opacity:.6}
-.lnk{background:none;border:0;color:#4f6bff;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0;margin-top:10px}
-#msg{min-height:20px;font-size:13px;margin:10px 0 0;color:var(--bad)}#msg.ok{color:#12805c}
+.go{width:100%;margin-top:12px;padding:12px;border:0;border-radius:10px;background:#5948f5;color:#fff;font:inherit;font-weight:700;cursor:pointer}.go:disabled{opacity:.6}
+.lnk{background:none;border:0;color:#5948f5;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0;margin-top:10px}
+#msg{min-height:20px;font-size:13px;margin:10px 0 0;color:var(--bad)}#msg.ok{color:#087a62}
 .hide{display:none}
 .otp{letter-spacing:.5em;text-align:center;font-size:22px;font-weight:700;padding-left:calc(12px + .5em)}
 #cf{margin-top:12px}#cf:empty{margin:0}
 .lnk.sm{display:block;margin-top:8px}.lnk:disabled{color:var(--mute);cursor:default}
 .gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
-.gbtn:hover{background:#f6f8fb}.gbtn:disabled{opacity:.6;cursor:default}
+.gbtn:hover{background:#f0f2f8}.gbtn:disabled{opacity:.6;cursor:default}
 .or{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:12px;margin:14px 0 0}.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line)}
 @media(max-width:760px){body{grid-template-columns:1fr}.hero{padding:28px 22px 4px}ul,.hero p{display:none}}
 </style><style>*{-webkit-tap-highlight-color:transparent}button,a.btn,summary,label{-webkit-user-select:none;user-select:none}input,textarea,select{-webkit-user-select:text;user-select:text}</style></head><body>
-<div id="splash" role="status" aria-label="Loading Campus Events"><div class="sp-logo"><i class="sp-ring"></i><div class="sp-mark"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lgs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b93ff"/><stop offset="1" stop-color="#ff7ab8"/></linearGradient></defs><rect width="40" height="40" fill="url(#lgs)"/><path d="M11 15h18v4a2 2 0 0 0 0 4v4H11v-4a2 2 0 0 0 0-4z" fill="#fff"/></svg></div></div><div class="sp-name">Campus Events</div><div class="sp-sub">Getting your events ready</div><div class="sp-bar"><i></i></div></div>
+<div id="splash" role="status" aria-label="Loading Campus Events"><div class="sp-logo"><i class="sp-ring"></i><div class="sp-mark"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></svg></div></div><div class="sp-name">Campus Events</div><div class="sp-sub">Getting your events ready</div><div class="sp-bar"><i></i></div></div>
 <section class="hero">
- <div class="brand"><svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b93ff"/><stop offset="1" stop-color="#ff7ab8"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#lg)"/><path d="M11 15h18v4a2 2 0 0 0 0 4v4H11v-4a2 2 0 0 0 0-4z" fill="#fff"/></svg><span>Campus Events</span></div>
+ <div class="brand"><svg width="40" height="40" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></svg><span>Campus Events</span></div>
  <h1>Run every campus event, together.</h1>
  <p>One workspace for registrations, teams, tasks and payments, live on every phone.</p>
  <ul><li>Roles for organizers, managers, treasurers and leads</li><li>Delegate tasks down to your own team</li><li>UPI payment links with UTR tracking</li></ul>
