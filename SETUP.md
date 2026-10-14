@@ -614,3 +614,56 @@ Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or 
 | A person shows **Role removed** | The custom role they held was deleted from another device. Give them another role. |
 | The Custom roles card is missing | You are not the organizer or a manager, or the event is not shared yet. |
 | Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |
+
+
+## Upgrade to 3.7.0: new brand, logo and icons
+
+3.7.0 is a **look-and-feel release**. There is nothing to change in Firebase, no new npm package, no change to the workflows, the Worker or the signing key, and the rules are unchanged. Free plans only. Allow about 10 minutes.
+
+**Read this first**
+- **No data is touched.** Events, members, roles and registration pages stay exactly as they are. Registration pages that picked the "Indigo night" background keep it (it is now called **Midnight** in the drop-down; the stored value is still `indigo`). Pages that chose their own accent colour keep it.
+- **The version is 3.7.0.** The APK version name is read from `www/ui.js`, so Build APK picks it up by itself. Optionally set `latest` to `3.7.0` in Firestore > `appconfig` > `version` so existing users see the update banner. Do **not** raise `min`: nothing in 3.7.0 is required.
+- **Link previews.** `index.html`, `login.html` and `register.html` now carry Open Graph tags that point to `https://cem.deba.indevs.in/icons/og-image.png` (the address in `CNAME`). If you host the site somewhere else, replace that address in those three files.
+
+### Files
+In the repo root replace: `package.json`, `README.md`, `SETUP.md`.
+In `scripts/` replace: `patch-android.sh`. In `scripts/` add (new): `patch-icons.sh`.
+In `www/` replace: `index.html`, `login.html`, `register.html`, `pay.html`, `ticket.html`, `404.html`, `splash.css`, `event.css`, `ui.js`, `sync.js`, `signup.js`, `event.js`, `chat.js`, `scan.js`, `calc.js`, `help.js`.
+In `www/` add (new): `favicon.ico`, `manifest.webmanifest`, and the folder `icons/` (10 files).
+In the repo root add (new): the folder `brand/` (logo, icon generator and the Android launcher icons).
+Not changed: `.github/`, `worker/`, `firestore.rules`, the other files in `www/`, `vendor/`, `fonts/`.
+
+### Steps
+1. **Upload the files** above to GitHub and commit to `main`. Keep the folder structure (`www/icons/...`, `brand/android/res/...`). Pushing starts **Build APK** by itself.
+2. **Deploy the website.** Actions > **Deploy web version** > Run workflow. Open the site, refresh once, and check profile icon > About & updates shows **v3.7.0**.
+3. **Install the new APK** over the old one. The launcher icon and round icon are now the new "E" logo.
+4. **Run the check list below.**
+
+### What is new
+- **New logo** (the rounded "E") in the loading screen, the sign-in, registration, payment and ticket pages and the app header.
+- **New colours.** Primary `#5948F5` (buttons, links, logo), Warm Amber `#FFB547` (unread dots, count badges on tabs, the loading ring), Midnight Navy `#10172B` (dark theme and the sign-in and public pages), Cloud White `#F6F7FB` (light theme) and Fresh Mint `#35C9A5` (check-ins, completed tasks and progress). The pink-to-blue gradients are gone: buttons are solid.
+- **Dark theme** uses a lighter tint of the primary (`#8F84FF`) for links and buttons, because `#5948F5` alone is too dark to read on navy. Success text on light backgrounds uses a deeper mint (`#087A62`) for the same reason; Fresh Mint itself is used for fills and in the dark theme.
+- **Favicon, home-screen icon and web manifest.** Browser tab icon, iPhone and Android "Add to home screen" icon, and a link-preview image for shared registration links. There is no service worker, so nothing is cached for offline use and nothing else changes.
+- **Android launcher icon and launch image.** `scripts/patch-android.sh` now also runs `scripts/patch-icons.sh`, which copies `brand/android/res` over the icon files Capacitor generates. It only replaces files that already exist under the same name, so it cannot break the Gradle build.
+- **Event-type tags** adapt to the theme so they stay readable in dark mode. Seminar now uses the primary colour.
+
+### Check list (5 minutes)
+1. Open the site: browser tab shows the new E icon; the loading screen shows the E with an amber ring.
+2. Sign in. Header shows the new logo; buttons are solid indigo. Open the profile icon menu and tap **Theme** until it says dark: buttons and the active tab turn a lighter indigo.
+3. Event > Registration: a pending-registration count shows as an **amber** badge. Task progress and seats-filled bars fill in **mint**.
+4. Open a registration link (`/r/<name>`) on a phone: navy page with the new logo. Share the link in a chat app: the preview shows the new image (some apps cache old previews for a few days).
+5. Install the APK: the launcher icon is the new E. On Android 11 and older the app also opens on a navy launch screen; Android 12 and newer show their own system launch screen with the app icon.
+
+### Changing the logo or colours later
+Edit `brand/logo.svg` (and the shapes at the top of `brand/make-icons.py` if the logo geometry changes), then run `pip install cairosvg pillow fonttools brotli` and `python3 brand/make-icons.py` from the repo root. It rewrites every icon under `www/` and `brand/android/res`. The colour values used in the app are listed in `brand/README.md`.
+
+### Rolling back
+Restore the 3.6.1 versions of the files listed above and delete the new ones. Nothing in Firebase needs to change.
+
+### Troubleshooting
+| What you see | Cause and fix |
+| --- | --- |
+| The old icon still shows in the browser tab | Browsers cache favicons hard. Close the tab, or open `/favicon.ico` and refresh it once. |
+| The APK still has the old launcher icon | The `brand/` folder was not uploaded, or the Build APK log says `brand/android/res not found`. Upload `brand/android/res/...` with its sub-folders and run Build APK again. Uninstall and reinstall if the phone launcher keeps the old picture. |
+| Link preview shows no image | Check that `https://<your-site>/icons/og-image.png` opens, and that the address in the `og:image` tags matches your site. Chat apps cache previews; try a new link. |
+| Icons missing on the site | The `www/icons/` folder or `www/manifest.webmanifest` was not uploaded, or the website was not redeployed. |

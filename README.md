@@ -138,5 +138,6 @@ Tap your **profile icon**:
 - **firestore.rules** must be published in your Firebase project; it holds the permission rules.
 - The permission list of each built-in role exists in two places and must match: `permsOf` in `firestore.rules` and `BASE` in `www/app2.js`.
 - App code is in `www/`: `event.js` (event page, Attendees, participant teams), `signup.js` (online registration), `payment.js` (cash collectors and the cash and UPI summary), `income.js` (Income tab and exports), `app2.js` (roles, tasks, people, payments, payment links), `expenses.js`, `chat.js`, `scan.js`, `import.js` and `sheet.js` (spreadsheet import), `calc.js`, `help.js`. The public pages are `register.html`, `pay.html`, `ticket.html` and `login.html`.
+- **Brand.** The logo, the colour list and the icon generator are in `brand/` (see `brand/README.md`). Android launcher icons are copied into the APK build by `scripts/patch-icons.sh`.
 
 Licence: see `LICENCE`.
