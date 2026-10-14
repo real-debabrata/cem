@@ -6,6 +6,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to create the GitHub Release
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -78,3 +80,37 @@ jobs:
           name: campus-events-apk
           path: android/app/build/outputs/apk/debug/campus-events-v*.apk
           if-no-files-found: error
+
+      # Publishes the APK as a GitHub Release, so the download website shows it by itself.
+      # - Release for this version does not exist yet: it is created (published) with the APK attached.
+      # - Release exists (for example a draft you wrote notes in) but has no APK: the APK is added to it.
+      # - Release already has an APK: nothing is touched, so your notes and files are never overwritten.
+      # Notes come from release-notes/vX.Y.Z.md if that file exists, otherwise GitHub writes them from the commits.
+      - name: Publish GitHub Release
+        if: github.ref_name == 'main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          VN=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle | head -1)
+          TAG="v$VN"
+          APK="android/app/build/outputs/apk/debug/campus-events-v$VN.apk"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            if gh release view "$TAG" --json assets --jq '.assets[].name' | grep -qi '\.apk$'; then
+              echo "- Release **$TAG** already has an APK, left unchanged." >> "$GITHUB_STEP_SUMMARY"
+            else
+              gh release upload "$TAG" "$APK"
+              echo "- APK added to the existing release **$TAG**." >> "$GITHUB_STEP_SUMMARY"
+            fi
+            exit 0
+          fi
+
+          if [ -f "release-notes/$TAG.md" ]; then
+            NOTES=(--notes-file "release-notes/$TAG.md")
+          else
+            NOTES=(--generate-notes)
+          fi
+          gh release create "$TAG" "$APK" --title "$TAG" --target "$GITHUB_SHA" --latest "${NOTES[@]}"
+          echo "- Published release **$TAG** with the APK attached." >> "$GITHUB_STEP_SUMMARY"
