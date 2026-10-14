@@ -47,3 +47,6 @@ if "CEM_SIGNING" not in s:
 open(p, "w").write(s)
 print("Patched", p, "-> versionName", os.environ["VERSION_NAME"], "versionCode", os.environ["VERSION_CODE"])
 PY
+
+# v3.7.0: new launcher icon and launch image (brand/android/res). Same step, so the workflow file does not change.
+bash "$(dirname "$0")/patch-icons.sh" "$(dirname "$GRADLE")/src/main/res"
