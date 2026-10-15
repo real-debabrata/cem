@@ -502,7 +502,7 @@ In `www/` add (new): `sheet.js`, `import.js`, `payment.js`, `calc.js`, `404.html
 Not changed: `.github/` (nothing there changes), `scripts/`, `worker/`, `app2.js`, `expenses.js`, `chat.js`, `scan.js`, `login.html`, `pay.html`, `ticket.html`, `firebase-config.js`, `event.css`, `vendor/`.
 
 ### Steps
-1. **Upload the files** above to GitHub and commit to `main`. Pushing starts **Build APK** by itself.
+1. **Upload the files** above to GitHub and commit to `main`. Build APK is started by hand (Actions > Build APK > Run workflow).
 2. **Publish the new rules.** Firebase console > Firestore Database > **Rules** > select everything > paste the new `firestore.rules` > **Publish**. Check there are no red error markers before you publish. If the editor shows an error, do not publish; paste the whole file again and tell whoever maintains the project what the marker says.
 3. **Deploy the website.** Actions > **Deploy web version** > Run workflow. Wait for the green tick, open the site, refresh once, and check account menu > About & updates shows **v3.6.0**. The deploy publishes the `www` folder, so `404.html` goes live with it. That file is what makes `https://your-site/r/<name>` work.
 4. **Install the new APK** over the old one if you use the app (Actions > Build APK). Optionally set `latest` to `3.6.0` in Firestore > `appconfig` > `version`. Do **not** raise `min`: 3.5.0 apps still work.
@@ -572,7 +572,7 @@ In `www/` add (new): `help.js`.
 Not changed: `.github/`, `scripts/`, `worker/`, `scan.js`, `sheet.js`, `404.html`, `login.html`, `register.html`, `pay.html`, `ticket.html`, `firebase-config.js`, `vendor/`.
 
 ### Steps
-1. **Upload the files** above to GitHub and commit to `main`. Pushing starts **Build APK** by itself.
+1. **Upload the files** above to GitHub and commit to `main`. Build APK is started by hand (Actions > Build APK > Run workflow).
 2. **Publish the new rules.** Firebase console > Firestore Database > **Rules** > select everything > paste the new `firestore.rules` > **Publish**. Check there are no red error markers before you publish. If the editor shows an error, do not publish; keep the old rules and note the line the marker points to.
 3. **Deploy the website.** Actions > **Deploy web version** > Run workflow. Open the site, refresh once, and check profile icon > About & updates shows **v3.6.1**.
 4. **Install the new APK** over the old one if you use the app (Actions > Build APK).
@@ -616,6 +616,18 @@ Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or 
 | Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |
 
 
+## Upgrade to 3.7.2: no update banner on the website
+
+3.7.2 is a **small fix**. The "Version x is available" banner and the "Update required" screen are only for the Android app. The website is always the latest deployed version, so it no longer shows them (and no longer reads `appconfig/version` from Firestore). Nothing changes in Firebase, the rules, the Worker, the workflows or the signing key.
+
+**Files:** replace `package.json`, `SETUP.md`, `www/ui.js` and `www/help.js`.
+
+**Steps**
+1. Commit the four files to `main`. Nothing builds by itself: Build APK and Deploy web version are both started by hand.
+2. **Deploy the website.** Actions > **Deploy web version** > Run workflow. Open the site, refresh once, and check profile icon > About & updates: it shows **v3.7.2**, "Web version" and a **Reload** button.
+3. **Build the APK.** Actions > **Build APK** > Run workflow. Type the release notes in the box (points separated by `|`) and keep **Publish a GitHub Release** ticked.
+4. Optional: set `latest` to `3.7.2` in Firestore > `appconfig` > `version` so installed APKs see the banner. Do **not** raise `min`.
+
 ## Upgrade to 3.7.0: new brand, logo and icons
 
 3.7.0 is a **look-and-feel release**. There is nothing to change in Firebase, no new npm package, no change to the workflows, the Worker or the signing key, and the rules are unchanged. Free plans only. Allow about 10 minutes.
@@ -634,7 +646,7 @@ In the repo root add (new): the folder `brand/` (logo, icon generator and the An
 Not changed: `.github/`, `worker/`, `firestore.rules`, the other files in `www/`, `vendor/`, `fonts/`.
 
 ### Steps
-1. **Upload the files** above to GitHub and commit to `main`. Keep the folder structure (`www/icons/...`, `brand/android/res/...`). Pushing starts **Build APK** by itself.
+1. **Upload the files** above to GitHub and commit to `main`. Keep the folder structure (`www/icons/...`, `brand/android/res/...`). Build APK is started by hand (Actions > Build APK > Run workflow).
 2. **Deploy the website.** Actions > **Deploy web version** > Run workflow. Open the site, refresh once, and check profile icon > About & updates shows **v3.7.0**.
 3. **Install the new APK** over the old one. The launcher icon and round icon are now the new "E" logo.
 4. **Run the check list below.**
