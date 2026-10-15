@@ -1,7 +1,8 @@
-/* CEM 3.7.0: new brand (Indigo #5948F5, Amber, Midnight Navy, Cloud White, Fresh Mint) and new logo.
+/* CEM 3.7.2: update banner / update check only in the Android app, never on the website (the website is always the latest deployed version).
+   CEM 3.7.0: new brand (Indigo #5948F5, Amber, Midnight Navy, Cloud White, Fresh Mint) and new logo.
    Campus Events: menu bar, UI polish, app version control. Loads after sync.js/app2.js; no core code is modified. */
 (function(){
-const APP_VERSION='3.7.1',BUILD='2026-10-14';   // bump these on every release
+const APP_VERSION='3.7.2',BUILD='2026-10-15';   // bump these on every release
 const $=s=>document.querySelector(s),LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const root=document.documentElement;
 let theme=localStorage.getItem('campus-theme')||'auto',CFG=LS('campus-ver',null);
@@ -75,13 +76,17 @@ paint();render();
 
 // ---- version control (Firestore doc appconfig/version, read-only for the app, edited in the Firebase console) ----
 const cmp=(a,b)=>{a=String(a).split('.').map(Number);b=String(b).split('.').map(Number);for(let i=0;i<3;i++){const d=(a[i]||0)-(b[i]||0);if(d)return d>0?1:-1}return 0};
-const newer=()=>CFG&&CFG.latest&&cmp(APP_VERSION,CFG.latest)<0;
+// 3.7.2: only the installed Android app (Capacitor) can be out of date. The website always serves the latest deployed files.
+const isApp=()=>{const K=window.Capacitor;return !!(K&&K.isNativePlatform&&K.isNativePlatform())};
+const newer=()=>isApp()&&CFG&&CFG.latest&&cmp(APP_VERSION,CFG.latest)<0;
 function gate(){
+ if(!isApp()){vb.classList.add('hid');ub.classList.add('hid');return}   // website: never block or nag
  if(CFG&&CFG.min&&cmp(APP_VERSION,CFG.min)<0){vb.innerHTML=`<div class="box"><h3>Update required</h3><p class="meta">This version (v${APP_VERSION}) is no longer supported. Please update to v${esc(CFG.latest||CFG.min)} to continue.</p>${CFG.notes?`<p class="meta">${esc(CFG.notes)}</p>`:''}<button class="btn" data-u="upd" style="width:100%">Update now</button></div>`;vb.classList.remove('hid');return}
  vb.classList.add('hid');
  if(newer()&&localStorage.getItem('campus-ver-dismiss')!==String(CFG.latest)){ub.innerHTML=`<span>Version ${esc(CFG.latest)} is available.</span><button data-u="upd">Update</button><button data-u="about">What's new</button><button data-u="dis" aria-label="Dismiss">✕</button>`;ub.classList.remove('hid')}else ub.classList.add('hid');
 }
 async function check(force){
+ if(!isApp()){gate();if(force)about();return}   // website: no version lookup (also saves a Firestore read)
  if(force||!CFG||Date.now()-(CFG.t||0)>6*36e5){   // at most one Firestore read per 6 hours (free-plan friendly)
   try{if(window.firebase&&firebase.apps.length){const s=await firebase.firestore().collection('appconfig').doc('version').get();
    if(s.exists){CFG=Object.assign({t:Date.now()},s.data());localStorage.setItem('campus-ver',JSON.stringify(CFG))}else if(force)toast('No version info published yet')}}
@@ -89,8 +94,11 @@ async function check(force){
  }
  gate();if(force)about();
 }
-const update=()=>CFG&&CFG.url?window.open(CFG.url,'_blank'):location.replace(location.pathname+'?v='+Date.now());
+const update=()=>isApp()&&CFG&&CFG.url?window.open(CFG.url,'_blank'):location.replace(location.pathname+'?v='+Date.now());
 function about(){
+ if(!isApp()){   // website: no update status, only a reload for a stale browser cache
+  vs.innerHTML=`<div class="box"><button type="button" class="x" data-u="x" aria-label="Close">✕</button><h3>Campus Events</h3><p class="meta">Version ${APP_VERSION} · build ${BUILD}</p><p><b>Web version</b></p><p class="meta">The website always uses the latest version. If something looks old, reload to fetch the newest files.</p>
+ <div class="row"><button class="btn" data-u="upd">Reload</button><button class="btn ghost" data-u="x">Close</button></div></div>`;vs.classList.remove('hid');return}
  const c=CFG||{},st=!c.latest?'Not checked yet':newer()?'Update available: v'+c.latest:'You are up to date';
  vs.innerHTML=`<div class="box"><button type="button" class="x" data-u="x" aria-label="Close">✕</button><h3>Campus Events</h3><p class="meta">Version ${APP_VERSION} · build ${BUILD}</p><p><b>${esc(st)}</b></p>${c.notes?`<p class="meta">${esc(c.notes)}</p>`:''}
  <div class="row"><button class="btn" data-u="chk">Check for updates</button>${newer()?'<button class="btn" data-u="upd">Update now</button>':''}<button class="btn ghost" data-u="x">Close</button></div></div>`;vs.classList.remove('hid');
