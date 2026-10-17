@@ -1,8 +1,9 @@
-/* CEM 3.7.2: update banner / update check only in the Android app, never on the website (the website is always the latest deployed version).
+/* CEM 3.8.0: smooth motion (see motion.js). This file is unchanged apart from the version.
+   CEM 3.7.2: update banner / update check only in the Android app, never on the website (the website is always the latest deployed version).
    CEM 3.7.0: new brand (Indigo #5948F5, Amber, Midnight Navy, Cloud White, Fresh Mint) and new logo.
    Campus Events: menu bar, UI polish, app version control. Loads after sync.js/app2.js; no core code is modified. */
 (function(){
-const APP_VERSION='3.7.2',BUILD='2026-10-15';   // bump these on every release
+const APP_VERSION='3.8.0',BUILD='2026-10-17';   // bump these on every release
 const $=s=>document.querySelector(s),LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const root=document.documentElement;
 let theme=localStorage.getItem('campus-theme')||'auto',CFG=LS('campus-ver',null);
