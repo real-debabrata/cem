@@ -616,6 +616,24 @@ Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or 
 | Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |
 
 
+## Upgrade to 3.8.0: smooth motion
+
+3.8.0 is a **look-and-feel release**. The app now moves: screens rise in, numbers count up, progress bars fill, the active tab and menu marker glide, rows flash when you check someone in or tick a task, panels ease open, and menus, dialogs and toasts fade in and out. Nothing changes in Firebase, the rules, the Worker, the workflows or the signing key, and no new npm package is needed. Free plans only. It all runs on the phone and uses no extra data.
+
+- **Nothing is hidden behind motion.** If the phone or browser is set to reduce motion, all of it is switched off and the app looks as it did before.
+- **Typing never replays the entrance.** Search boxes and background syncs do not trigger it, so nothing flickers while you work.
+- **The version is 3.8.0.** The APK version name is read from `www/ui.js`, so Build APK picks it up by itself.
+
+**Files:** add the new `www/motion.js`, and replace `www/index.html`, `www/ui.js`, `package.json` and `SETUP.md`.
+
+**Steps**
+1. Commit the five files to `main`. Nothing builds by itself: Build APK and Deploy web version are both started by hand.
+2. **Deploy the website.** Actions > **Deploy web version** > Run workflow. Open the site, refresh once, and check profile icon > About & updates: it shows **v3.8.0**. Open the Dashboard and the numbers count up.
+3. **Build the APK.** Actions > **Build APK** > Run workflow. Type the release notes in the box (points separated by `|`) and keep **Publish a GitHub Release** ticked.
+4. Optional: set `latest` to `3.8.0` in Firestore > `appconfig` > `version` so installed APKs see the banner. Do **not** raise `min`.
+
+If something looks wrong, delete the `<script src="motion.js"></script>` line from `www/index.html` and redeploy: the app goes back to exactly how 3.7.2 looked.
+
 ## Upgrade to 3.7.2: no update banner on the website
 
 3.7.2 is a **small fix**. The "Version x is available" banner and the "Update required" screen are only for the Android app. The website is always the latest deployed version, so it no longer shows them (and no longer reads `appconfig/version` from Firestore). Nothing changes in Firebase, the rules, the Worker, the workflows or the signing key.
