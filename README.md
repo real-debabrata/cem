@@ -33,6 +33,7 @@ Campus Events (CEM) brings the moving parts of a campus event into one place. Cr
 |:---:|---|---|
 | 📝 | **Registration** | Publish a registration page, share a link or QR code, review applications and manage a waitlist. |
 | 🎟️ | **QR tickets & check-in** | Issue tickets, scan at the gate and check attendees in — including offline check-in after the event is opened online. |
+| ✉️ | **Bulk ticket email** | Email every attendee their own QR ticket from your own mailbox — through your mail app, or automatically with your Gmail, Zoho or Brevo (SMTP). |
 | ✅ | **Tasks & shopping list** | Assign tasks, set due dates, organise task groups and track items to buy. |
 | 👥 | **Roles & teams** | Work with organisers, managers, volunteers and custom roles with configurable permissions. |
 | 💳 | **Payments** | Track cash and UPI payments, review payment-link submissions and verify transactions. |
@@ -79,6 +80,7 @@ The Attendees area has two views: **Attendees** and **Registration**.
 - Check in with one tap and use **Undo** to reverse it. The attendee's **…** menu includes **Ticket (QR)**, **Mark paid**, payment mode, collector and **Remove registration**.
 - On Android, ticket scanning uses Google's scanner. On the website, use the camera or enter a ticket code or College ID. A used ticket shows when and by whom it was checked in. Unpaid fees can be marked paid from the scan flow.
 - For offline check-in, open the event once with internet before the gate opens. Scans can then work offline and synchronise when the device is online again.
+- **Email tickets** (Attendees tab) sends each attendee their own name and QR ticket in bulk. **My mail app** opens your default mail app pre-filled for each person; **Automatic (SMTP)** sends everything for you with your own mail login, which stays on your device. Available to every role with *Attendees and check-in*; setup is in **Help & guides > Email tickets to everyone**.
 - Import attendees from CSV, TSV, Excel (`.xlsx`, `.xlsm`) or OpenDocument (`.ods`). The file is processed on your device, not uploaded. Match file columns to registration questions, review skipped rows and download them as CSV to fix and re-import. Old `.xls` and password-protected files are not supported. Limits: 8 MB, 5,000 rows and 60 columns.
 
 **Registration**

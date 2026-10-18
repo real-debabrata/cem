@@ -616,6 +616,93 @@ Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or 
 | Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |
 
 
+## Upgrade to 3.10.0: bulk ticket email (your mail app, or automatic SMTP)
+
+Organizers no longer send tickets one by one. **Attendees > Email tickets** sends every attendee their own message with their own name and their own QR ticket, from the organizer's **own mailbox**. Two ways:
+
+- **My mail app:** the phone's or computer's mail app opens pre-filled for each attendee; tap Send, come back, tap *Open next*. Needs no setup at all.
+- **Automatic (SMTP):** the organizer enters their own Gmail / Zoho / Brevo / college mail login once, and the app sends every email by itself (8 at a time, with progress and retry), each with the attendee's QR picture inside.
+
+Nothing has to be switched on per organizer. The button appears for every role that has the **Attendees and check-in** permission (Organizer, Manager, Treasurer, Team lead, Coordinator, Registration desk, and custom roles with it), the moment they have that role. Firestore rules are **unchanged**, and the Android app needs **no new plugin**.
+
+### Files
+In `www/` add (new): `mailer.js`. Replace: `index.html`, `event.js`, `scan.js`, `help.js`, `ui.js`.
+In `worker/` replace: `otp-worker.js` (and optionally `wrangler.toml`).
+In the repo root replace: `package.json`, `README.md`, `SETUP.md`. Add `release-notes/v3.10.0.md`.
+Only `index.html`, `event.js`, `scan.js`, `help.js` and `ui.js` had a few lines changed; everything else in them is as before.
+
+### Steps (about 15 minutes)
+
+**Part A: website and "My mail app" mode (works as soon as the site is published)**
+1. Upload the files above to your GitHub repository (same way as earlier upgrades), commit, and let the *pages* workflow publish the site.
+2. Open the site, sign in, open an event with attendees, go to **Attendees** and tap **Email tickets**. Done: the mail-app mode works now.
+
+**Part B: Automatic (SMTP) mode: update the Worker once (administrator, about 5 minutes)**
+
+This reuses the Worker you already made in *Upgrade to 3.2.0*. **No new variable, secret or Worker is required.** It already has the Firebase project (`FIREBASE_SA`), the `OTP_KV` store and your `ALLOWED_ORIGINS`.
+1. Cloudflare dashboard > **Workers & Pages** > your Worker (`cem-otp`) > **Edit code**.
+2. Select everything in the editor, delete it, paste the whole content of `worker/otp-worker.js` from this release, and press **Deploy**.
+3. Check that `ALLOWED_ORIGINS` (Settings > Variables) contains your website address, `https://localhost` and `capacitor://localhost` (the Android app). If sign-up already works in the website and the APK, it does.
+4. `www/firebase-config.js` already has `window.OTP_API = "https://...workers.dev"` from 3.2.0. The email service uses the same address. Nothing to change.
+5. Open `https://YOUR-WORKER.workers.dev/` in a browser: it must show `{"ok":true,"service":"campus-events-otp"}`.
+6. In the app: **Email tickets > Automatic (SMTP)**, choose a provider, **Test connection**, then **Send a test email to me**.
+
+Optional Worker settings (Settings > Variables and Secrets, type *Text*):
+
+| Name | What it does |
+| --- | --- |
+| `MAIL_DAILY_LIMIT` | Emails one signed-in person may send per day through your Worker. Default 1000. |
+| `SMTP_ALLOWED_HOSTS` | Comma list such as `smtp.gmail.com,smtp-relay.brevo.com`. Only those mail servers can be used. Leave out to allow any. |
+
+**Part C: the Android app**
+1. Run **Actions > Build APK > Run workflow** as usual. The version becomes 3.10.0 and the new screen is inside the APK, because the app is the `www/` folder. No new Android plugin, permission or signing change.
+2. Install the new APK over the old one. In the app, the mail-app mode opens Gmail (or whichever mail app is the phone's default); press Back after sending to return. SMTP mode works over the normal internet connection.
+
+### Which mail account should organizers use?
+| Provider | Setup | Notes |
+| --- | --- | --- |
+| Gmail or Google Workspace | Turn on 2-Step Verification, create an **App password** (Google account > Security). Server `smtp.gmail.com`, port 465, username = full email. | About 500 recipients a day (2,000 on Workspace). A college administrator may have switched App passwords off. |
+| Brevo | Verify your sender, then SMTP & API > create an **SMTP key**. Server `smtp-relay.brevo.com`, port 587. Username = the SMTP login Brevo shows; fill **Send from** with the verified sender. | Free plan: 300 a day. |
+| Zoho Mail | App-specific password. Server `smtp.zoho.in` (India) or `smtp.zoho.com`, port 465. | |
+| Yahoo | App password. Server `smtp.mail.yahoo.com`, port 465. | |
+| Outlook / Microsoft 365 | Server `smtp.office365.com`, port 587. | Microsoft switches off password SMTP by default at the end of December 2026, so do not rely on it. |
+
+### Test checklist (10 minutes, test event with 3 attendees that have email addresses you own)
+1. Attendees tab shows **Email tickets** (as Organizer). Sign in as a Viewer on a second account: the button is not there.
+2. Open it. The preview shows the first attendee's name, the event and a ticket link.
+3. **My mail app:** tap *Open next*. The mail app opens addressed to the first attendee with the message filled in. Send it, come back, tap again for the second. The attendee list now shows **Emailed** tags.
+4. Open the ticket link from the email on a phone: the QR page appears. Scan it with **Scan tickets** in the app: it checks the person in.
+5. **Automatic:** choose Gmail (or another), **Test connection** says *Connected and logged in*, **Send a test email to me** arrives in your inbox with the QR picture. Then *Everyone with an email* > send. Progress reaches 100 % and your own mailbox's Sent folder shows the emails.
+6. Put a wrong password on purpose: the message says to use an app password. Use a made-up address for one attendee: that one is listed as failed and the others still go out.
+
+### How it works
+- The QR is the ticket the app already had: `CEM1:<event code>:<ticket id>`. The email only carries it. Check-in, offline scanning and the one-use rule are unchanged.
+- **My mail app** builds a `mailto:` link per attendee. A web page or app cannot press *Send* inside another mail app; that is why this mode is one tap per person.
+- **SMTP:** a browser cannot speak SMTP, so the app sends each batch (8 emails) to your Cloudflare Worker (`/mail/send`). The Worker first checks the caller's Firebase sign-in token against Google's public keys (signed-in app users only), then opens an encrypted connection (port 465, or 587 with STARTTLS; port 25 is blocked by Cloudflare) to the mail server, logs in with the organizer's own login, and sends. It refuses servers that cannot encrypt, never stores or logs the password, and counts emails per person per day.
+- The organizer's SMTP login is kept only in that device's browser or app storage, never in Firestore, so teammates cannot read it. Tapping **Forget the saved login** removes it.
+- Each attendee gets `ml` (time) and `mlv` (`app` or `smtp`) when emailed. These are ordinary fields of the attendee entry, so the existing rules already allow roles with *Attendees and check-in* to write them.
+
+### Free-plan budget
+- Cloudflare Workers free plan: 100,000 requests a day. A batch of 8 emails is one request, so 1,000 emails is about 125 requests. One KV write per batch (the daily counter): the KV free plan allows 1,000 writes a day, which the sign-up codes share. About 500 emails a day per organizer is comfortable; raise nothing unless you run many events on the same day.
+- Free-plan Workers have a small CPU allowance per request. Batches of 8 are well inside it. If you ever see *Exceeded CPU* in the Worker logs, reduce `BATCH` in `www/mailer.js` from 8 to 4.
+- Firebase: marking attendees as emailed is one small write per attendee.
+
+### Rolling back
+Restore the 3.8.0 versions of the changed files and delete `www/mailer.js`. The Worker keeps working for sign-up either way. Attendee entries may keep harmless `ml` and `mlv` fields.
+
+### Troubleshooting
+| What you see | Cause and fix |
+| --- | --- |
+| *needs the newer Worker* | The Worker still has the old code. Do Part B, steps 1 and 2. |
+| *This app is not allowed to use the email service* | `ALLOWED_ORIGINS` in the Worker does not contain the address you opened the app from. Add it (website address, `https://localhost`, `capacitor://localhost`). |
+| *Please sign in again* | The sign-in expired. Sign out and in. If it persists, `FIREBASE_SA` in the Worker belongs to a different Firebase project than the app. |
+| *The mail server refused the login* | A normal password was used. Use an app password (Gmail, Yahoo, Zoho) or an SMTP key (Brevo). |
+| *Could not connect* | Wrong server or port. Use 465 or 587. |
+| *does not offer an encrypted connection* | The server is not suitable. Use port 465 or another provider. |
+| *Daily limit reached* | The provider's limit or `MAIL_DAILY_LIMIT`. Continue tomorrow; *Not emailed yet* resumes where it stopped. |
+| Emails go to Spam | Ask attendees to mark them *not spam*; send a test to yourself first; keep the message short. |
+| Nothing opens in *My mail app* on a computer | No default mail app is set in the system. Set one, or use Automatic. |
+
 ## Upgrade to 3.8.0: smooth motion
 
 3.8.0 is a **look-and-feel release**. The app now moves: screens rise in, numbers count up, progress bars fill, the active tab and menu marker glide, rows flash when you check someone in or tick a task, panels ease open, and menus, dialogs and toasts fade in and out. Nothing changes in Firebase, the rules, the Worker, the workflows or the signing key, and no new npm package is needed. Free plans only. It all runs on the phone and uses no extra data.
