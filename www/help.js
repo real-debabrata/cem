@@ -53,7 +53,7 @@ const SECS=()=>[
  L(['<b>Register attendee</b> opens a short form and is ready for the next person after each save. A College ID that is already registered is refused, and so is a full event.',
   '<b>Search and filters:</b> All, Not checked in, Checked in, and (when there is a fee) Unpaid and Cash due. <b>Check in</b> is one tap; <b>Undo</b> reverses it.',
   'The <b>&hellip;</b> menu on an attendee: <b>Ticket (QR)</b>, Mark paid, change the payment mode and collector, and Remove registration (needs the Edit event permission).',
-  '<b>Ticket (QR):</b> share the ticket link, copy it, save the QR image, or send it by WhatsApp or email. A shareable link needs your public site address (Income &gt; Link settings).',
+  '<b>Ticket (QR):</b> share the ticket link, copy it, save the QR image, or send it by WhatsApp or email. A shareable link needs your public site address (Income &gt; Link settings). To send tickets to many people at once, use <b>Email tickets</b> (see <b>Email tickets to everyone</b> below).',
   '<b>Scan tickets:</b> in the Android app it uses Google\'s scanner screen; on the website it uses the camera, or you can type a ticket code or College ID. A ticket already used shows when and by whom, and an unpaid fee shows a one-tap <b>Mark as paid</b>. Open the event once with internet before the gate opens: scanning then works offline and check-ins are sent when the connection returns.',
     '<b>Who can do what:</b> roles with Attendees and check-in (Organizer, Manager, Treasurer, Team lead, Coordinator, Registration desk) check in, scan, mark paid, import and make teams (teams are in the People tab). Team member basics can add attendees but not check them in.'])+
  `<h4>Import pre-registered attendees</h4>`+L([
@@ -63,6 +63,49 @@ const SECS=()=>[
   'Before anything is saved it checks: name filled, every required question answered, no duplicate College ID (or email or phone when there is no College ID), and the seat limit. The result is shown first. <b>Download skipped rows</b> gives a CSV with the reason, so you can fix it and import again.',
   'Imported people show an <b>Imported</b> tag and get a QR ticket like everyone else. Importing only adds attendees; it never changes or deletes existing ones.',
   'More than about 800 attendees in one event: see the README note on document size (1,500 is the hard limit).'])],
+['mail','Email tickets to everyone',
+ L([`Instead of sending tickets one by one, open <b>Attendees &gt; Email tickets</b>. Every attendee with an email address gets their own message with their own name and their own QR ticket, sent from <b>your own mailbox</b>.`,
+  `<b>Who sees it:</b> every role with the <b>Attendees and check-in</b> permission (Organizer, Manager, Treasurer, Team lead, Coordinator, Registration desk, and custom roles that have it). Nobody has to be switched on: when someone gets that role, the button appears. Everyone sends from their own mail account.`,
+  `<b>The QR is the normal ticket.</b> It is the same code as <b>Ticket (QR)</b> in an attendee's &hellip; menu, so scanning at the gate works exactly as before, and a ticket still works only once.`,
+  `Attendees who were emailed get an <b>Emailed</b> tag in the list. Nothing is sent twice unless you choose <b>Everyone with an email</b>.`])+
+ `<h4>Quick start</h4>`+L([
+  `Open the event &gt; <b>Attendees</b> &gt; <b>Email tickets</b>.`,
+  `Check the <b>Subject</b> and <b>Message</b>. Tap a tag such as <code>{first_name}</code> to insert it where your cursor is. The preview shows the first attendee's email.`,
+  `Choose who: <b>Not emailed yet</b> (the usual choice) or <b>Everyone with an email</b>. People without an email are listed so you can type one in.`,
+  `Pick <b>My mail app</b> or <b>Automatic (SMTP)</b> (both explained below) and send.`,
+  `Tip: your public site address must be set (Income &gt; Link settings), because the ticket link needs it.`])+
+ `<h4>Option 1: My mail app (no setup, works everywhere)</h4>`+L([
+  `Tap <b>Open next</b>. Your phone's or computer's mail app opens with the person's name, your message and their ticket link already filled in. Tap <b>Send</b> there.`,
+  `Press <b>Back</b> to return to Campus Events (on Android, Back from Gmail returns to the app), then tap <b>Open next</b> again. The counter shows how many are left. You can also open one person from the list, or tap <b>Open again</b> if you closed a draft by mistake.`,
+  `Why one tap each? An app or website is not allowed to press <b>Send</b> inside your mail app. That is a rule of phones and browsers, not a missing feature. For fully automatic sending use Option 2.`,
+  `In this option the QR is a link: the email contains a personal link that opens the attendee's QR ticket page. The QR <i>picture</i> is only inside emails sent with Option 2.`,
+  `<b>Download mail-merge file (CSV)</b> gives a spreadsheet with name, email, ticket link and the finished message, for Outlook or Google Sheets mail-merge tools.`,
+  `If nothing opens on a computer, no default mail app is set. Set one in the system settings, or use Option 2.`])+
+ `<h4>Option 2: Automatic (SMTP): sends everything for you</h4>`+L([
+  `SMTP is how mail programs hand email to a mail server. You give the app your mailbox login once and it sends all the emails, each with the attendee's QR picture inside, while you wait. About 8 emails go out at a time and a progress bar shows the rest.`,
+  `<b>Your login stays on your device</b> (never in the event, never visible to your team). Each organiser uses their own mailbox. On a shared phone or computer, tap <b>Forget the saved login</b> when you finish.`,
+  `For safety the password is sent over HTTPS to the app's own email service for each batch, used to sign in to your mail server, and not stored or logged there.`,
+  `Always tap <b>Test connection</b> and then <b>Send a test email to me</b> before the real send. The test email looks exactly like what attendees get.`,
+  `Needs: you are signed in, you are online, and the administrator has set up the email service once (SETUP.md &gt; Upgrade to 3.10.0). If the app says it needs the newer Worker, send the administrator that line.`])+
+ `<h4>Choosing a mail provider</h4>`+L([
+  `<b>Gmail or Google Workspace (a college Gmail):</b> the easiest. Turn on <b>2-Step Verification</b> in your Google account (Security), then open <b>App passwords</b>, create one called Campus Events and copy the 16 letters. In the app choose <b>Gmail</b>, enter your full email as Username and the app password as Password. Your normal password will not work. If App passwords is missing, your college administrator has switched it off: ask them, or use Brevo. Limit: about 500 recipients a day on a personal Gmail, 2,000 on Workspace.`,
+  `<b>Brevo (free, 300 emails a day):</b> sign up, add and verify your sender email under <b>Senders</b>, then open <b>SMTP &amp; API</b> and create an <b>SMTP key</b>. In the app choose <b>Brevo</b>. Username is the SMTP login Brevo shows (it can look like <code>abc123@smtp-brevo.com</code>), Password is the SMTP key, and <b>Send from</b> is your verified sender address.`,
+  `<b>Zoho Mail:</b> choose <b>Zoho (India)</b> (server <code>smtp.zoho.in</code>) or the global one (<code>smtp.zoho.com</code>) to match where your account lives. Create an <b>app-specific password</b> in Zoho Accounts &gt; Security and use it as the Password.`,
+  `<b>Yahoo:</b> create an <b>app password</b> in Account security and use it as the Password.`,
+  `<b>Outlook or Microsoft 365:</b> Microsoft is turning off password sign-in for SMTP at the end of December 2026 (administrators can switch it back on for a while). It may already be off for you. If it fails, use one of the options above.`,
+  `<b>Port:</b> use <b>465 (SSL)</b> unless your provider says 587. Port 25 is not available. The app only connects over an encrypted link and refuses servers that cannot do that.`])+
+ `<h4>Message tags</h4>`+L([
+  `<code>{first_name}</code>, <code>{name}</code>, <code>{event}</code>, <code>{date}</code>, <code>{time}</code>, <code>{venue}</code>, <code>{college_id}</code> and <code>{organizer}</code> (your name or team from the box under the message).`,
+  `<code>{qr}</code> is the QR ticket: a picture in automatic emails, a link in your mail app. <code>{ticket_link}</code> is the link to the ticket page. Keep one of them in your message or attendees get no ticket (the window warns you).`,
+  `A line like <code>Where: {venue}</code> disappears by itself when the venue is empty. Your message is remembered on this device for each event.`])+
+ `<h4>If something goes wrong</h4>`+L([
+  `<b>&ldquo;The mail server refused the login&rdquo;:</b> you used your normal password. Use an app password (Gmail, Yahoo, Zoho) or an SMTP key (Brevo), and make sure the username is complete.`,
+  `<b>&ldquo;Could not connect&rdquo;:</b> check the server name and use port 465 or 587.`,
+  `<b>&ldquo;needs the newer Worker&rdquo; or &ldquo;not allowed to use the email service&rdquo;:</b> a setup step is missing. The administrator follows SETUP.md &gt; Upgrade to 3.10.0.`,
+  `<b>&ldquo;Daily limit reached&rdquo;:</b> your mail provider or the app's own daily cap (1,000 a day per person by default) is used up. Continue tomorrow; <b>Not emailed yet</b> picks up where you stopped.`,
+  `<b>Some failed:</b> the list under the progress bar says why (for example the mailbox does not exist). Fix the address and send <b>Not emailed yet</b> again; only the ones that failed are left.`,
+  `<b>Emails land in Spam:</b> ask attendees to check Spam and mark the message as not spam. Send a test to yourself first, keep the message short, and avoid writing in capital letters.`,
+  `<b>Someone has no email:</b> open the <b>&hellip; have no email address</b> list in the window and type it in, or import a sheet with an Email column.`])],
 ['online','Online registration',
  L(['Attendees tab &gt; <b>Registration</b> (the second button at the top) &gt; <b>Open online registration</b>. Needs a shared event and your public site address (you can type it right there, or under Income &gt; Link settings). Needs the Payments and online registration permission (Organizer, Manager, Treasurer).',
   'Share the link or QR image, <b>Copy link</b>, <b>Share</b>, <b>Save QR image</b>, or <b>Preview page</b>. The <b>Backup link</b> always works. People need no account.',

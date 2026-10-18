@@ -204,5 +204,5 @@ document.addEventListener('submit',x=>{
  const i=$('scmi');if(i&&i.value.trim()){handle(i.value);i.value='';i.focus()}
 });
 document.addEventListener('keydown',x=>{if(x.key==='Escape'){stopScan();closeTk()}});
-window.showTicket=showTicket;window.openScanner=scan;
+window.showTicket=showTicket;window.openScanner=scan;window.ticketLinkOf=ticketLink;   // 3.10.0: mailer.js builds the same link
 })();

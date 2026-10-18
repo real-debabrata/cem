@@ -89,7 +89,7 @@ function regRows(e){
  return list.map(r=>{
   const sub=e.fields.slice(1,4).map(x=>{const v=r.data&&r.data[x.id];return x.type==='checkbox'?(v==='Yes'?x.label:''):(v||'')}).filter(Boolean).join(', ');
   const tk=can(e,'addreg'),sec=(fee&&canReg)||canRm||tk,more=V.rmo===r.id&&sec;
-  const tags=(r.in?`<span class="pill ok">Checked in${r.inAt?' '+hm(r.inAt):''}</span> `:'')+(r.src==='form'?'<span class="pill acc">Online</span> ':r.src==='import'?'<span class="pill acc">Imported</span> ':'')+(fee?(r.paid?'<span class="pill ok">Paid</span> ':'<span class="pill warn">Unpaid</span> ')+(window.payTagV?payTagV(r):''):'');
+  const tags=(r.in?`<span class="pill ok">Checked in${r.inAt?' '+hm(r.inAt):''}</span> `:'')+(r.ml?'<span class="pill" title="Ticket emailed">Emailed</span> ':'')+(r.src==='form'?'<span class="pill acc">Online</span> ':r.src==='import'?'<span class="pill acc">Imported</span> ':'')+(fee?(r.paid?'<span class="pill ok">Paid</span> ':'<span class="pill warn">Unpaid</span> ')+(window.payTagV?payTagV(r):''):'');
   return `<div class="li"><div class="main"><div class="ttl">${esc(r.name)}</div>${tags||sub?`<div class="sub">${tags}${esc(sub)}</div>`:''}</div>
    <div class="act">${canReg?`<button class="btn sm${r.in?' ghost':''}" data-ci="${r.id}">${r.in?'Undo':'Check in'}</button>`:''}${sec?`<button class="btn ghost sm" data-rmo="${r.id}" aria-expanded="${more}" aria-label="More actions for ${esc(r.name)}" title="More">&hellip;</button>`:''}</div>
    ${more?`<div class="more">${tk?`<button class="btn ghost sm" data-tk="${r.id}">Ticket (QR)</button>`:''}${fee&&canReg?`<button class="btn ghost sm" data-paid="${r.id}">${r.paid?'Mark unpaid':'Mark paid'}</button>`:''}${fee&&canReg&&window.payEditV?payEditV(e,r):''}${canRm?`<button class="btn ghost sm del" data-rm="${r.id}">Remove registration</button>`:''}</div>`:''}</div>`;
@@ -106,6 +106,7 @@ function listPanel(e){
   <div class="prog" role="progressbar" aria-label="Seats filled" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pc}"><i style="width:${pc}%;background:var(--acc)"></i></div>
   <div class="row" style="margin-top:14px"><input id="rq" type="search" placeholder="Search attendees" value="${esc(V.rq||'')}" style="flex:1;min-width:150px" aria-label="Search attendees">
    ${canScan?'<button class="btn ghost" data-scan="1">Scan tickets</button>':''}
+   ${canScan&&n?'<button class="btn ghost" data-mail="1">Email tickets</button>':''}
    ${w?(full?'<span class="pill warn">Event is full</span>':(n?`<button class="btn" data-rgt="1" aria-expanded="${showForm}">${showForm?'Close form':'Register attendee'}</button>`:'')):''}</div>
   ${n?`<div class="chips" style="margin:12px 0 0">${chips.map(c=>`<button class="chip ${f===c[0]?'on':''}" data-rf="${c[0]}">${c[1]} (${c[2]})</button>`).join('')}</div>`:''}
   ${showForm?`<form id="reg" class="fp" data-eid="${e.id}"><h3 style="margin-bottom:8px;font-size:15px">Register an attendee</h3><div class="rg">${e.fields.map(regField).join('')}${window.payBlockV?payBlockV(e):''}</div><div class="acts"><button class="btn" type="submit">Register</button>${n?'<button type="button" class="btn ghost" data-rgt="1">Done</button>':''}</div></form>`:''}
