@@ -1,0 +1,24 @@
+/* CEM 4.0 — sign-in / sign-up screens. Loaded after the page's own <style>. Light by default, follows the system dark mode. */
+:root{--bg:#f7f8fc;--card:#fff;--ink:#10172b;--mute:#626a86;--line:#e6e8f1;--acc:#5948f5}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1426;--card:#151d36;--ink:#f4f5fb;--mute:#9fa6c4;--line:#232c4d}}
+body{font-family:'Figtree','Poppins',system-ui,sans-serif;color:var(--ink);background:var(--bg);grid-template-columns:1.1fr 1fr}
+.hero{padding:8vh 7vw;gap:18px}
+.brand{font:700 20px 'Bricolage','Poppins',sans-serif;letter-spacing:-.02em}
+h1{font:700 clamp(32px,4.4vw,52px)/1.05 'Bricolage','Poppins',sans-serif;letter-spacing:-.03em;text-wrap:balance}
+.hero p{color:var(--mute);font-size:16px}
+li{color:var(--ink);padding-left:24px}
+li:before{top:8px;width:8px;height:8px;background:var(--acc)}
+.pane{background:color-mix(in srgb,var(--ink) 3%,var(--bg));border-left:1px solid var(--line)}
+.glass{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:0 20px 50px -24px rgba(16,23,43,.25)}
+h2{font:700 24px 'Bricolage','Poppins',sans-serif;letter-spacing:-.02em}
+.seg{background:color-mix(in srgb,var(--acc) 9%,transparent);border-radius:10px}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(16,23,43,.14)}
+label{font-weight:600}
+input{background:var(--card);color:var(--ink);border-color:var(--line);border-radius:10px;padding:11px 13px}
+input:focus{outline:0;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 20%,transparent)}
+.go{border-radius:10px;background:var(--acc);font-weight:600;padding:12px;box-shadow:none}
+.go:hover:not(:disabled){filter:brightness(1.08)}
+.gbtn{background:var(--card);color:var(--ink);border-color:var(--line);border-radius:10px}
+.gbtn:hover{background:color-mix(in srgb,var(--acc) 7%,var(--card))}
+.lnk{color:var(--acc)}
+@media(max-width:760px){body{grid-template-columns:1fr}.hero{padding:28px 22px 8px}.pane{border-left:0;background:none}}
