@@ -23,7 +23,16 @@
  *   ALLOWED_EMAIL_DOMAINS text  OPTIONAL, e.g. "college.edu.in" to accept only college addresses
  *   BLOCKED_EMAIL_DOMAINS text  OPTIONAL, extra throwaway domains to refuse
  * KV namespace binding: OTP_KV
+ *
+ * v3.10.0 adds bulk ticket email through the organiser's OWN mail account (SMTP). Same Worker, no new setting is required:
+ *   POST /mail/verify  { smtp:{host,port,user,pass} }                      -> connects and logs in, sends nothing
+ *   POST /mail/send    { smtp, from:{email,name}, messages:[{to,name,subject,text,html,qr}] }  -> sends (max 20 per call)
+ * Both need the header  Authorization: Bearer <Firebase ID token>  (only signed-in app users may use them).
+ * The SMTP password is used for that one request and is never stored or logged. Optional settings:
+ *   MAIL_DAILY_LIMIT    text  emails one signed-in user may send per day through this Worker (default 1000)
+ *   SMTP_ALLOWED_HOSTS  text  OPTIONAL comma list, e.g. "smtp.gmail.com,smtp-relay.brevo.com"; leave out to allow any mail server
  */
+import { connect } from 'cloudflare:sockets';
 
 const OTP_TTL_MS = 10 * 60 * 1000;   // a code works for 10 minutes
 const MAX_TRIES = 5;                  // wrong guesses allowed per code
@@ -73,7 +82,7 @@ const json = (obj, status, headers) => new Response(JSON.stringify(obj), { statu
 
 function corsHeaders(req, env) {
   const origin = req.headers.get('Origin') || '';
-  const h = { 'Vary': 'Origin', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '86400' };
+  const h = { 'Vary': 'Origin', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Access-Control-Max-Age': '86400' };
   const ok = String(env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
   if (origin && ok.includes(origin)) h['Access-Control-Allow-Origin'] = origin;
   return h;
@@ -253,14 +262,277 @@ async function handleVerify(b, req, env, cors) {
   return json({ ok: true }, 200, cors);
 }
 
+/* ======================================================================================================
+   Bulk ticket email (v3.10.0): send through the organiser's own mail account (SMTP)
+   A browser cannot speak SMTP, so the app hands each batch to this Worker, which opens an encrypted
+   connection to the organiser's mail server (Gmail, Zoho, Brevo, a college server...) and sends from there.
+   - Only signed-in app users: the Firebase ID token is verified here against Google's public keys.
+   - Only encrypted connections: port 465 (TLS) or STARTTLS. If the server offers neither, nothing is sent.
+   - Ports 465, 587, 2465 and 2525 only. Cloudflare blocks port 25.
+   - The SMTP password lives in memory for this request only. It is never written to KV, never logged.
+   ====================================================================================================== */
+const MAIL_MAX_MESSAGES = 20;            // emails in one request (the app sends 8 at a time)
+const MAIL_MAX_BODY = 600 * 1024;        // bytes in one request
+const MAIL_PORTS = new Set([465, 587, 2465, 2525]);
+const MAIL_IMPLICIT_TLS = new Set([465, 2465]);
+const QR_CID = 'ticket-qr@cem.local';    // the app writes <img src="cid:ticket-qr@cem.local"> in the HTML part
+const mEnc = new TextEncoder();
+
+/* ---------- small helpers ---------- */
+const bytesToB64 = bytes => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); };
+const wrap76 = s => (String(s).match(/.{1,76}/g) || []).join('\r\n');
+const b64Text = str => wrap76(bytesToB64(mEnc.encode(str)));
+const b64uToBytes = s => { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; const bin = atob(s); const o = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) o[i] = bin.charCodeAt(i); return o; };
+const hexRand = n => { const a = new Uint8Array(n); crypto.getRandomValues(a); return [...a].map(x => x.toString(16).padStart(2, '0')).join(''); };
+
+async function readJsonMax(req, max) {
+  const t = await req.text();
+  if (t.length > max) throw new HttpError(413, 'That batch is too large. Try fewer attendees at a time.');
+  let b; try { b = JSON.parse(t); } catch (e) { throw new HttpError(400, 'Bad request.'); }
+  if (!b || typeof b !== 'object') throw new HttpError(400, 'Bad request.');
+  return b;
+}
+
+/* ---------- who is calling: verify the Firebase ID token (RS256) with Google's public keys ---------- */
+let JWKS = null, jwksAt = 0;
+async function googleKeys(force) {
+  if (!force && JWKS && Date.now() - jwksAt < 3600 * 1000) return JWKS;
+  const r = await fetch('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com');
+  if (!r.ok) throw new Error('jwks ' + r.status);
+  JWKS = (await r.json()).keys || []; jwksAt = Date.now();
+  return JWKS;
+}
+function mailProjectId(env) {
+  if (env.FIREBASE_PROJECT_ID) return String(env.FIREBASE_PROJECT_ID);
+  try { return serviceAccount(env).project_id; } catch (e) { throw new HttpError(500, 'Email sending is not set up yet. Please tell the admin.'); }
+}
+async function verifyIdToken(env, token) {
+  const pid = mailProjectId(env), parts = String(token || '').split('.');
+  if (parts.length !== 3) throw new HttpError(401, 'Please sign in again.');
+  let head, claims;
+  try { head = JSON.parse(new TextDecoder().decode(b64uToBytes(parts[0]))); claims = JSON.parse(new TextDecoder().decode(b64uToBytes(parts[1]))); }
+  catch (e) { throw new HttpError(401, 'Please sign in again.'); }
+  if (head.alg !== 'RS256' || !head.kid) throw new HttpError(401, 'Please sign in again.');
+  let jwk = (await googleKeys(false)).find(k => k.kid === head.kid);
+  if (!jwk) jwk = (await googleKeys(true)).find(k => k.kid === head.kid);
+  if (!jwk) throw new HttpError(401, 'Please sign in again.');
+  const key = await crypto.subtle.importKey('jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
+  const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, b64uToBytes(parts[2]), mEnc.encode(parts[0] + '.' + parts[1]));
+  const now = Math.floor(Date.now() / 1000);
+  if (!ok || claims.aud !== pid || claims.iss !== 'https://securetoken.google.com/' + pid || !(claims.exp > now) || !(claims.iat <= now + 300) || typeof claims.sub !== 'string' || !claims.sub)
+    throw new HttpError(401, 'Please sign in again.');
+  return { uid: claims.sub, email: claims.email || '' };
+}
+async function authUser(req, env) {
+  const m = /^Bearer (.+)$/.exec(req.headers.get('Authorization') || '');
+  if (!m) throw new HttpError(401, 'Please sign in again.');
+  try { return await verifyIdToken(env, m[1]); }
+  catch (e) { if (e instanceof HttpError) throw e; console.error('token check failed', e && e.message); throw new HttpError(401, 'Please sign in again.'); }
+}
+
+/* ---------- input checks ---------- */
+const MAIL_RE = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
+const HOST_RE = /^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+const mailAddr = (v, what) => { const e = String(v || '').trim(); if (e.length > 254 || !MAIL_RE.test(e)) throw new HttpError(400, 'The ' + what + ' email address is not valid.'); return e; };
+const oneLine = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+
+function cleanSmtp(o, env) {
+  o = o && typeof o === 'object' ? o : {};
+  const host = String(o.host || '').trim().toLowerCase(), port = parseInt(o.port, 10);
+  if (!HOST_RE.test(host)) throw new HttpError(400, 'Enter the mail server name, for example smtp.gmail.com.');
+  if (!MAIL_PORTS.has(port)) throw new HttpError(400, 'Use port 465 (SSL) or 587 (STARTTLS). Port 25 is not available.');
+  const allow = list(env.SMTP_ALLOWED_HOSTS);
+  if (allow.length && !allow.some(a => host === a || host.endsWith('.' + a))) throw new HttpError(400, 'This mail server is not allowed by the app administrator.');
+  const user = String(o.user || '').trim(); let pass = String(o.pass == null ? '' : o.pass);
+  if (!user || user.length > 254 || /[\u0000\r\n]/.test(user)) throw new HttpError(400, 'Enter the mail account username (usually your full email address).');
+  if (!pass || pass.length > 256 || /[\u0000\r\n]/.test(pass)) throw new HttpError(400, 'Enter the password (for Gmail, an app password).');
+  if (host === 'smtp.gmail.com') pass = pass.replace(/\s+/g, '');   // Google shows app passwords in groups of four
+  return { host, port, user, pass };
+}
+
+/* ---------- building the email (MIME) ---------- */
+function encWord(s) {
+  s = String(s).replace(/[\r\n]+/g, ' ').trim();
+  if (/^[\x20-\x7e]*$/.test(s)) return s;
+  const out = []; let cur = '', n = 0;
+  for (const ch of s) { const k = mEnc.encode(ch).length; if (n + k > 45) { out.push(cur); cur = ''; n = 0; } cur += ch; n += k; }
+  if (cur) out.push(cur);
+  return out.map(p => '=?UTF-8?B?' + bytesToB64(mEnc.encode(p)) + '?=').join('\r\n ');
+}
+function addrHeader(name, email) {
+  const n = String(name || '').replace(/[\r\n]+/g, ' ').trim();
+  if (!n) return '<' + email + '>';
+  return (/^[\x20-\x7e]*$/.test(n) ? '"' + n.replace(/(["\\])/g, '\\$1') + '"' : encWord(n)) + ' <' + email + '>';
+}
+function buildMime(from, m) {
+  const text = String(m.text || '').replace(/\r?\n/g, '\r\n'), html = m.html ? String(m.html).replace(/\r?\n/g, '\r\n') : '';
+  const head = [
+    'From: ' + addrHeader(from.name, from.email),
+    'To: ' + addrHeader(m.name, m.to),
+    'Subject: ' + encWord(m.subject),
+    'Date: ' + new Date().toUTCString().replace('GMT', '+0000'),
+    'Message-ID: <' + hexRand(16) + '@' + from.email.split('@')[1] + '>',
+    'MIME-Version: 1.0',
+    'X-Mailer: Campus Events'
+  ];
+  const part = (type, body) => 'Content-Type: ' + type + '\r\nContent-Transfer-Encoding: base64\r\n\r\n' + body;
+  if (!html) { head.push('Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64'); return head.join('\r\n') + '\r\n\r\n' + b64Text(text) + '\r\n'; }
+  const b1 = '=_rel' + hexRand(10), b2 = '=_alt' + hexRand(10);
+  const alt = '--' + b2 + '\r\n' + part('text/plain; charset=UTF-8', b64Text(text)) + '\r\n--' + b2 + '\r\n' + part('text/html; charset=UTF-8', b64Text(html)) + '\r\n--' + b2 + '--';
+  if (!m.qr) { head.push('Content-Type: multipart/alternative; boundary="' + b2 + '"'); return head.join('\r\n') + '\r\n\r\n' + alt + '\r\n'; }
+  const img = '--' + b1 + '\r\nContent-Type: image/png; name="ticket-qr.png"\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <' + QR_CID + '>\r\nContent-Disposition: inline; filename="ticket-qr.png"\r\n\r\n' + wrap76(m.qr);
+  const rel = '--' + b1 + '\r\nContent-Type: multipart/alternative; boundary="' + b2 + '"\r\n\r\n' + alt + '\r\n' + img + '\r\n--' + b1 + '--';
+  head.push('Content-Type: multipart/related; type="multipart/alternative"; boundary="' + b1 + '"');
+  return head.join('\r\n') + '\r\n\r\n' + rel + '\r\n';
+}
+
+/* ---------- a small SMTP client over Cloudflare's TCP sockets ---------- */
+class SmtpError extends Error { constructor(stage, message, code) { super(message); this.stage = stage; this.code = code; } }
+const withTimeout = (p, ms, stage) => { let t; return Promise.race([p, new Promise((_, no) => { t = setTimeout(() => no(new SmtpError(stage, 'The mail server did not answer in time. Try again.')), ms); })]).finally(() => clearTimeout(t)); };
+
+function smtpFail(stage, r) {
+  const first = (r.lines[0] || '').replace(/^\d{3}[ -]/, '').slice(0, 200);
+  if (stage === 'auth') {
+    const bad = [534, 535, 454, 530].includes(r.code) || /5\.7\.(8|0|9)/.test(first);
+    return new SmtpError('auth', bad ? 'The mail server refused the login. Check the username and password. Gmail, Yahoo and Zoho need an app password, not your normal password.' : 'Login failed: ' + first, r.code);
+  }
+  return new SmtpError(stage, first || ('The mail server answered with error ' + r.code + '.'), r.code);
+}
+
+async function smtpOpen(cfg) {
+  const implicit = MAIL_IMPLICIT_TLS.has(cfg.port);
+  let socket;
+  try { socket = connect({ hostname: cfg.host, port: cfg.port }, { secureTransport: implicit ? 'on' : 'starttls', allowHalfOpen: false }); }
+  catch (e) { throw new SmtpError('connect', 'Could not connect to ' + cfg.host + ' on port ' + cfg.port + '. Check the server name and port.'); }
+  const dec = new TextDecoder();
+  const s = { socket, buf: '', rd: null, wr: null };
+  const attach = () => { s.rd = s.socket.readable.getReader(); s.wr = s.socket.writable.getWriter(); s.buf = ''; };
+  s.read = async (stage, ms) => {
+    const lines = [];
+    for (;;) {
+      let i;
+      while ((i = s.buf.indexOf('\n')) < 0) {
+        const r = await withTimeout(s.rd.read(), ms || 20000, stage);
+        if (r.done) throw new SmtpError(stage, 'The mail server closed the connection.');
+        s.buf += dec.decode(r.value, { stream: true });
+        if (s.buf.length > 65536) throw new SmtpError(stage, 'Unexpected answer from the mail server.');
+      }
+      const line = s.buf.slice(0, i).replace(/\r$/, ''); s.buf = s.buf.slice(i + 1);
+      lines.push(line);
+      if (/^\d{3}( |$)/.test(line)) return { code: +line.slice(0, 3), lines, text: lines.join('\n') };
+    }
+  };
+  s.send = str => s.wr.write(mEnc.encode(str));
+  s.cmd = async (line, stage, ok, ms) => { await s.send(line + '\r\n'); const r = await s.read(stage, ms); if (!ok.includes(r.code)) throw smtpFail(stage, r); return r; };
+  s.close = () => { try { s.rd.releaseLock(); } catch (e) {} try { s.wr.releaseLock(); } catch (e) {} try { s.socket.close(); } catch (e) {} };
+
+  try {
+    if (socket.opened) await withTimeout(socket.opened, 12000, 'connect');
+    attach();
+    const g = await s.read('connect');
+    if (g.code !== 220) throw smtpFail('connect', g);
+    let ehlo = await s.cmd('EHLO cem.mailer', 'hello', [250]);
+    if (!implicit) {
+      if (!/^250[ -]STARTTLS\s*$/im.test(ehlo.text)) throw new SmtpError('tls', 'This mail server does not offer an encrypted connection (STARTTLS), so the app will not send your password to it. Use port 465 or another server.');
+      await s.cmd('STARTTLS', 'tls', [220]);
+      s.rd.releaseLock(); s.wr.releaseLock();
+      s.socket = s.socket.startTls(); attach();
+      ehlo = await s.cmd('EHLO cem.mailer', 'hello', [250]);
+    }
+    const mech = (ehlo.text.match(/^250[ -]AUTH[ =](.*)$/im) || [])[1] || '';
+    const b64 = x => bytesToB64(mEnc.encode(x));
+    if (/\bPLAIN\b/i.test(mech)) await s.cmd('AUTH PLAIN ' + b64('\u0000' + cfg.user + '\u0000' + cfg.pass), 'auth', [235]);
+    else if (/\bLOGIN\b/i.test(mech)) { await s.cmd('AUTH LOGIN', 'auth', [334]); await s.cmd(b64(cfg.user), 'auth', [334]); await s.cmd(b64(cfg.pass), 'auth', [235]); }
+    else throw new SmtpError('auth', 'This mail server does not accept a username and password (PLAIN or LOGIN).');
+    return s;
+  } catch (e) {
+    s.close();
+    if (e instanceof SmtpError) throw e;
+    throw new SmtpError('connect', 'Could not connect to ' + cfg.host + ' on port ' + cfg.port + '. Check the server name and port.');
+  }
+}
+
+const FATAL = /limit|quota|too many|exceeded|\brate\b|blocked|suspend|spam|5\.4\.5|4\.7\.0/i;
+async function smtpSendAll(s, from, msgs) {
+  const out = []; let stopped = '';
+  for (const m of msgs) {
+    if (stopped) { out.push({ to: m.to, ok: false, error: 'Not sent. ' + stopped }); continue; }
+    try {
+      await s.cmd('MAIL FROM:<' + from.email + '>', 'mail', [250]);
+      await s.cmd('RCPT TO:<' + m.to + '>', 'rcpt', [250, 251]);
+      await s.cmd('DATA', 'data', [354]);
+      await s.send(buildMime(from, m).replace(/^\./gm, '..').replace(/\r\n$/, '') + '\r\n.\r\n');
+      const r = await s.read('data', 60000);
+      if (r.code !== 250) throw smtpFail('data', r);
+      out.push({ to: m.to, ok: true });
+    } catch (e) {
+      if (!(e instanceof SmtpError)) throw e;
+      out.push({ to: m.to, ok: false, error: e.message, code: e.code });
+      const hard = e.code === 421 || e.stage === 'mail' || FATAL.test(e.message);   // a refused sender or a server limit will not get better with the next email
+      try { if (!hard) await s.cmd('RSET', 'rset', [250]); } catch (x) { stopped = 'The connection to the mail server was lost.'; }
+      if (hard) stopped = 'The mail server stopped accepting email: ' + e.message;
+    }
+  }
+  return out;
+}
+
+/* ---------- routes ---------- */
+async function handleMail(path, req, env, cors) {
+  const user = await authUser(req, env);
+  const b = await readJsonMax(req, MAIL_MAX_BODY);
+  const cfg = cleanSmtp(b.smtp, env);
+  const fail = e => json({ ok: false, stage: e.stage, message: e.message }, e.stage === 'auth' ? 401 : 502, cors);
+
+  if (path === '/mail/verify') {
+    let s; try { s = await smtpOpen(cfg); } catch (e) { if (e instanceof SmtpError) return fail(e); throw e; }
+    try { await s.cmd('QUIT', 'quit', [221]); } catch (e) { /* closing anyway */ }
+    s.close();
+    return json({ ok: true, message: 'Connected to ' + cfg.host + ' and logged in.' }, 200, cors);
+  }
+
+  const from = { email: mailAddr(b.from && b.from.email, 'sender'), name: oneLine(b.from && b.from.name, 60) };
+  const raw = Array.isArray(b.messages) ? b.messages : [];
+  if (!raw.length) throw new HttpError(400, 'There is nothing to send.');
+  if (raw.length > MAIL_MAX_MESSAGES) throw new HttpError(400, 'At most ' + MAIL_MAX_MESSAGES + ' emails can be sent at once.');
+  const msgs = raw.map(m => {
+    m = m && typeof m === 'object' ? m : {};
+    const text = String(m.text || '').slice(0, 20000), html = String(m.html || '').slice(0, 60000), qr = String(m.qr || '');
+    if (!text.trim()) throw new HttpError(400, 'An email has no text.');
+    if (qr && (!/^[A-Za-z0-9+/=]+$/.test(qr) || qr.length > 40000)) throw new HttpError(400, 'A QR image is not valid.');
+    return { to: mailAddr(m.to, 'recipient'), name: oneLine(m.name, 80), subject: oneLine(m.subject, 200) || 'Your ticket', text, html, qr };
+  });
+
+  const limit = Math.max(1, parseInt(env.MAIL_DAILY_LIMIT || '1000', 10) || 1000);
+  const dayKey = 'mail:' + user.uid + ':' + new Date().toISOString().slice(0, 10);
+  const used = env.OTP_KV ? parseInt(await env.OTP_KV.get(dayKey) || '0', 10) : 0;
+  if (used + msgs.length > limit) throw new HttpError(429, 'Daily limit reached (' + limit + ' emails a day through this app). Try again tomorrow.');
+
+  let s; try { s = await smtpOpen(cfg); } catch (e) { if (e instanceof SmtpError) return fail(e); throw e; }
+  let results;
+  try { results = await smtpSendAll(s, from, msgs); }
+  catch (e) {
+    s.close();
+    if (e instanceof SmtpError) return fail(e);
+    console.error('mail io error', e && e.message);
+    return json({ ok: false, stage: 'connect', message: 'The connection to the mail server was lost. Try again.' }, 502, cors);
+  }
+  try { await s.cmd('QUIT', 'quit', [221]); } catch (e) { /* closing anyway */ }
+  s.close();
+  const sent = results.filter(r => r.ok).length;
+  if (env.OTP_KV && sent) await env.OTP_KV.put(dayKey, String(used + sent), { expirationTtl: 172800 });
+  return json({ ok: true, sent, results }, 200, cors);
+}
+
 export default {
   async fetch(req, env) {
     const cors = corsHeaders(req, env), path = new URL(req.url).pathname.replace(/\/+$/, '') || '/';
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (req.method === 'GET' && path === '/') return json({ ok: true, service: 'campus-events-otp' }, 200, cors);
     try {
-      if (req.method !== 'POST' || (path !== '/send' && path !== '/verify')) throw new HttpError(404, 'Not found.');
+      const isMail = path === '/mail/verify' || path === '/mail/send';
+      if (req.method !== 'POST' || (path !== '/send' && path !== '/verify' && !isMail)) throw new HttpError(404, 'Not found.');
       if (!cors['Access-Control-Allow-Origin']) throw new HttpError(403, 'This site is not allowed to use the sign-up service.');
+      if (isMail) return await handleMail(path, req, env, cors);
       const body = await readJson(req);
       return path === '/send' ? await handleSend(body, req, env, cors) : await handleVerify(body, req, env, cors);
     } catch (e) {

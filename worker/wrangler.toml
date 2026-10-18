@@ -8,6 +8,10 @@
 #   npx wrangler secret put OTP_PEPPER             # any long random string
 #   npx wrangler secret put TURNSTILE_SECRET       # optional
 #   npx wrangler deploy
+#
+# v3.10.0 (bulk ticket email over SMTP) needs no extra setting. Optional text variables:
+#   MAIL_DAILY_LIMIT = "1000"                       emails one signed-in user may send per day
+#   SMTP_ALLOWED_HOSTS = "smtp.gmail.com"           limit which mail servers may be used
 
 name = "cem-otp"
 main = "otp-worker.js"
