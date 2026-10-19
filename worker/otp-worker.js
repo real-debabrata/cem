@@ -26,7 +26,9 @@
  *
  * v3.10.0 adds bulk ticket email through the organiser's OWN mail account (SMTP). Same Worker, no new setting is required:
  *   POST /mail/verify  { smtp:{host,port,user,pass} }                      -> connects and logs in, sends nothing
- *   POST /mail/send    { smtp, from:{email,name}, messages:[{to,name,subject,text,html,qr}] }  -> sends (max 20 per call)
+ *   POST /mail/send    { smtp, from:{email,name}, messages:[{to,name,subject,text,html,qr,ticket,file}] }  -> sends (max 20 per call)
+ *                      v3.11.0: ticket = the attendee's designed ticket picture (PNG as base64, up to ~520 KB; real ones are ~60 KB). It is shown in the email and also
+ *                      attached as <file>. Without it the small QR picture (qr) is shown, as in v3.10.0. The answer includes ticketPng:true.
  * Both need the header  Authorization: Bearer <Firebase ID token>  (only signed-in app users may use them).
  * The SMTP password is used for that one request and is never stored or logged. Optional settings:
  *   MAIL_DAILY_LIMIT    text  emails one signed-in user may send per day through this Worker (default 1000)
@@ -272,7 +274,8 @@ async function handleVerify(b, req, env, cors) {
    - The SMTP password lives in memory for this request only. It is never written to KV, never logged.
    ====================================================================================================== */
 const MAIL_MAX_MESSAGES = 20;            // emails in one request (the app sends 8 at a time)
-const MAIL_MAX_BODY = 600 * 1024;        // bytes in one request
+const MAIL_MAX_BODY = 4 * 1024 * 1024;   // bytes in one request (v3.11.0: each email can carry a ticket picture of about 60 KB)
+const TICKET_MAX_B64 = 700000;           // longest accepted ticket picture, as base64 text (about 520 KB of PNG)
 const MAIL_PORTS = new Set([465, 587, 2465, 2525]);
 const MAIL_IMPLICIT_TLS = new Set([465, 2465]);
 const QR_CID = 'ticket-qr@cem.local';    // the app writes <img src="cid:ticket-qr@cem.local"> in the HTML part
@@ -379,11 +382,21 @@ function buildMime(from, m) {
   if (!html) { head.push('Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64'); return head.join('\r\n') + '\r\n\r\n' + b64Text(text) + '\r\n'; }
   const b1 = '=_rel' + hexRand(10), b2 = '=_alt' + hexRand(10);
   const alt = '--' + b2 + '\r\n' + part('text/plain; charset=UTF-8', b64Text(text)) + '\r\n--' + b2 + '\r\n' + part('text/html; charset=UTF-8', b64Text(html)) + '\r\n--' + b2 + '--';
-  if (!m.qr) { head.push('Content-Type: multipart/alternative; boundary="' + b2 + '"'); return head.join('\r\n') + '\r\n\r\n' + alt + '\r\n'; }
-  const img = '--' + b1 + '\r\nContent-Type: image/png; name="ticket-qr.png"\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <' + QR_CID + '>\r\nContent-Disposition: inline; filename="ticket-qr.png"\r\n\r\n' + wrap76(m.qr);
+  if (!m.qr && !m.ticket) { head.push('Content-Type: multipart/alternative; boundary="' + b2 + '"'); return head.join('\r\n') + '\r\n\r\n' + alt + '\r\n'; }
+  // v3.11.0: m.ticket is the designed ticket picture. It is shown in the email (inline, same Content-ID) AND attached under the attendee's file name,
+  // so they can save it. Without it (older app) m.qr, the small QR picture, is shown inline exactly as in v3.10.0.
+  const inl = m.ticket || m.qr, inName = m.ticket ? 'ticket.png' : 'ticket-qr.png';
+  const img = '--' + b1 + '\r\nContent-Type: image/png; name="' + inName + '"\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <' + QR_CID + '>\r\nContent-Disposition: inline; filename="' + inName + '"\r\n\r\n' + wrap76(inl);
   const rel = '--' + b1 + '\r\nContent-Type: multipart/alternative; boundary="' + b2 + '"\r\n\r\n' + alt + '\r\n' + img + '\r\n--' + b1 + '--';
-  head.push('Content-Type: multipart/related; type="multipart/alternative"; boundary="' + b1 + '"');
-  return head.join('\r\n') + '\r\n\r\n' + rel + '\r\n';
+  if (!m.ticket) {
+    head.push('Content-Type: multipart/related; type="multipart/alternative"; boundary="' + b1 + '"');
+    return head.join('\r\n') + '\r\n\r\n' + rel + '\r\n';
+  }
+  const b0 = '=_mix' + hexRand(10), fn = m.file || 'ticket.png';
+  const att = '--' + b0 + '\r\nContent-Type: image/png; name="' + fn + '"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename="' + fn + '"\r\n\r\n' + wrap76(m.ticket);
+  const mixed = '--' + b0 + '\r\nContent-Type: multipart/related; type="multipart/alternative"; boundary="' + b1 + '"\r\n\r\n' + rel + '\r\n' + att + '\r\n--' + b0 + '--';
+  head.push('Content-Type: multipart/mixed; boundary="' + b0 + '"');
+  return head.join('\r\n') + '\r\n\r\n' + mixed + '\r\n';
 }
 
 /* ---------- a small SMTP client over Cloudflare's TCP sockets ---------- */
@@ -499,7 +512,11 @@ async function handleMail(path, req, env, cors) {
     const text = String(m.text || '').slice(0, 20000), html = String(m.html || '').slice(0, 60000), qr = String(m.qr || '');
     if (!text.trim()) throw new HttpError(400, 'An email has no text.');
     if (qr && (!/^[A-Za-z0-9+/=]+$/.test(qr) || qr.length > 40000)) throw new HttpError(400, 'A QR image is not valid.');
-    return { to: mailAddr(m.to, 'recipient'), name: oneLine(m.name, 80), subject: oneLine(m.subject, 200) || 'Your ticket', text, html, qr };
+    let ticket = String(m.ticket || '');
+    if (ticket && (ticket.length > TICKET_MAX_B64 || !/^[A-Za-z0-9+/=]+$/.test(ticket) || !ticket.startsWith('iVBORw0KGgo'))) throw new HttpError(400, 'A ticket picture is not valid.');
+    let file = String(m.file || '').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[.-]+/, '').slice(0, 60);
+    if (!/\.png$/i.test(file)) file = 'ticket.png';
+    return { to: mailAddr(m.to, 'recipient'), name: oneLine(m.name, 80), subject: oneLine(m.subject, 200) || 'Your ticket', text, html, qr, ticket, file };
   });
 
   const limit = Math.max(1, parseInt(env.MAIL_DAILY_LIMIT || '1000', 10) || 1000);
@@ -520,7 +537,7 @@ async function handleMail(path, req, env, cors) {
   s.close();
   const sent = results.filter(r => r.ok).length;
   if (env.OTP_KV && sent) await env.OTP_KV.put(dayKey, String(used + sent), { expirationTtl: 172800 });
-  return json({ ok: true, sent, results }, 200, cors);
+  return json({ ok: true, sent, results, ticketPng: true }, 200, cors);   // ticketPng tells the app this Worker is v3.11.0 or newer
 }
 
 export default {

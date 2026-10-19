@@ -9,7 +9,7 @@
 #   npx wrangler secret put TURNSTILE_SECRET       # optional
 #   npx wrangler deploy
 #
-# v3.10.0 (bulk ticket email over SMTP) needs no extra setting. Optional text variables:
+# v3.10.0 (bulk ticket email over SMTP) and v3.11.0 (the ticket picture attached to each email) need no extra setting. Optional text variables:
 #   MAIL_DAILY_LIMIT = "1000"                       emails one signed-in user may send per day
 #   SMTP_ALLOWED_HOSTS = "smtp.gmail.com"           limit which mail servers may be used
 
