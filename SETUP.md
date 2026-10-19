@@ -616,12 +616,67 @@ Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or 
 | Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |
 
 
+## Upgrade to 3.11.0: designed ticket pictures (PNG), emailed and saved for offline use
+
+Tickets are now a proper ticket **picture** instead of a bare QR code: attendee name, event, date, time, venue and **one QR code** (no barcode). Two looks, chosen by the organizer: **Gradient** (purple, QR on top, tear-off stub) and **Flat** (white with striped edges, QR at the bottom).
+
+- **Attendee:** the ticket link opens the picture with **Save ticket (PNG)** and **Share or save to Photos**. The page remembers the ticket on that phone and keeps its own files (a small service worker), so the link also opens without internet.
+- **Organizer:** *Attendees > ... > Ticket* shows the picture with a style switch, **Save ticket (PNG)**, **Share image**, link, WhatsApp and email. *Email tickets* has the same style switch and a live preview.
+- **Automatic (SMTP) emails** show the attendee's own ticket picture inside the email **and attach it** as `ticket-<name>.png`. **My mail app** mode sends the ticket link, which opens the same picture (a web page cannot attach files to another mail app).
+- The QR is the same `CEM1:<event code>:<ticket id>` as before. Scanning, offline check-in and the one-use rule are unchanged. Old ticket links keep working. Firestore rules are **unchanged** and the Android app needs **no new plugin**.
+
+### Files
+In `www/` add (new): `ticketart.js`, `ticket-sw.js`. Replace: `ticket.html`, `scan.js`, `mailer.js`, `index.html`, `help.js`, `ui.js`.
+In `worker/` replace: `otp-worker.js` (and optionally `wrangler.toml`; only a comment changed).
+In the repo root replace: `package.json`, `README.md`, `SETUP.md`. Add `release-notes/v3.11.0.md`. In `tests/` replace `test-worker.mjs`.
+`index.html` only gained one line (`<script src="ticketart.js"></script>` before `scan.js`).
+
+### Steps (about 10 minutes)
+
+**Part A: website (works as soon as it is published)**
+1. Upload the files above, commit, and let the *pages* workflow publish the site.
+2. Open an event > **Attendees** > an attendee's **...** > **Ticket (QR)**. The ticket picture appears. Try the **Gradient / Flat** switch and **Save ticket (PNG)**.
+3. Open the ticket link on a phone. Save the picture, then switch on airplane mode and open the link again: it still opens.
+
+**Part B: automatic emails with the picture attached: update the Worker once (administrator, about 3 minutes)**
+
+Same steps as in 3.10.0, Part B. **No new variable or secret.**
+1. Cloudflare dashboard > **Workers & Pages** > your Worker (`cem-otp`) > **Edit code**.
+2. Select everything, delete it, paste the whole content of `worker/otp-worker.js` from this release, and press **Deploy**.
+3. In the app: **Email tickets > Automatic (SMTP) > Send a test email to me**. The email shows the ticket picture and has `ticket-asha-rao.png` (or similar) attached.
+
+If you skip Part B nothing breaks: emails still go out with the small QR picture like in 3.10.x, and the app shows a note that the Worker is older.
+
+**Part C: the Android app**
+Run **Actions > Build APK > Run workflow** as usual. The version becomes 3.11.0. No new plugin, permission or signing change. In the app, **Save ticket (PNG)** opens the phone's share sheet (Save to Drive, WhatsApp, Files, Gallery).
+
+### What changed under the hood
+- `ticketart.js` draws the picture on a canvas (720 x 1440 px, saved as a 256-colour PNG of about 40-70 KB so emails stay light). One drawing routine serves the organizer window, the emailed picture and the attendee page, so they always match.
+- The ticket link now also carries `tm` (time), `ty` (event type) and `s` (look, only when it is Flat): `ticket.html#e=...&r=...&n=...&t=...&d=...&tm=19:30&ty=Seminar&s=flat`.
+- The Worker accepts `ticket` (PNG as base64, up to about 520 KB) and `file` per email, shows the picture inline and attaches it. Its answer now includes `ticketPng:true`, which is how the app knows the Worker is current.
+- Because every email is a little bigger, automatic sending goes **4 emails per request** (was 8).
+- `ticket-sw.js` only answers for `ticket.html` and the few files it needs (network first, so updates always win). Everything else in the app goes to the network exactly as before.
+
+### Rolling back
+Restore the 3.10.0 versions of the changed files and delete `ticketart.js` and `ticket-sw.js`. The 3.11.0 Worker also works with the 3.10.0 app. Ticket links created by 3.11.0 still open in 3.10.0 (they show the plain QR).
+
+### Troubleshooting
+| What you see | Cause and fix |
+| --- | --- |
+| The ticket shows a plain QR, not the picture | `ticketart.js` was not uploaded to `www/`, or `ticket.html` is the old file. Upload both and redeploy. |
+| Emails arrive with a small QR only, and the app says the email service is an older version | The Worker was not updated. Do Part B. |
+| *A ticket picture is not valid* | The Worker is new but the browser sent something that is not a PNG. Reload the app (hard refresh) so it loads the new `mailer.js` and `ticketart.js`. |
+| Worker logs show *Exceeded CPU* | On the free plan, lower `BATCH` in `www/mailer.js` from 4 to 2. |
+| The ticket link does not open offline | Open it once with internet first (the phone then keeps the page). Browsers that block service workers (some private modes) cannot do this; the saved PNG always works. |
+| Text looks different in the picture | The bundled Poppins font did not load. Check that `www/fonts/` and `www/fonts.css` are uploaded. |
+
+
 ## Upgrade to 3.10.0: bulk ticket email (your mail app, or automatic SMTP)
 
 Organizers no longer send tickets one by one. **Attendees > Email tickets** sends every attendee their own message with their own name and their own QR ticket, from the organizer's **own mailbox**. Two ways:
 
 - **My mail app:** the phone's or computer's mail app opens pre-filled for each attendee; tap Send, come back, tap *Open next*. Needs no setup at all.
-- **Automatic (SMTP):** the organizer enters their own Gmail / Zoho / Brevo / college mail login once, and the app sends every email by itself (8 at a time, with progress and retry), each with the attendee's QR picture inside.
+- **Automatic (SMTP):** the organizer enters their own Gmail / Zoho / Brevo / college mail login once, and the app sends every email by itself (8 at a time in 3.10.0, 4 at a time since 3.11.0, with progress and retry), each with the attendee's QR picture inside.
 
 Nothing has to be switched on per organizer. The button appears for every role that has the **Attendees and check-in** permission (Organizer, Manager, Treasurer, Team lead, Coordinator, Registration desk, and custom roles with it), the moment they have that role. Firestore rules are **unchanged**, and the Android app needs **no new plugin**.
 
@@ -678,13 +733,13 @@ Optional Worker settings (Settings > Variables and Secrets, type *Text*):
 ### How it works
 - The QR is the ticket the app already had: `CEM1:<event code>:<ticket id>`. The email only carries it. Check-in, offline scanning and the one-use rule are unchanged.
 - **My mail app** builds a `mailto:` link per attendee. A web page or app cannot press *Send* inside another mail app; that is why this mode is one tap per person.
-- **SMTP:** a browser cannot speak SMTP, so the app sends each batch (8 emails) to your Cloudflare Worker (`/mail/send`). The Worker first checks the caller's Firebase sign-in token against Google's public keys (signed-in app users only), then opens an encrypted connection (port 465, or 587 with STARTTLS; port 25 is blocked by Cloudflare) to the mail server, logs in with the organizer's own login, and sends. It refuses servers that cannot encrypt, never stores or logs the password, and counts emails per person per day.
+- **SMTP:** a browser cannot speak SMTP, so the app sends each batch (8 emails in 3.10.0, 4 since 3.11.0 because each one now carries a ticket picture) to your Cloudflare Worker (`/mail/send`). The Worker first checks the caller's Firebase sign-in token against Google's public keys (signed-in app users only), then opens an encrypted connection (port 465, or 587 with STARTTLS; port 25 is blocked by Cloudflare) to the mail server, logs in with the organizer's own login, and sends. It refuses servers that cannot encrypt, never stores or logs the password, and counts emails per person per day.
 - The organizer's SMTP login is kept only in that device's browser or app storage, never in Firestore, so teammates cannot read it. Tapping **Forget the saved login** removes it.
 - Each attendee gets `ml` (time) and `mlv` (`app` or `smtp`) when emailed. These are ordinary fields of the attendee entry, so the existing rules already allow roles with *Attendees and check-in* to write them.
 
 ### Free-plan budget
-- Cloudflare Workers free plan: 100,000 requests a day. A batch of 8 emails is one request, so 1,000 emails is about 125 requests. One KV write per batch (the daily counter): the KV free plan allows 1,000 writes a day, which the sign-up codes share. About 500 emails a day per organizer is comfortable; raise nothing unless you run many events on the same day.
-- Free-plan Workers have a small CPU allowance per request. Batches of 8 are well inside it. If you ever see *Exceeded CPU* in the Worker logs, reduce `BATCH` in `www/mailer.js` from 8 to 4.
+- Cloudflare Workers free plan: 100,000 requests a day. A batch of 8 emails is one request (4 since 3.11.0), so 1,000 emails is about 125 requests (250 since 3.11.0). One KV write per batch (the daily counter): the KV free plan allows 1,000 writes a day, which the sign-up codes share. About 500 emails a day per organizer is comfortable; raise nothing unless you run many events on the same day.
+- Free-plan Workers have a small CPU allowance per request. Batches are well inside it. If you ever see *Exceeded CPU* in the Worker logs, reduce `BATCH` in `www/mailer.js` (see the 3.11.0 section).
 - Firebase: marking attendees as emailed is one small write per attendee.
 
 ### Rolling back

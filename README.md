@@ -32,8 +32,8 @@ Campus Events (CEM) brings the moving parts of a campus event into one place. Cr
 | | Feature | What you can do |
 |:---:|---|---|
 | 📝 | **Registration** | Publish a registration page, share a link or QR code, review applications and manage a waitlist. |
-| 🎟️ | **QR tickets & check-in** | Issue tickets, scan at the gate and check attendees in — including offline check-in after the event is opened online. |
-| ✉️ | **Bulk ticket email** | Email every attendee their own QR ticket from your own mailbox — through your mail app, or automatically with your Gmail, Zoho or Brevo (SMTP). |
+| 🎟️ | **QR tickets & check-in** | Issue designed ticket pictures (Gradient or Flat look, one QR code), scan at the gate and check attendees in — including offline check-in after the event is opened online. |
+| ✉️ | **Bulk ticket email** | Email every attendee their own designed ticket (PNG with QR, to save for offline use) from your own mailbox — through your mail app, or automatically with your Gmail, Zoho or Brevo (SMTP). |
 | ✅ | **Tasks & shopping list** | Assign tasks, set due dates, organise task groups and track items to buy. |
 | 👥 | **Roles & teams** | Work with organisers, managers, volunteers and custom roles with configurable permissions. |
 | 💳 | **Payments** | Track cash and UPI payments, review payment-link submissions and verify transactions. |
