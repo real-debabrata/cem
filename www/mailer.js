@@ -64,6 +64,9 @@ function lists(e){
  rs.forEach(r=>{const em=emailOf(e,r);(em?withMail:noMail).push({r,em})});
  return{withMail,noMail,pending:withMail.filter(x=>!x.r.ml),done:withMail.filter(x=>x.r.ml)};
 }
+// sync.js apply() swaps in fresh attendee objects every time Firestore echoes a save back, so a saved reference goes stale.
+// Always find the attendee by id at the moment of marking, and keep a list so late echoes can be corrected (see sendAll).
+const markOne=(eid,id,how,t)=>{const r=S.regs.find(q=>q.eid===eid&&q.id===id);if(!r||r.ml)return false;r.ml=t;r.mlv=how;return true};
 const pool=e=>{const L=lists(e);return M.scope==='all'?L.withMail:L.pending};
 const ticketLink=(e,r)=>window.ticketLinkOf?ticketLinkOf(e,r):'';
 const can_=e=>!!(e&&window.can&&can(e,'regs'));
@@ -143,7 +146,7 @@ function drawSummary(){
  const miss=L.noMail.length?`<details id="mlmiss" ${wasOpen?'open':''}><summary>${L.noMail.length} attendee${L.noMail.length===1?' has':'s have'} no email address</summary><p class="meta" style="margin:0 0 6px">Type an email to include them. It is saved on the attendee.</p>${L.noMail.slice(0,25).map(x=>`<div class="mi"><span>${esc(x.r.name)}</span><input type="email" inputmode="email" placeholder="name@example.com" data-mlem="${esc(x.r.id)}" aria-label="Email for ${esc(x.r.name)}"></div>`).join('')}${L.noMail.length>25?`<p class="meta" style="margin:6px 0 10px">Showing 25 of ${L.noMail.length}. Imported spreadsheets can include an Email column.</p>`:''}</details>`:'';
  box.innerHTML=`${base?'':'<div class="note" style="margin-bottom:10px"><b>Set your public site address first.</b> Ticket links need it: Income &gt; Link settings, or Attendees &gt; Registration.</div>'}
   <div class="chips" style="margin:0 0 6px"><button type="button" class="chip ${M.scope==='pending'?'on':''}" data-mls="pending">Not emailed yet (${L.pending.length})</button><button type="button" class="chip ${M.scope==='all'?'on':''}" data-mls="all">Everyone with an email (${L.withMail.length})</button></div>
-  <p class="meta" style="margin:0">${n} will be emailed${L.done.length?`, ${L.done.length} already done`:''}.${L.done.length?' <button type="button" class="link" data-mlclr="1">Clear &ldquo;emailed&rdquo; marks</button>':''}</p>${miss}`;
+  <p class="meta" style="margin:0">${n} will be emailed${L.done.length?`, ${L.done.length} already done`:''}.${L.done.length?' <button type="button" class="link" data-mlclr="1">Clear &ldquo;emailed&rdquo; marks</button>':''}${L.pending.length?' <button type="button" class="link" data-mlmarkall="1">Mark all as emailed</button>':''}</p>${miss}`;
 }
 function drawEditor(){
  const b=$('mled');if(!b)return;
@@ -257,7 +260,7 @@ async function sendAll(){
  const e=cur_();if(!can_(e))return toast('You no longer have permission to send.');
  const L=pool(e);if(!L.length)return;const s=readSmtp(),bad=checkSmtp(s);if(bad)return say(bad);
  if(!confirm('Send '+L.length+' email'+(L.length===1?'':'s')+' from '+(s.from||s.user)+'?\n\nEach person gets their own ticket QR.'))return;
- M.run={active:true,total:L.length,done:0,ok:0,fail:0,errs:[],fatal:'',stop:false};drawMethod();
+ M.run={active:true,total:L.length,done:0,ok:0,fail:0,errs:[],fatal:'',stop:false,sentIds:[]};drawMethod();
  const r=M.run;
  for(let i=0;i<L.length&&!r.stop;i+=BATCH){
   if(!can_(cur_())){r.fatal='Your permission to send was removed.';break}
@@ -267,10 +270,14 @@ async function sendAll(){
   if(!j.ok){r.fatal=j.message||'The email service refused the request.';break}
   if(i===0)keep(s);
   (j.results||[]).forEach((q,k)=>{const x=chunk[k];if(!x)return;r.done++;
-   if(q.ok){r.ok++;x.r.ml=Date.now();x.r.mlv='smtp'}else{r.fail++;r.errs.push({name:x.r.name,em:x.em,why:q.error||'Not sent'})}});
+   if(q.ok){r.ok++;const t=Date.now();r.sentIds.push([x.r.id,t]);markOne(e.id,x.r.id,'smtp',t)}else{r.fail++;r.errs.push({name:x.r.name,em:x.em,why:q.error||'Not sent'})}});
   save();drawRun();drawSummary();
  }
- r.active=false;if(!$('ml'))return;drawMethod();drawSummary();sv();
+ r.active=false;
+ // A cloud echo can still arrive after the last batch and replace the attendee objects. Re-apply every mark that went missing, a few times.
+ const fix=()=>{let c=0;r.sentIds.forEach(([id,t])=>{if(markOne(e.id,id,'smtp',t))c++});if(c){save();if($('ml')){drawSummary();drawMethod()}sv()}};
+ fix();[2500,7000].forEach(ms=>setTimeout(fix,ms));
+ if(!$('ml'))return;drawMethod();drawSummary();sv();
 }
 
 /* ---------- mail-merge file ---------- */
@@ -294,10 +301,11 @@ document.addEventListener('click',x=>{
  else if(D.mlrst!==undefined){if(!confirm('Put back the standard subject and message?'))return;M.tpl.subject=DEF_SUBJECT;M.tpl.body=DEF_BODY;saveTpl();drawEditor();drawPreview()}
  else if(D.mlhelp!==undefined){if(window.openHelp)openHelp('mail')}
  else if(D.mlclr!==undefined){if(!can_(e)||!confirm('Clear the "emailed" mark on everyone? They will count as not emailed yet.'))return;regsOf(e.id).forEach(r=>{delete r.ml;delete r.mlv});sv();drawSummary();drawMethod()}
+ else if(D.mlmarkall!==undefined){if(!can_(e))return;const L=lists(e).pending;if(!L.length||!confirm('Mark '+L.length+' attendee'+(L.length===1?'':'s')+' as already emailed? Use this if you sent their tickets another way. Nobody is emailed now.'))return;const t=Date.now();L.forEach(x=>markOne(e.id,x.r.id,'app',t));sv();drawSummary();drawMethod()}
  else if(D.mlall!==undefined){M.all=true;drawMethod()}
  else if(D.mlnext!==undefined||D.mlone){
   if(!can_(e))return;const L=pool(e),x1=D.mlone?L.find(z=>z.r.id===D.mlone):L.find(z=>!z.r.ml);if(!x1)return;
-  openMail(mailto(e,x1));x1.r.ml=Date.now();x1.r.mlv='app';sv();drawSummary();drawMethod();
+  openMail(mailto(e,x1));markOne(e.id,x1.r.id,'app',Date.now());sv();drawSummary();drawMethod();
  }
  else if(D.mlcsv!==undefined)csv();
  else if(D.mltest)testSmtp(D.mltest);
