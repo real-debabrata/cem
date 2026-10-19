@@ -90,6 +90,31 @@ assert.ok(!inj.headers.has('bcc')); assert.equal(inj.to.value.length, 1); assert
 ok('header injection through name or subject does not create a Bcc');
 assert.equal(kv.get('mail:uid-organiser:' + new Date().toISOString().slice(0, 10)), '3'); ok('daily counter counted the 3 delivered emails');
 
+// 3b v3.11.0: the designed ticket picture is shown in the email AND attached
+{
+  const pngHead = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);   // PNG signature + IHDR chunk start, like every real PNG
+  const ticket = Buffer.concat([pngHead, crypto.randomBytes(240 * 1024)]);   // about the size of a real ticket picture
+  got.length = 0;
+  r = await call('/mail/send', { smtp: { ...good, port: 465 }, from: { email: 'organiser@college.edu', name: 'TechFest Team' }, messages: [
+    { to: 'asha@students.example', name: 'Asha Rao', subject: 'Your ticket', text: 'Hi Asha', html: '<p><img src="cid:ticket-qr@cem.local"></p>', qr: png.toString('base64'), ticket: ticket.toString('base64'), file: 'ticket-asha-rao.png' },
+    { to: 'ravi@students.example', name: 'Ravi', subject: 'Your ticket', text: 'Hi Ravi', html: '<p><img src="cid:ticket-qr@cem.local"></p>', ticket: ticket.toString('base64'), file: '../../evil.sh' }
+  ] });
+  assert.equal(r.s, 200, JSON.stringify(r.j)); assert.equal(r.j.sent, 2); assert.equal(r.j.ticketPng, true); ok('send answers ticketPng:true so the app knows the Worker is current');
+  const t1 = got[0], inl = t1.attachments.find(x => x.cid), att = t1.attachments.find(x => x.contentDisposition === 'attachment');
+  assert.equal(t1.attachments.length, 2); assert.ok(inl && att, 'one inline and one attached picture');
+  assert.ok(inl.content.equals(ticket), 'inline picture is the ticket, not the small QR'); assert.equal(inl.cid, 'ticket-qr@cem.local');
+  assert.ok(att.content.equals(ticket)); assert.equal(att.filename, 'ticket-asha-rao.png'); assert.equal(att.contentType, 'image/png');
+  assert.match(t1.html, /cid:ticket-qr@cem\.local|data:image/); assert.equal(t1.text.trim(), 'Hi Asha');   // the parser may inline the cid image as a data: URI
+  ok('ticket picture is inline (cid) and attached as ticket-asha-rao.png, byte for byte');
+  assert.equal(got[1].attachments.find(x => x.contentDisposition === 'attachment').filename, 'ticket.png'); ok('a hostile file name falls back to ticket.png');
+  got.length = 0;
+  r = await call('/mail/send', { smtp: good, from: { email: 'organiser@college.edu' }, messages: [{ to: 'a@b.example', text: 'x', html: '<b>x</b>', qr: png.toString('base64') }] });
+  assert.equal(r.j.sent, 1); assert.equal(got[0].attachments.length, 1); ok('older app (QR only, no ticket) still works exactly as in 3.10.0');
+  r = await call('/mail/send', { smtp: good, from: { email: 'organiser@college.edu' }, messages: [{ to: 'a@b.example', text: 'x', ticket: Buffer.from('not a png at all').toString('base64') }] }); assert.equal(r.s, 400); ok('ticket that is not a PNG -> 400');
+  r = await call('/mail/send', { smtp: good, from: { email: 'organiser@college.edu' }, messages: [{ to: 'a@b.example', text: 'x', ticket: 'iVBORw0KGgo' + 'A'.repeat(720000) }] }); assert.equal(r.s, 400); ok('oversized ticket picture -> 400');
+  got.length = 0;
+}
+
 // 4 limits and shape checks
 r = await call('/mail/send', { smtp: good, from: { email: 'organiser@college.edu' }, messages: Array.from({ length: 21 }, () => ({ to: 'a@b.example', text: 'x' })) }); assert.equal(r.s, 400); ok('more than 20 emails in one call -> 400');
 r = await call('/mail/send', { smtp: good, from: { email: 'organiser@college.edu' }, messages: [{ to: 'not-an-email', text: 'x' }] }); assert.equal(r.s, 400); ok('invalid recipient -> 400');
