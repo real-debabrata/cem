@@ -1,4 +1,4 @@
-/* CEM 3.5.0: QR tickets and scan-to-check-in.
+/* CEM 3.5.0: QR tickets and scan-to-check-in.   (3.11.0: the Ticket window now shows a designed ticket PNG, drawn by ticketart.js; the QR inside it is unchanged.)
    Ticket:  every attendee has a QR code holding  CEM1:<event code>:<ticket id>.  The ticket id is the attendee's own random id (12 characters
             from the browser's secure random generator), so it cannot be guessed. Open it from Attendees > ... > Ticket (QR), then share the
             link (ticket.html#...), save the QR image, or send it by WhatsApp or email.
@@ -25,6 +25,9 @@ css.textContent=`#tk,#sc{position:fixed;inset:0;z-index:60;display:grid;place-it
 #tk .box,#sc .box{position:relative;background:var(--card);color:var(--ink);border-radius:18px;padding:20px;width:min(420px,100%);box-shadow:0 24px 70px rgba(0,0,0,.5)}
 #tk .tq{background:#fff;border-radius:14px;padding:10px;margin:12px auto;max-width:300px}#tk .tq svg{display:block;width:100%;height:auto}
 #tk .x{position:absolute;top:10px;right:10px;float:none;margin:0}
+#tk .tkp{display:grid;place-items:center;margin:12px 0 8px;min-height:140px}#tk .tkp img{display:block;width:min(100%,250px);height:auto;-webkit-touch-callout:default}
+#tk .tksk{width:min(100%,250px);aspect-ratio:1/2;border-radius:22px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;color:var(--mute);font-size:13px}
+#tk .tks{margin:0 auto 6px;max-width:260px}
 #sc .scv{position:relative;background:#000;border-radius:14px;overflow:hidden;aspect-ratio:1/1;margin:10px 0}
 #sc video{width:100%;height:100%;object-fit:cover;display:block}
 #sc .scf{position:absolute;inset:18%;border:3px solid rgba(255,255,255,.85);border-radius:16px;box-shadow:0 0 0 999px rgba(0,0,0,.28);pointer-events:none}
@@ -48,27 +51,44 @@ window.savePng=function(svgEl,name,size){
 const ticketLink=(e,r)=>{
  const b=window.siteBase?siteBase():'';if(!b)return '';
  const p=new URLSearchParams({e:e.id,r:r.id,n:r.name||'',t:e.name||'',d:e.date||'',v:/^https?:/i.test(e.venue||'')?'':(e.venue||'')});
+ if(e.time)p.set('tm',e.time);if(e.type)p.set('ty',e.type);
+ const st=window.cemTicket?cemTicket.styleOf(e.id):'gradient';if(st&&st!=='gradient')p.set('s',st);   // 3.11.0: time, type and look travel in the link
  return b+'ticket.html#'+p.toString();
 };
+// What the ticket picture shows. mailer.js uses the same function so the emailed picture and this window always match.
+const ticketOpts=(e,r)=>({style:window.cemTicket?cemTicket.styleOf(e.id):'gradient',event:e.name||'',type:e.type||'',name:r.name||'',date:e.date||'',time:e.time||'',venue:/^https?:/i.test(e.venue||'')?'':(e.venue||''),id:r.id,code:e.id});
+let tkUrl='',tkSeq=0;
 const waNum=p=>{let d=String(p||'').replace(/\D/g,'');if(d.length===10)d='91'+d;return d.length>=11?d:''};
 function showTicket(eid,rid){
  const e=S.events.find(x=>x.id===eid),r=e&&findReg(eid,rid);if(!r)return;
  let svg='';try{const q=qrcode(0,'M');q.addData(payload(e,r));q.make();svg=q.createSvgTag(8,4)}catch(x){}
- const url=ticketLink(e,r),msg='Your ticket for '+e.name+': '+url,wa=waNum(r.ph);
+ const url=ticketLink(e,r),msg='Your ticket for '+e.name+': '+url,wa=waNum(r.ph),T=window.cemTicket,cur=T?T.styleOf(e.id):'gradient',canSh=!!(T&&T.canShareFiles()&&!nat());
  let m=$('tk');if(!m){m=document.createElement('div');m.id='tk';document.body.append(m)}
  m.innerHTML=`<div class="box" role="dialog" aria-label="Ticket"><button type="button" class="x" data-tkx="1" aria-label="Close">✕</button>
   <p class="meta" style="margin:0">${esc(e.name)}</p><h3 style="margin:2px 0 0">${esc(r.name)}</h3>${r.cid?`<p class="meta" style="margin:2px 0 0">College ID ${esc(r.cid)}</p>`:''}
-  <div class="tq" id="tkq">${svg||'<p class="meta">QR library did not load.</p>'}</div>
+  <div class="tkp" id="tkp"><div class="tksk">Drawing the ticket...</div></div>
+  <div class="tq" id="tkq" hidden>${svg||''}</div>
   <p class="meta" style="margin:0;text-align:center">Ticket ${esc(r.id)}${r.in?' · checked in':''}</p>
+  ${T?`<div class="seg tks" role="group" aria-label="Ticket style" style="margin-top:10px">${Object.keys(T.STYLES).map(k=>`<button type="button" data-tkst="${k}" class="${k===cur?'on':''}" aria-pressed="${k===cur}">${T.STYLES[k]}</button>`).join('')}</div>`:''}
   <div class="row" style="margin-top:12px;justify-content:center">
-   ${url?`<button class="btn sm" data-tka="share">Share ticket link</button><button class="btn ghost sm" data-tka="copy">Copy link</button>`:''}
-   <button class="btn ghost sm" data-tka="png">Save QR image</button>
+   <button class="btn sm" data-tka="ticket">Save ticket (PNG)</button>
+   ${canSh?`<button class="btn ghost sm" data-tka="shareimg">Share image</button>`:''}
+   ${url?`<button class="btn ghost sm" data-tka="share">Share ticket link</button><button class="btn ghost sm" data-tka="copy">Copy link</button>`:''}
+   <button class="btn ghost sm" data-tka="png">QR only</button>
    ${url&&wa?`<a class="btn ghost sm" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}">WhatsApp</a>`:''}
    ${url&&r.em?`<a class="btn ghost sm" style="text-decoration:none" href="mailto:${esc(r.em)}?subject=${encodeURIComponent('Your ticket: '+e.name)}&body=${encodeURIComponent(msg)}">Email</a>`:''}</div>
+  <p class="meta" style="margin:10px 0 0;text-align:center">The ticket picture works offline once saved. To email every attendee their picture at once, use Email tickets.</p>
   ${url?'':'<p class="meta" style="margin:10px 0 0">Set your public site address (Income tab, Link settings) to get a shareable ticket link.</p>'}</div>`;
- m._u=url;m._m=msg;m._n=r.name;
+ m._u=url;m._m=msg;m._n=r.name;m._b=null;m._e=eid;m._r=rid;
+ const my=++tkSeq;
+ if(!T){const p=$('tkp');if(p)p.innerHTML='<p class="meta">The ticket picture could not be drawn. Use QR only.</p>';return}
+ T.blob(ticketOpts(e,r)).then(b=>{
+  const box=$('tk'),p=$('tkp');if(!box||!p||my!==tkSeq)return;
+  if(tkUrl)URL.revokeObjectURL(tkUrl);tkUrl=URL.createObjectURL(b);box._b=b;
+  p.innerHTML='<img alt="Ticket for '+esc(r.name)+'" src="'+tkUrl+'">';
+ }).catch(()=>{const p=$('tkp');if(p&&my===tkSeq)p.innerHTML='<p class="meta">The ticket picture could not be drawn. Use QR only.</p>'});
 }
-const closeTk=()=>{const m=$('tk');if(m)m.remove()};
+const closeTk=()=>{tkSeq++;const m=$('tk');if(m)m.remove();if(tkUrl){URL.revokeObjectURL(tkUrl);tkUrl=''}};
 
 /* ---------- scanner ---------- */
 let SC=null;   // {eid, alive, stream, last, lastAt, pause}
@@ -188,9 +208,12 @@ document.addEventListener('click',x=>{
  const t=x.target.closest('button,a');if(!t)return;const D=t.dataset||{};
  if(D.tk){const E=cur();if(E)showTicket(E.id,D.tk)}
  else if(D.tkx!==undefined)closeTk();
+ else if(D.tkst){const m=$('tk');if(m&&m._e&&window.cemTicket){cemTicket.setStyle(m._e,D.tkst);showTicket(m._e,m._r)}}
  else if(D.tka){
   const m=$('tk');if(!m)return;
-  if(D.tka==='png'){const s=document.querySelector('#tkq svg');if(s)savePng(s,'ticket-'+String(m._n||'attendee').replace(/[^A-Za-z0-9]+/g,'-').slice(0,30)+'.png')}
+  if(D.tka==='ticket'){if(!m._b)return toast('The ticket is still being drawn');const T=window.cemTicket;(window.cemSave?cemSave(T.fileName(m._n),'image/png',m._b):T.share(m._b,T.fileName(m._n),'Ticket',''))}
+  else if(D.tka==='shareimg'){if(!m._b)return toast('The ticket is still being drawn');const T=window.cemTicket,E=S.events.find(z=>z.id===m._e);T.share(m._b,T.fileName(m._n),'Ticket: '+(E?E.name:''),'Your ticket for '+(E?E.name:'')).then(ok=>{if(!ok&&window.cemSave)cemSave(T.fileName(m._n),'image/png',m._b)})}
+  else if(D.tka==='png'){const s=document.querySelector('#tkq svg');if(s)savePng(s,'ticket-qr-'+String(m._n||'attendee').replace(/[^A-Za-z0-9]+/g,'-').slice(0,30)+'.png')}
   else if(D.tka==='copy'){try{navigator.clipboard.writeText(m._u);toast('Ticket link copied')}catch(e){toast(m._u)}}
   else if(D.tka==='share'){if(navigator.share)navigator.share({title:'Your ticket',text:m._m}).catch(()=>{});else{try{navigator.clipboard.writeText(m._u);toast('Ticket link copied')}catch(e){}}}
  }
@@ -204,5 +227,5 @@ document.addEventListener('submit',x=>{
  const i=$('scmi');if(i&&i.value.trim()){handle(i.value);i.value='';i.focus()}
 });
 document.addEventListener('keydown',x=>{if(x.key==='Escape'){stopScan();closeTk()}});
-window.showTicket=showTicket;window.openScanner=scan;window.ticketLinkOf=ticketLink;   // 3.10.0: mailer.js builds the same link
+window.showTicket=showTicket;window.openScanner=scan;window.ticketLinkOf=ticketLink;window.ticketOptsOf=ticketOpts;   // 3.10.0: mailer.js builds the same link; 3.11.0: and the same picture
 })();

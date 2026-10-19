@@ -53,7 +53,7 @@ const SECS=()=>[
  L(['<b>Register attendee</b> opens a short form and is ready for the next person after each save. A College ID that is already registered is refused, and so is a full event.',
   '<b>Search and filters:</b> All, Not checked in, Checked in, and (when there is a fee) Unpaid and Cash due. <b>Check in</b> is one tap; <b>Undo</b> reverses it.',
   'The <b>&hellip;</b> menu on an attendee: <b>Ticket (QR)</b>, Mark paid, change the payment mode and collector, and Remove registration (needs the Edit event permission).',
-  '<b>Ticket (QR):</b> share the ticket link, copy it, save the QR image, or send it by WhatsApp or email. A shareable link needs your public site address (Income &gt; Link settings). To send tickets to many people at once, use <b>Email tickets</b> (see <b>Email tickets to everyone</b> below).',
+  '<b>Ticket (QR):</b> the ticket is a designed picture with the attendee&rsquo;s name, event details and QR code. <b>Save ticket (PNG)</b>, share the picture or the ticket link, copy the link, or send it by WhatsApp or email. Pick the <b>Gradient</b> or <b>Flat</b> look. <b>QR only</b> saves just the code. A shareable link needs your public site address (Income &gt; Link settings). To send tickets to many people at once, use <b>Email tickets</b> (see <b>Email tickets to everyone</b> below).',
   '<b>Scan tickets:</b> in the Android app it uses Google\'s scanner screen; on the website it uses the camera, or you can type a ticket code or College ID. A ticket already used shows when and by whom, and an unpaid fee shows a one-tap <b>Mark as paid</b>. Open the event once with internet before the gate opens: scanning then works offline and check-ins are sent when the connection returns.',
     '<b>Who can do what:</b> roles with Attendees and check-in (Organizer, Manager, Treasurer, Team lead, Coordinator, Registration desk) check in, scan, mark paid, import and make teams (teams are in the People tab). Team member basics can add attendees but not check them in.'])+
  `<h4>Import pre-registered attendees</h4>`+L([
@@ -64,9 +64,9 @@ const SECS=()=>[
   'Imported people show an <b>Imported</b> tag and get a QR ticket like everyone else. Importing only adds attendees; it never changes or deletes existing ones.',
   'More than about 800 attendees in one event: see the README note on document size (1,500 is the hard limit).'])],
 ['mail','Email tickets to everyone',
- L([`Instead of sending tickets one by one, open <b>Attendees &gt; Email tickets</b>. Every attendee with an email address gets their own message with their own name and their own QR ticket, sent from <b>your own mailbox</b>.`,
+ L([`Instead of sending tickets one by one, open <b>Attendees &gt; Email tickets</b>. Every attendee with an email address gets their own message with their own ticket picture (name, event details and QR code), sent from <b>your own mailbox</b>. With <b>Automatic (SMTP)</b> the picture is inside the email and attached, so they can save it and open it without internet. With <b>My mail app</b> the email carries a link that opens the same picture with a Save button.`,
   `<b>Who sees it:</b> every role with the <b>Attendees and check-in</b> permission (Organizer, Manager, Treasurer, Team lead, Coordinator, Registration desk, and custom roles that have it). Nobody has to be switched on: when someone gets that role, the button appears. Everyone sends from their own mail account.`,
-  `<b>The QR is the normal ticket.</b> It is the same code as <b>Ticket (QR)</b> in an attendee's &hellip; menu, so scanning at the gate works exactly as before, and a ticket still works only once.`,
+  `<b>The QR on the picture is the normal ticket.</b> It is the same code as <b>Ticket (QR)</b> in an attendee's &hellip; menu (there is no barcode), so scanning at the gate works exactly as before, and a ticket still works only once.`,
   `Attendees who were emailed get an <b>Emailed</b> tag in the list. Nothing is sent twice unless you choose <b>Everyone with an email</b>.`])+
  `<h4>Quick start</h4>`+L([
   `Open the event &gt; <b>Attendees</b> &gt; <b>Email tickets</b>.`,

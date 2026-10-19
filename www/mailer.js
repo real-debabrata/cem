@@ -1,4 +1,5 @@
-/* CEM 3.10.0: bulk ticket email.  Attendees > Email tickets  (roles with "Attendees and check-in": Organizer, Manager, Treasurer,
+/* CEM 3.10.0: bulk ticket email.   (3.11.0: automatic emails now carry the designed ticket PNG, inline and as an attachment, and the ticket link opens
+   the same picture with Save and offline support. The picture comes from ticketart.js; the QR inside it is unchanged.)  Attendees > Email tickets  (roles with "Attendees and check-in": Organizer, Manager, Treasurer,
    Team lead, Coordinator, Registration desk, and custom roles that have it. Nobody has to be added; the role decides.)
 
    Two ways to send, both from the organiser's OWN mailbox:
@@ -16,13 +17,13 @@
 (function(){
 const $=id=>document.getElementById(id);
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
-const EMAIL=/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/,BATCH=8,CID='ticket-qr@cem.local';
+const EMAIL=/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/,BATCH=4,CID='ticket-qr@cem.local';   // 3.11.0: 4 per request, because each email now carries a ticket picture (about 60 KB)
 const SMTP_KEY='cem-mail-smtp',TPL_KEY=id=>'cem-mail-tpl:'+id;
 const later=fn=>{clearTimeout(later.t);later.t=setTimeout(fn,160)};
 const slug=s=>String(s||'event').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'event';
 
 const DEF_SUBJECT='Your ticket for {event}';
-const DEF_BODY='Hi {first_name},\n\nYou are registered for {event}.\nWhen: {date} {time}\nWhere: {venue}\n\nYour personal QR ticket:\n{qr}\n\nShow it at the entrance. It works only once, so please do not forward it.\n\nSee you there!\n{organizer}';
+const DEF_BODY='Hi {first_name},\n\nYou are registered for {event}.\nWhen: {date} {time}\nWhere: {venue}\n\nYour personal ticket:\n{qr}\n\nShow the QR code at the entrance. Save the ticket picture to your phone so it opens even without internet. It works only once, so please do not forward it.\n\nSee you there!\n{organizer}';
 const TAGS=[['first_name','First name'],['name','Full name'],['event','Event name'],['date','Event date'],['time','Event time'],['venue','Venue'],['qr','QR ticket (picture in automatic emails, link in your mail app)'],['ticket_link','Link to the ticket page'],['college_id','College ID']];
 const KNOWN=TAGS.map(t=>t[0]).concat(['ticket_id','email','organizer']);
 const PROV={
@@ -35,7 +36,7 @@ const PROV={
  custom:{n:'Another mail server',host:'',port:587,note:'Ask your mail administrator for the SMTP server, port (465 or 587), username and password.'}
 };
 
-let M={eid:null,scope:'pending',mode:'app',tpl:null,smtp:null,run:null,all:false,msg:''};
+let M={eid:null,scope:'pending',mode:'app',tpl:null,smtp:null,run:null,all:false,msg:'',pvt:0};
 
 /* ---------- styles ---------- */
 const css=document.createElement('style');
@@ -45,7 +46,8 @@ css.textContent=`#ml{position:fixed;inset:0;z-index:58;display:grid;place-items:
 #ml textarea{min-height:150px;resize:vertical;line-height:1.45}
 #ml .pv{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px}
 #ml .pv pre{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
-#ml iframe{width:100%;height:340px;border:1px solid var(--line);border-radius:12px;background:#f6f7fb;margin-top:6px}
+#ml .tkt{display:flex;gap:12px;align-items:center;margin-top:6px}#ml .tkt .th{flex:0 0 84px;aspect-ratio:1/2;border-radius:10px;background:var(--bg);border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;font-size:11px;color:var(--mute)}#ml .tkt .th img{display:block;width:100%;height:auto}#ml .tkt .seg{margin:0 0 6px}
+#ml iframe{width:100%;height:420px;border:1px solid var(--line);border-radius:12px;background:#f6f7fb;margin-top:6px}
 #ml .chip{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
 #ml details{border:1px solid var(--line);border-radius:12px;margin:10px 0 0;padding:0 12px}#ml summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14px}
 #ml .mi{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}#ml .mi span{flex:1 1 40%;min-width:0;overflow-wrap:anywhere;font-size:14px}#ml .mi input{flex:1 1 55%;min-width:0}
@@ -80,14 +82,14 @@ function vals(e,x){
 }
 const tidy=t=>t.replace(/[ \t]+$/gm,'').replace(/^[A-Za-z ]{2,20}:[ \t]*\n/gm,'').replace(/\n{3,}/g,'\n\n').trim();   // drops "Where:" when the venue is empty
 const mergeText=(tpl,v)=>String(tpl||'').replace(/\{(\w+)\}/g,(m,k)=>k==='qr'?(v.ticket_link||''):(k in v?v[k]:m));
-const qrBlock=(v,sz)=>`<div data-qr="1" style="text-align:center;margin:18px 0 8px"><img src="cid:${CID}" width="${sz}" height="${sz}" alt="QR ticket for ${esc(v.name)}" style="display:inline-block;border:1px solid #e1e4ef;border-radius:12px;padding:6px;background:#ffffff"></div>`+
+const qrBlock=(v)=>`<div data-qr="1" style="text-align:center;margin:18px 0 8px"><img src="cid:${CID}" width="340" alt="Ticket for ${esc(v.name)}" style="display:inline-block;width:100%;max-width:340px;height:auto;border:0"></div>`+
  (v.ticket_link?`<div style="text-align:center;margin:0 0 10px"><a href="${esc(v.ticket_link)}" style="background:#5948f5;color:#ffffff;text-decoration:none;font-weight:700;padding:11px 20px;border-radius:9px;display:inline-block">Open my ticket</a></div>`:'');
 function mergeHtml(tpl,v,sz){
  const inner=String(tpl||'').split(/(\{\w+\})/).map(p=>{
   const m=/^\{(\w+)\}$/.exec(p);
   if(!m)return esc(p).replace(/\r?\n/g,'<br>');
   const k=m[1];
-  if(k==='qr')return qrBlock(v,sz);
+  if(k==='qr')return qrBlock(v);
   if(k==='ticket_link')return v.ticket_link?`<a href="${esc(v.ticket_link)}" style="color:#5948f5">${esc(v.ticket_link)}</a>`:'';
   return k in v?esc(v[k]):esc(p);
  }).join('').replace(/(<br>\s*)+(<div data-qr)/g,'$2').replace(/(<\/div>)(\s*<br>)+/g,'$1');
@@ -102,6 +104,13 @@ function qrPng(text){
   for(let i=0;i<n;i++)for(let j=0;j<n;j++)if(q.isDark(i,j))g.fillRect(m+j*px,m+i*px,px,px);
   return{b64:c.toDataURL('image/png').split(',')[1],size:s};
  }catch(x){return{b64:'',size:240}}
+}
+// 3.11.0: the designed ticket as PNG (base64). Same picture as the Ticket window and the ticket page. Kept for the preview only.
+const TC=new Map();
+async function ticketPng(e,r,keep){
+ const o=window.ticketOptsOf?ticketOptsOf(e,r):null;if(!o||!window.cemTicket)throw new Error('no ticket art');
+ const k=JSON.stringify(o);if(keep&&TC.has(k))return TC.get(k);
+ const t=await cemTicket.b64(o);if(keep){if(TC.size>=4)TC.delete(TC.keys().next().value);TC.set(k,t)}return t;
 }
 function mailto(e,x){
  const v=vals(e,x),s=mergeText(M.tpl.subject,v).replace(/\s+/g,' ').trim(),b=tidy(mergeText(M.tpl.body,v));
@@ -153,22 +162,37 @@ function drawEditor(){
  b.innerHTML=`<div class="card" style="margin:12px 0"><label for="mlsub" style="margin-top:0">Subject</label><input id="mlsub" maxlength="150" value="${esc(M.tpl.subject)}">
   <label for="mlbody">Message</label><textarea id="mlbody">${esc(M.tpl.body)}</textarea>
   <div class="chips" style="margin:8px 0 0" aria-label="Insert a detail">${TAGS.map(t=>`<button type="button" class="chip" data-mltag="${t[0]}" title="${esc(t[1])}">{${t[0]}}</button>`).join('')}</div>
+  <label style="margin-bottom:0">Ticket picture</label>
+  <div class="tkt"><div class="th" id="mlth">...</div><div style="flex:1;min-width:0"><div class="seg" id="mlst2" role="group" aria-label="Ticket style"></div><p class="meta" style="margin:0">Each attendee gets their own picture with their name and QR code. Automatic emails attach it so they can save it for offline use.</p></div></div>
   <label for="mlfn">Your name or team (the From name, and {organizer})</label><input id="mlfn" maxlength="60" value="${esc(M.tpl.fromName)}">
   <p class="meta" id="mlwarn" style="margin:8px 0 0"></p>
   <div class="row" style="margin-top:6px"><button type="button" class="link" data-mlrst="1">Reset message</button><button type="button" class="link" data-mlhelp="1">Setup guide</button></div></div>`;
+ drawStyle();
 }
 function drawWarn(){
  const w=$('mlwarn');if(!w)return;const b=M.tpl.body,u=[...new Set((b+' '+M.tpl.subject).match(/\{\w+\}/g)||[])].filter(t=>!KNOWN.includes(t.slice(1,-1)));
  w.className='meta bad';
  w.textContent=!/\{(qr|ticket_link)\}/.test(b)?'Your message has no {qr} or {ticket_link}, so attendees would not get their ticket.':u.length?'Unknown tag: '+u.join(' ')+'. Use the buttons above.':'';
 }
+function drawStyle(){
+ const e=cur_(),b=$('mlst2');if(!e||!b||!window.cemTicket)return;
+ const st=cemTicket.styleOf(e.id);
+ b.innerHTML=Object.keys(cemTicket.STYLES).map(k=>`<button type="button" data-mlstyle="${k}" class="${k===st?'on':''}" aria-pressed="${k===st}">${cemTicket.STYLES[k]}</button>`).join('');
+ const th=$('mlth'),x=sample(e);if(!th)return;
+ th.textContent='...';
+ ticketPng(e,x.r,true).then(t=>{const n=$('mlth');if(n&&cur_()&&cemTicket.styleOf(e.id)===st)n.innerHTML='<img alt="Ticket preview" src="data:image/png;base64,'+t.b64+'">'}).catch(()=>{const n=$('mlth');if(n)n.textContent='n/a'});
+}
 function drawPreview(){
  const e=cur_(),box=$('mlpv');if(!e||!box)return;drawWarn();
- const x=sample(e),v=vals(e,x),sub=mergeText(M.tpl.subject,v);
+ const x=sample(e),v=vals(e,x),sub=mergeText(M.tpl.subject,v),tok=++M.pvt;
  let body;
- if(M.mode==='smtp'){const q=qrPng('CEM1:'+e.id+':'+x.r.id),h=mergeHtml(M.tpl.body,v,q.size).split('cid:'+CID).join('data:image/png;base64,'+q.b64);body=`<iframe sandbox="" title="Preview of the email" srcdoc="${h.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></iframe>`}
+ if(M.mode==='smtp')body='<iframe id="mlpvf" sandbox="" title="Preview of the email" srcdoc="&lt;p style=&quot;font:14px Arial;padding:14px;color:#5b6380&quot;&gt;Drawing the ticket...&lt;/p&gt;"></iframe>';
  else body=`<pre>${esc(tidy(mergeText(M.tpl.body,v)))}</pre>`;
  box.innerHTML=`<div class="card" style="margin:0 0 4px"><p class="meta" style="margin:0 0 6px">Preview for ${esc(x.r.name)}</p><div class="pv"><b>${esc(sub)}</b>${M.mode==='smtp'?'':body}</div>${M.mode==='smtp'?body:''}</div>`;
+ if(M.mode==='smtp'){
+  const put=b64=>{const f=$('mlpvf');if(f&&tok===M.pvt)f.srcdoc=mergeHtml(M.tpl.body,v).split('cid:'+CID).join('data:image/png;base64,'+b64)};
+  ticketPng(e,x.r,true).then(t=>put(t.b64)).catch(()=>put(qrPng('CEM1:'+e.id+':'+x.r.id).b64));
+ }
 }
 
 function drawMethod(){
@@ -180,7 +204,7 @@ function appPanel(e){
  const L=pool(e),left=L.filter(x=>!x.r.ml).length,rows=(M.all?L:L.slice(0,12));
  return `<div class="card" style="margin-top:0"><p style="margin:0 0 10px">Your mail app opens with the name, message and personal ticket link filled in. Tap <b>Send</b> there, press Back to return here, then open the next one.</p>
   <button type="button" class="btn" data-mlnext="1" style="width:100%" ${left?'':'disabled'}>${left?`Open next (${left} left)`:'All opened'}</button>
-  <p class="meta" style="margin:8px 0 0">The ticket link shows each person's own QR code. For the QR picture inside the email itself, use Automatic (SMTP).</p>
+  <p class="meta" style="margin:8px 0 0">The ticket link opens that person's own ticket picture, with a Save button. For the picture inside the email itself (also attached, ready to save), use Automatic (SMTP).</p>
   ${rows.length?`<div style="margin-top:8px">${rows.map(x=>`<div class="li"><div class="main"><div class="ttl">${esc(x.r.name)}</div><div class="sub">${esc(x.em)}</div></div><div class="act">${x.r.ml?'<span class="pill ok">Opened</span> ':''}<button type="button" class="btn ${x.r.ml?'ghost ':''}sm" data-mlone="${esc(x.r.id)}">${x.r.ml?'Open again':'Open'}</button></div></div>`).join('')}${!M.all&&L.length>12?`<button type="button" class="link" data-mlall="1" style="margin-top:8px">Show all ${L.length}</button>`:''}</div>`:'<p class="meta" style="margin:10px 0 0">Nobody to email in this selection.</p>'}
   <div class="row" style="margin-top:12px"><button type="button" class="link" data-mlcsv="1">Download mail-merge file (CSV)</button></div></div>`;
 }
@@ -202,7 +226,7 @@ function smtpPanel(e){
   <p class="meta" id="mlst" role="status" aria-live="polite" style="margin:8px 0 0">${esc(M.msg)}</p></div>
   <div id="mlrun"></div>
   <button type="button" class="btn" data-mlsend="1" style="width:100%" ${n&&!(M.run&&M.run.active)?'':'disabled'}>Send to ${n} attendee${n===1?'':'s'}</button>
-  <p class="meta" style="margin:8px 0 0">Each email has that person's own QR picture. Gmail allows about 500 recipients a day (2,000 for Google Workspace).</p>`;
+  <p class="meta" style="margin:8px 0 0">Each email has that person's own ticket picture, shown in the email and attached. Gmail allows about 500 recipients a day (2,000 for Google Workspace).</p>`;
 }
 function drawRun(){
  const b=$('mlrun');if(!b)return;const r=M.run;
@@ -211,6 +235,7 @@ function drawRun(){
  b.innerHTML=`<div class="card"><div class="sh" style="margin-bottom:6px"><h3 style="font-size:15px">${r.active?'Sending...':r.fatal?'Stopped':r.stop?'Stopped':'Finished'}</h3>${r.active?'<button type="button" class="btn ghost sm" data-mlstop="1">Stop</button>':''}</div>
   <div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pc}"><i style="width:${pc}%"></i></div>
   <p class="meta" style="margin:8px 0 0" role="status" aria-live="polite">${r.ok} sent${r.fail?`, <b class="bad">${r.fail} failed</b>`:''} of ${r.total}.${r.fatal?` <b class="bad">${esc(r.fatal)}</b>`:''}${!r.active&&(r.fail||r.fatal||r.stop)?' Choose &ldquo;Not emailed yet&rdquo; and send again to retry the rest.':''}</p>
+  ${r.note?`<p class="meta bad" style="margin:8px 0 0">${esc(r.note)}</p>`:''}
   ${r.errs.length?`<div class="errs">${r.errs.map(x=>`<div><b>${esc(x.name)}</b> (${esc(x.em)}): ${esc(x.why)}</div>`).join('')}</div>`:''}</div>`;
 }
 
@@ -223,7 +248,7 @@ async function api(path,body,again){
  catch(x){throw new Error('Could not reach the email service. Check your internet connection.')}
  const j=await r.json().catch(()=>({ok:false,message:'The email service sent an unexpected answer.'}));
  if(r.status===401&&!j.stage&&!again)return api(path,body,true);
- if(r.status===404)return{ok:false,message:'The email service needs the newer Worker. Update it (SETUP.md, Upgrade to 3.10.0).'};
+ if(r.status===404)return{ok:false,message:'The email service needs the newer Worker. Update it (SETUP.md, Upgrade to 3.11.0).'};
  if(r.status===403)return{ok:false,message:'This app is not allowed to use the email service. Add its address to ALLOWED_ORIGINS in the Worker.'};
  return j;
 }
@@ -240,35 +265,37 @@ const keep=s=>{if(s.remember)LS.set(SMTP_KEY,{prov:s.prov,host:s.host,port:s.por
 const say=t=>{M.msg=t;const n=$('mlst');if(n)n.textContent=t};
 const creds=s=>({host:s.host,port:s.port,user:s.user,pass:s.pass});
 
-function build(e,x,s,test){
- const v=vals(e,x),q=qrPng('CEM1:'+e.id+':'+x.r.id);
+const OLD_WORKER='Your email service is an older version, so these emails carry only the small QR picture. Update the Worker (SETUP.md, Upgrade to 3.11.0) to send the full ticket picture.';
+async function build(e,x,s,test){
+ const v=vals(e,x),q=qrPng('CEM1:'+e.id+':'+x.r.id);let tk=null;
+ try{tk=await ticketPng(e,x.r,false)}catch(err){}   // if the picture cannot be drawn the email still goes out with the small QR
  return{to:test?(s.from||s.user):x.em,name:test?'You (test)':x.r.name,subject:(test?'[Test] ':'')+mergeText(M.tpl.subject,v).replace(/\s+/g,' ').trim(),
-  text:tidy(mergeText(M.tpl.body,v)),html:mergeHtml(M.tpl.body,v,q.size),qr:q.b64};
+  text:tidy(mergeText(M.tpl.body,v)),html:mergeHtml(M.tpl.body,v),qr:q.b64,ticket:tk?tk.b64:'',file:tk?cemTicket.fileName(x.r.name):''};
 }
 async function testSmtp(kind){
  const e=cur_();if(!can_(e))return;const s=readSmtp(),bad=checkSmtp(s);if(bad)return say(bad);
  say(kind==='conn'?'Connecting...':'Sending a test email...');
  try{
-  const j=kind==='conn'?await api('/mail/verify',{smtp:creds(s)}):await api('/mail/send',{smtp:creds(s),from:{email:s.from||s.user,name:M.tpl.fromName},messages:[build(e,sample(e),s,true)]});
+  const j=kind==='conn'?await api('/mail/verify',{smtp:creds(s)}):await api('/mail/send',{smtp:creds(s),from:{email:s.from||s.user,name:M.tpl.fromName},messages:[await build(e,sample(e),s,true)]});
   if(!j.ok)return say(j.message||'It did not work.');
   keep(s);
   if(kind==='conn')say('Connected and logged in. You can send now.');
-  else{const q=(j.results||[])[0];say(q&&q.ok?'Test email sent to '+(s.from||s.user)+'. Check your inbox (and spam).':'The test email failed: '+((q&&q.error)||'unknown error'))}
+  else{const q=(j.results||[])[0];say(q&&q.ok?'Test email sent to '+(s.from||s.user)+'. Check your inbox (and spam).'+(j.ticketPng?'':' '+OLD_WORKER):'The test email failed: '+((q&&q.error)||'unknown error'))}
  }catch(x){say(x.message)}
 }
 async function sendAll(){
  const e=cur_();if(!can_(e))return toast('You no longer have permission to send.');
  const L=pool(e);if(!L.length)return;const s=readSmtp(),bad=checkSmtp(s);if(bad)return say(bad);
- if(!confirm('Send '+L.length+' email'+(L.length===1?'':'s')+' from '+(s.from||s.user)+'?\n\nEach person gets their own ticket QR.'))return;
+ if(!confirm('Send '+L.length+' email'+(L.length===1?'':'s')+' from '+(s.from||s.user)+'?\n\nEach person gets their own ticket picture.'))return;
  M.run={active:true,total:L.length,done:0,ok:0,fail:0,errs:[],fatal:'',stop:false,sentIds:[]};drawMethod();
  const r=M.run;
  for(let i=0;i<L.length&&!r.stop;i+=BATCH){
   if(!can_(cur_())){r.fatal='Your permission to send was removed.';break}
   const chunk=L.slice(i,i+BATCH);let j;
-  try{j=await api('/mail/send',{smtp:creds(s),from:{email:s.from||s.user,name:M.tpl.fromName},messages:chunk.map(x=>build(e,x,s,false))})}
+  try{j=await api('/mail/send',{smtp:creds(s),from:{email:s.from||s.user,name:M.tpl.fromName},messages:await Promise.all(chunk.map(x=>build(e,x,s,false)))})}
   catch(x){r.fatal=x.message||'Network problem.';break}
   if(!j.ok){r.fatal=j.message||'The email service refused the request.';break}
-  if(i===0)keep(s);
+  if(i===0){keep(s);if(!j.ticketPng)r.note=OLD_WORKER}
   (j.results||[]).forEach((q,k)=>{const x=chunk[k];if(!x)return;r.done++;
    if(q.ok){r.ok++;const t=Date.now();r.sentIds.push([x.r.id,t]);markOne(e.id,x.r.id,'smtp',t)}else{r.fail++;r.errs.push({name:x.r.name,em:x.em,why:q.error||'Not sent'})}});
   save();drawRun();drawSummary();
@@ -295,6 +322,7 @@ document.addEventListener('click',x=>{
  const e=cur_();
  if(D.mlx!==undefined)close();
  else if(D.mlm){if(M.run&&M.run.active)return;M.mode=D.mlm;LS.set('cem-mail-mode',M.mode);drawAll()}
+ else if(D.mlstyle){if(window.cemTicket){cemTicket.setStyle(M.eid,D.mlstyle);drawStyle();drawPreview()}}
  else if(D.mls){M.scope=D.mls;M.all=false;drawSummary();drawMethod()}
  else if(D.mltag){const a=$('mlbody');if(!a)return;const p=a.selectionStart==null?a.value.length:a.selectionStart,q=a.selectionEnd==null?p:a.selectionEnd,ins='{'+D.mltag+'}';
   a.value=a.value.slice(0,p)+ins+a.value.slice(q);a.focus();a.selectionStart=a.selectionEnd=p+ins.length;M.tpl.body=a.value;saveTpl();drawPreview()}

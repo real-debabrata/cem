@@ -31,6 +31,21 @@ button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 14p
 .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .err{color:#c2331f;min-height:18px;font-size:13px;margin:8px 0 0}
 .ok{text-align:center}.ok b{font-size:44px;display:block;color:#087a62}
+.stage{display:grid;place-items:center;min-height:200px;margin:4px 0 14px}
+.stage img{display:block;width:min(100%,380px);height:auto;-webkit-touch-callout:default;user-select:auto;-webkit-user-select:auto}
+.sk{width:min(100%,380px);aspect-ratio:1/2;border-radius:30px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.04));animation:pulse 1.2s ease-in-out infinite alternate}
+@keyframes pulse{to{opacity:.55}}@media(prefers-reduced-motion:reduce){.sk{animation:none}}
+.acts{display:grid;gap:10px;max-width:380px;margin:0 auto}
+.pri{width:100%;background:#fff;color:#10172b;font-size:16px;padding:14px 16px;border-radius:14px}
+.sec{width:100%;background:rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:14px}
+.seg{display:flex;gap:4px;background:rgba(255,255,255,.10);border-radius:14px;padding:4px}
+.seg button{flex:1;background:transparent;color:#d9dcf2;padding:9px 10px;border-radius:10px;font-size:14px}
+.seg button[aria-pressed=true]{background:#fff;color:#10172b}
+.note{max-width:380px;margin:14px auto 0;text-align:center;color:#c9cde6;font-size:13px}
+.note b{color:#fff}.saved{max-width:380px;margin:22px auto 0}.saved h2{font-size:14px;color:#c9cde6;margin:0 0 8px;font-weight:600}
+.saved button{display:block;width:100%;text-align:left;background:rgba(255,255,255,.08);color:#fff;margin:0 0 8px;border-radius:12px;padding:10px 12px;font-weight:600}
+.saved small{display:block;font-weight:400;color:#c9cde6}
+.pri:focus-visible,.sec:focus-visible,.seg button:focus-visible,.saved button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 </style><style>*{-webkit-tap-highlight-color:transparent}button,a.btn,summary,label{-webkit-user-select:none;user-select:none}input,textarea,select{-webkit-user-select:text;user-select:text}</style></head><body>
 <div id="splash" role="status" aria-label="Loading Campus Events"><div class="sp-logo"><i class="sp-ring"></i><div class="sp-mark"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></svg></div></div><div class="sp-name">Campus Events</div><div class="sp-sub">Getting your events ready</div><div class="sp-bar"><i></i></div></div>
 <main>
@@ -40,29 +55,82 @@ button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 14p
 <script>window.SPLASH_HOLD=1</script>
 <script src="splash.js"></script>
 <script src="qrcode.js"></script>
+<script src="ticketart.js"></script>
 <script>
-/* CEM 3.5.0: a person's QR ticket. Opened from a link the organizers send: ticket.html#e=CODE&r=TICKETID&n=NAME&t=EVENT&d=DATE&v=VENUE
-   Everything is in the link, so this page needs no sign-in and no database. The QR holds only the event code and the ticket id;
-   the scanner at the gate looks the ticket up in the event's attendee list. Keep the link private: whoever holds it holds the ticket. */
+/* CEM 3.11.0: a person's ticket picture. Opened from a link the organizers send:
+     ticket.html#e=CODE&r=TICKETID&n=NAME&t=EVENT&d=DATE&tm=TIME&v=VENUE&ty=TYPE&s=gradient|flat
+   Everything is in the link, so this page needs no sign-in and no database. The QR on the ticket holds only the event code and the
+   ticket id; the scanner at the gate looks the ticket up in the event's attendee list. Keep the link private: whoever holds it holds the ticket.
+   Offline: the ticket is drawn on this phone (ticketart.js), "Save ticket" downloads the PNG, the details are remembered on this device,
+   and ticket-sw.js keeps this page's files so the link also opens without internet. Older links (without tm, ty, s) still work. */
 const $=id=>document.getElementById(id),root=$('root');
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const p=new URLSearchParams(location.hash.replace(/^#/,'')),e=(p.get('e')||'').toUpperCase(),r=p.get('r')||'';
-if(!/^[A-Z]{6}$/.test(e)||!/^[A-Za-z0-9_-]{4,40}$/.test(r)){root.innerHTML='<div class="card"><h1>Ticket unavailable</h1><p class="meta">This ticket link is incomplete. Ask the organizers to send it again.</p></div>'}
-else{
- const payload='CEM1:'+e+':'+r;let svg='';
- try{const q=qrcode(0,'M');q.addData(payload);q.make();svg=q.createSvgTag(10,4)}catch(x){}
- const d=p.get('d')||'',when=new Date(d+'T00:00:00'),dt=isNaN(when)?esc(d):when.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long',year:'numeric'});
- document.title='Ticket: '+(p.get('t')||'');
- root.innerHTML=`<div class="card" style="text-align:center"><p class="meta">${esc(p.get('t')||'Event ticket')}</p><h1>${esc(p.get('n')||'')}</h1>
-  <p class="meta">${dt}${p.get('v')?'<br>'+esc(p.get('v')):''}</p>
-  <div class="qr" id="qr">${svg||'<p class="meta">The QR code could not be drawn. Show this code at the gate: '+esc(payload)+'</p>'}</div>
-  <p class="meta">Show this QR code at the entrance. Brightness up helps the scanner.</p>
-  <div class="row"><button class="alt" id="dl">Save image</button></div>
-  <p class="meta" style="margin-top:10px">Ticket ${esc(r)}</p></div>`;
- setTimeout(()=>window.splashDone&&splashDone(),0);
- $('dl').onclick=()=>{const el=document.querySelector('#qr svg');if(!el)return;
-  const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=720;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,720,720);x.drawImage(img,0,0,720,720);
-   const a=document.createElement('a');a.download='ticket.png';a.href=c.toDataURL('image/png');document.body.append(a);a.click();a.remove()};
-  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(el))};
+const OKE=/^[A-Z]{6}$/,OKR=/^[A-Za-z0-9_-]{4,40}$/,LSK='cem-tickets';
+const valid=T=>OKE.test(T.e)&&OKR.test(T.r);
+const readSaved=()=>{try{const a=JSON.parse(localStorage.getItem(LSK)||'[]');return Array.isArray(a)?a.filter(x=>x&&valid(x)):[]}catch(x){return[]}};
+const remember=T=>{try{const a=readSaved().filter(x=>!(x.e===T.e&&x.r===T.r));a.unshift(Object.assign({},T,{at:Date.now()}));localStorage.setItem(LSK,JSON.stringify(a.slice(0,20)));return true}catch(x){return false}};
+const hashOf=T=>{const p=new URLSearchParams({e:T.e,r:T.r,n:T.n||'',t:T.t||'',d:T.d||'',v:T.v||''});if(T.tm)p.set('tm',T.tm);if(T.ty)p.set('ty',T.ty);if(T.s)p.set('s',T.s);return p.toString()};
+const fromHash=()=>{const p=new URLSearchParams(location.hash.replace(/^#/,''));
+ return{e:(p.get('e')||'').toUpperCase(),r:p.get('r')||'',n:p.get('n')||'',t:p.get('t')||'',d:p.get('d')||'',tm:p.get('tm')||'',v:p.get('v')||'',ty:p.get('ty')||'',s:p.get('s')||''}};
+const styleOf=T=>cemTicket.STYLES[T.s]?T.s:'gradient';
+const done=()=>setTimeout(()=>window.splashDone&&splashDone(),0);
+const fail=(h,m)=>{root.innerHTML='<div class="card"><h1>'+h+'</h1><p class="meta">'+m+'</p></div>';done()};
+
+// the page's own files are kept for offline use (see ticket-sw.js)
+let swReady=false;
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){try{navigator.serviceWorker.register('ticket-sw.js').then(()=>navigator.serviceWorker.ready).then(()=>{swReady=true;offline()}).catch(()=>{})}catch(x){}}
+
+let T=null,blob=null,url='',stored=false,seq=0;
+const optsOf=T=>({style:styleOf(T),event:T.t,type:T.ty,name:T.n,date:T.d,time:T.tm,venue:T.v,id:T.r,code:T.e});
+function offline(){
+ const n=$('off');if(!n)return;
+ n.innerHTML=stored&&swReady?'<b>Saved for offline use.</b> This ticket also opens without internet on this device. Saving the picture is still the safest copy.'
+  :stored?'<b>Remembered on this device.</b> Save the picture below so you have it even without internet.':'Save the picture below so you have it even without internet.';
 }
+async function draw(){
+ const my=++seq,st=$('stage');if(!st)return;
+ st.innerHTML='<div class="sk" role="img" aria-label="Drawing your ticket"></div>';
+ try{
+  const b=await cemTicket.blob(optsOf(T));if(my!==seq)return;
+  blob=b;if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(b);
+  st.innerHTML='<img id="tkimg" alt="Ticket for '+esc(T.n)+', '+esc(T.t)+'. Shows a QR code to scan at the entrance." src="'+url+'">';
+ }catch(x){
+  // the picture could not be drawn: fall back to the plain QR so the ticket still works
+  blob=null;let svg='';try{const q=qrcode(0,'M');q.addData('CEM1:'+T.e+':'+T.r);q.make();svg=q.createSvgTag(10,4)}catch(y){}
+  st.innerHTML='<div class="card" style="text-align:center;width:100%;max-width:380px"><p class="meta">'+esc(T.t)+'</p><h1>'+esc(T.n)+'</h1>'+(svg||'<p class="meta">Show this code at the gate: CEM1:'+esc(T.e)+':'+esc(T.r)+'</p>')+'</div>';
+ }
+ done();
+}
+function save(){
+ if(!blob)return;const a=document.createElement('a');a.download=cemTicket.fileName(T.n);a.href=url;document.body.append(a);a.click();a.remove();
+ const m=$('msg');if(m)m.textContent='Saved as '+a.download+'. Look in your Downloads or Files. It works without internet.';
+}
+async function shareImg(){
+ if(!blob)return;const ok=await cemTicket.share(blob,cemTicket.fileName(T.n),'Ticket: '+T.t,'My ticket for '+T.t);if(!ok)save();
+}
+function view(t,list){
+ T=t;document.title='Ticket: '+(T.t||'');stored=remember(T);
+ const when=new Date((T.d||'')+'T'+(T.tm||'00:00')),can=cemTicket.canShareFiles(),cur=styleOf(T);
+ const others=(list||[]).filter(x=>!(x.e===T.e&&x.r===T.r));
+ root.innerHTML=`<div class="acts" style="margin-bottom:14px"><button type="button" class="pri" id="dl">Save ticket (PNG)</button>
+   ${can?'<button type="button" class="sec" id="sh">Share or save to Photos</button>':''}</div>
+  <div id="stage" class="stage" aria-live="polite"></div>
+  <div class="acts"><div class="seg" role="group" aria-label="Ticket style">${Object.keys(cemTicket.STYLES).map(k=>`<button type="button" data-s="${k}" aria-pressed="${k===cur}">${cemTicket.STYLES[k]}</button>`).join('')}</div></div>
+  <p class="note" id="msg" role="status" aria-live="polite"></p>
+  <p class="note" id="off"></p>
+  <p class="note">Show the QR code at the entrance. Turn the screen brightness up if it does not scan.</p>
+  ${others.length?`<div class="saved"><h2>Other tickets saved on this device</h2>${others.map((x,i)=>`<button type="button" data-o="${i}">${esc(x.t||'Event')}<small>${esc(x.n||'')}</small></button>`).join('')}</div>`:''}`;
+ $('dl').onclick=save;if($('sh'))$('sh').onclick=shareImg;
+ root.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{T.s=b.dataset.s;remember(T);try{history.replaceState(null,'','#'+hashOf(T))}catch(x){}
+  root.querySelectorAll('[data-s]').forEach(z=>z.setAttribute('aria-pressed',String(z===b)));draw()});
+ root.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const x=others[+b.dataset.o];if(x){try{history.replaceState(null,'','#'+hashOf(x))}catch(y){}view(x,readSaved());scrollTo(0,0)}});
+ offline();draw();
+}
+{const h=fromHash(),saved=readSaved();
+ if(valid(h))view(h,saved);
+ else if(saved.length)view(saved[0],saved);
+ else fail('Ticket unavailable','This ticket link is incomplete. Ask the organizers to send it again.');
+}
+// the same tab opened with another ticket link (only the part after # changed): show that ticket
+addEventListener('hashchange',()=>{const h=fromHash();if(valid(h)&&!(T&&h.e===T.e&&h.r===T.r&&(h.s||'')===(T.s||'')))view(h,readSaved())});
 </script></body></html>
