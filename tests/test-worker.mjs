@@ -115,6 +115,21 @@ assert.equal(kv.get('mail:uid-organiser:' + new Date().toISOString().slice(0, 10
   got.length = 0;
 }
 
+// 3c v3.12.0: an invitation (tickets switched off). The app sends HTML with an EMPTY qr and an EMPTY ticket. No Worker change was needed for this.
+{
+  got.length = 0;
+  r = await call('/mail/send', { smtp: good, from: { email: 'organiser@college.edu', name: 'TechFest Team' }, messages: [
+    { to: 'asha@students.example', name: 'Asha Rao', subject: 'You are invited to TechFest', text: 'Hi Asha,\n\nYou are invited to TechFest.', html: '<!doctype html><html><body><p>Hi Asha,<br>You are invited to TechFest.</p></body></html>', qr: '', ticket: '', file: '' }
+  ] });
+  assert.equal(r.s, 200, JSON.stringify(r.j)); assert.equal(r.j.sent, 1); assert.equal(r.j.results[0].ok, true);
+  const iv = got[0];
+  assert.equal(iv.subject, 'You are invited to TechFest'); assert.equal(iv.attachments.length, 0, 'no attachment, no inline picture');
+  assert.match(iv.text, /You are invited to TechFest/); assert.match(iv.html, /<p>Hi Asha/); assert.doesNotMatch(String(iv.html), /cid:|data:image/);
+  assert.match(iv.headers.get('content-type').value, /multipart\/alternative/, 'plain text + HTML, nothing else');
+  ok('an invitation (HTML, empty qr, empty ticket) is delivered as plain text + HTML with no image and no attachment');
+  got.length = 0;
+}
+
 // 4 limits and shape checks
 r = await call('/mail/send', { smtp: good, from: { email: 'organiser@college.edu' }, messages: Array.from({ length: 21 }, () => ({ to: 'a@b.example', text: 'x' })) }); assert.equal(r.s, 400); ok('more than 20 emails in one call -> 400');
 r = await call('/mail/send', { smtp: good, from: { email: 'organiser@college.edu' }, messages: [{ to: 'not-an-email', text: 'x' }] }); assert.equal(r.s, 400); ok('invalid recipient -> 400');
