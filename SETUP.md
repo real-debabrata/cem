@@ -616,6 +616,44 @@ Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or 
 | Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |
 
 
+## Upgrade to 3.12.0: Email attendees in three simple steps (ticket or invitation)
+
+The email window is now a short guided flow, so a person who has never heard of SMTP can use it:
+
+1. **People:** tabs **Not emailed**, **Emailed** and **No email** show who has and has not been emailed (with the date, and whether each person got a ticket or an invitation). **Email these again too** and **Clear emailed marks** are buttons here.
+2. **Message:** write or edit the subject and message. The box **Send a ticket with a QR code** is **ticked by default**. Untick it for an event that needs no ticket: attendees get a plain invitation with no QR code, no ticket picture and no ticket link. The tick is remembered per event on that device.
+3. **Send:** pick **This device's mail app** (no setup) or **My email account (automatic)**. For the second, tap your provider (**Gmail, Outlook, Yahoo Mail, Zoho Mail (India), Zoho Mail (World), Brevo, Other**, each with its logo and name), then enter your email address and app password. Server and port are filled in; **Server settings** shows them. A **How do I get this password?** button shows the steps, with a button to the Google or Brevo page where those apply.
+
+Every former text link in this window is now a real button. **No Worker change, no new variable or secret, no Firestore rules change and no new Android plugin.** The Worker from 3.11.0 already accepts an email without a ticket picture (the test suite now proves it).
+
+### Files
+In `www/` replace: `mailer.js`, `event.js`, `help.js`, `ui.js`.
+In the repo root replace: `package.json`, `README.md`, `SETUP.md`. Add `release-notes/v3.12.0.md`. In `tests/` replace `test-client.mjs` and `test-worker.mjs`.
+`worker/` is **unchanged**.
+
+### Steps (about 3 minutes)
+1. Upload the files above, commit, and let the *pages* workflow publish the site.
+2. Open an event > **Attendees** > **Email attendees**. Walk through the three steps. Try unticking **Send a ticket with a QR code** and watch the preview turn into an invitation.
+3. Android: run **Actions > Build APK > Run workflow** as usual. The version becomes 3.12.0.
+
+### Small details
+- Attendees get one more optional field, `mlk` (`t` ticket or `i` invitation), next to the existing `ml` and `mlv`. Older emailed marks without it count as tickets.
+- The **Emailed** tag in the attendee list now says *Ticket emailed* or *Invitation emailed* when you hover it.
+- Standard invitation text: *You are invited to {event}* ... *We would love to see you there.* Texts you wrote yourself are never replaced when you tick or untick; use **Reset message** to get the standard text for the current choice.
+- Gmail, Zoho and Brevo logos come from the open `simple-icons` set (CC0). Yahoo and Outlook are plain lettermark badges drawn in code. All names and logos belong to their owners.
+
+### Rolling back
+Restore the 3.11.0 versions of `mailer.js`, `event.js`, `help.js` and `ui.js`. Attendee marks written by 3.12.0 are still read correctly (`ml` and `mlv` are unchanged).
+
+### Troubleshooting
+| What you see | Cause and fix |
+| --- | --- |
+| The window still looks like the old single screen | The browser cached the old `mailer.js`. Hard refresh, or reopen the app. |
+| *Automatic sending is not set up yet* | `OTP_API` is missing in `firebase-config.js`, as in 3.10.0. |
+| *Tickets are switched off, so the ticket parts of your message are left out* | You edited the message and then unticked the ticket box. Tap **Reset message** for the standard invitation. |
+| *Your message has no ticket in it* | The ticket box is ticked but the message has no **Ticket QR** or **Ticket link**. Tap one of those buttons, or untick the box. |
+| Gmail says the login was refused | Use an app password, not your normal password. If **App passwords** is missing in your Google account, your college may have turned it off: use **Brevo**. |
+
 ## Upgrade to 3.11.0: designed ticket pictures (PNG), emailed and saved for offline use
 
 Tickets are now a proper ticket **picture** instead of a bare QR code: attendee name, event, date, time, venue and **one QR code** (no barcode). Two looks, chosen by the organizer: **Gradient** (purple, QR on top, tear-off stub) and **Flat** (white with striped edges, QR at the bottom).
