@@ -1,7 +1,8 @@
 /* Online registration, organizer side (the public page is register.html). Shown in Attendees > Registration, together with the cash collectors.
    - Open online registration writes a small public document regpages/{event code}: event name, date, seats taken, the form questions and, if set, the ticket price and UPI details.
-   - A person opens the link, fills the form and sends it. It lands in regpages/{code}/subs/{COLLEGE ID} as "pending", so the same College ID cannot apply twice (enforced by firestore.rules).
-   - When the seats are full the application is stored as "waitlist". Approve (or Promote) re-checks the seats and the College ID, then adds the person as an attendee with a QR ticket.
+   - A person opens the link, fills the form and sends it. It lands in regpages/{code}/subs/{EMAIL in lower case} as "pending", so the same email address cannot apply twice (enforced by firestore.rules).
+     Since 3.12.1 the email address is the only answer that is always required; the College ID is optional and exists only when the organizer's form asks for it (older applications are filed under the College ID).
+   - When the seats are full the application is stored as "waitlist". Approve (or Promote) re-checks the seats and whether the person is already an attendee (same College ID or same email), then adds the person as an attendee with a QR ticket.
    - Customize page and link: link name (regslugs/{name}), headline, welcome text, colours, banner, closing time. Price and settings: ticket price, UPI ID, payee, waitlist, message.
    - Cash or UPI: the applicant's choice, and the cash collector they picked (payment.js), is shown on each application and carried into the attendee. */
 (function(){
@@ -11,6 +12,9 @@ const pcol=eid=>firebase.firestore().collection('regpages').doc(eid);
 const bad=x=>toast(x&&x.code==='permission-denied'?'No permission for that.':'Problem: '+((x&&x.message)||x));
 const upiOk=u=>/^[\w.\-]{2,}@[\w]{2,}$/.test(u||'');
 const subsOf=e=>RSUBS[e.id]||[];
+// 3.12.1: is this attendee the person behind this application? Same College ID (only when the application has one) or same email address.
+const emOf=(e,r)=>{if(r.em)return String(r.em).trim().toLowerCase();const f=(e.fields||[]).find(q=>q.type!=='checkbox'&&/e-?mail/i.test(q.label||''));return f?String((r.data||{})[f.id]||'').trim().toLowerCase():''};
+const sameP=(e,r,x)=>{const c=x.cid&&window.regCid?regCid(e,r):'',m=x.em?emOf(e,r):'';return !!((c&&c===x.cid)||(m&&m===String(x.em).trim().toLowerCase()))};
 const rp=e=>(e.pay&&e.pay.rp)||{};
 const slugOf=e=>rp(e).slug||'';
 const SLUG_RE=/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/;
@@ -83,9 +87,9 @@ window.signupV=function(e){
  const subs=subsOf(e),pend=subs.filter(x=>x.s==='pending'),wl=subs.filter(x=>x.s==='waitlist'),done=subs.filter(x=>x.s==='approved'||x.s==='rejected');
  const taken=regsOf(e.id).length,left=Math.max(0,e.cap-taken),regs=regsOf(e.id);
  const row=x=>{
-  const ex=regs.find(r=>regCid(e,r)===x.cid),dupU=x.utr&&subs.some(y=>y.id!==x.id&&y.utr===x.utr);
+  const ex=regs.find(r=>sameP(e,r,x)),dupU=x.utr&&subs.some(y=>y.id!==x.id&&y.utr===x.utr);
   const handled=x.s==='approved'||x.s==='rejected',mine=regs.find(r=>r.id===x.ri);
-  const info=[`College ID ${esc(x.cid)}`,x.ph?`<a href="tel:${esc(x.ph)}">${esc(x.ph)}</a>`:'',x.em?`<a href="mailto:${esc(x.em)}">${esc(x.em)}</a>`:'',when(x.at)].filter(Boolean).join(', ');
+  const info=[x.cid?`College ID ${esc(x.cid)}`:'',x.ph?`<a href="tel:${esc(x.ph)}">${esc(x.ph)}</a>`:'',x.em?`<a href="mailto:${esc(x.em)}">${esc(x.em)}</a>`:'',when(x.at)].filter(Boolean).join(', ');
   const tags=(x.s==='waitlist'?'<span class="pill warn">Waitlist</span> ':'')+(x.s==='approved'?'<span class="pill ok">Approved</span> ':'')+(x.s==='rejected'?'<span class="pill bad">Rejected</span> ':'')
    +(ex&&!handled?'<span class="pill bad">Already registered</span> ':'')+(x.pm==='cash'?`<span class="pill acc">Cash: ${esc((((e.pay||{}).cashiers||[]).find(c=>c.id===x.cc)||{}).n||'collector')}${x.cp?' (says already paid)':' (pays later)'}</span> `:x.pm==='upi'?'<span class="pill acc">UPI</span> ':'')+(x.utr?`<span class="pill ${dupU?'bad':'acc'}">UTR ${esc(x.utr)}${dupU?' (also on another application)':''}</span> `:'');
   const noSeat=!ex&&left<=0;
@@ -139,17 +143,17 @@ async function claimSlug(E,slug,old){
 function setSub(eid,id,patch,msg){
  return pcol(eid).collection('subs').doc(id).update(patch).then(()=>{if(msg)toast(msg)}).catch(bad);
 }
-// Approve: re-check College ID and seats, then add the person as an attendee.
+// Approve: re-check that the person is not already an attendee (College ID or email) and that a seat is free, then add the person as an attendee.
 function approve(E,sub,paid,quiet){
  if(!can(E,'pay'))return false;
  if(sub.s==='approved'){if(!quiet)toast('Already approved');return false}
- const regs=regsOf(E.id),ex=regs.find(r=>regCid(E,r)===sub.cid);
- if(ex){setSub(E.id,sub.id,{s:'approved',ri:ex.id});if(!quiet)toast('This College ID is already registered. Linked to the existing attendee.');return false}
+ const regs=regsOf(E.id),ex=regs.find(r=>sameP(E,r,sub));
+ if(ex){setSub(E.id,sub.id,{s:'approved',ri:ex.id});if(!quiet)toast('This person is already registered (same email or College ID). Linked to the existing attendee.');return false}
  if(regs.length>=E.cap){if(sub.s!=='waitlist')setSub(E.id,sub.id,{s:'waitlist'});if(!quiet)toast('All '+E.cap+' seats are taken, so this person is on the waitlist');return false}
  let vals={};try{vals=JSON.parse(sub.x||'{}')}catch(x){}
  const data={};(E.fields||[]).forEach(f=>{const v=vals[f.id];data[f.id]=f.type==='checkbox'?(v==='Yes'?'Yes':'No'):String(v==null?'':v).slice(0,200)});
- const first=(E.fields||[])[0],r={id:rid(),eid:E.id,data,name:String((first&&data[first.id])||sub.n||'Guest').slice(0,80),cid:sub.cid,in:false,at:Date.now(),src:'form',by:window.MYUID};
- if(sub.em)r.em=sub.em;if(sub.ph)r.ph=sub.ph;if(sub.utr)r.utr=sub.utr;
+ const first=(E.fields||[])[0],r={id:rid(),eid:E.id,data,name:String((first&&data[first.id])||sub.n||'Guest').slice(0,80),in:false,at:Date.now(),src:'form',by:window.MYUID};
+ if(sub.cid)r.cid=sub.cid;if(sub.em)r.em=sub.em;if(sub.ph)r.ph=sub.ph;if(sub.utr)r.utr=sub.utr;
  if(sub.pm==='cash'||sub.pm==='upi')r.pm=sub.pm;
  if(sub.pm==='cash'&&sub.cc){const c=((E.pay||{}).cashiers||[]).find(z=>z.id===sub.cc);if(c){r.cc=c.id;r.cn=c.n}}
  if(paid&&(+(E.pay||{}).fee||0)>0){r.paid=true;r.pt=Date.now()}
@@ -185,7 +189,7 @@ document.addEventListener('click',x=>{
  else if(a==='ap'&&sub)approve(E,sub,false);
  else if(a==='apd'&&sub)approve(E,sub,true);
  else if(a==='rj'&&sub)setSub(E.id,id,{s:'rejected'},'Rejected');
- else if(a==='del'&&sub){pcol(E.id).collection('subs').doc(id).delete().then(()=>toast('Removed. The same College ID can apply again.')).catch(bad)}
+ else if(a==='del'&&sub){pcol(E.id).collection('subs').doc(id).delete().then(()=>toast('Removed. The same email address can apply again.')).catch(bad)}
  else if(a==='pn')promote(E);
 });
 document.addEventListener('submit',async x=>{

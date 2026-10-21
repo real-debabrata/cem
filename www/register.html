@@ -63,8 +63,9 @@ button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 14p
 <script src="qrcode.js"></script>
 <script>
 /* CEM 3.5.0: public self-registration page. Opened as register.html?e=EVENTCODE. No account needed.
-   Reads regpages/{code} (public while the organizer keeps it open) and writes one application to regpages/{code}/subs/{COLLEGE ID}.
-   The document id is the College ID, so each College ID can apply once per event; firestore.rules enforce it. */
+   Reads regpages/{code} (public while the organizer keeps it open) and writes one application to regpages/{code}/subs/{EMAIL in lower case}.
+   3.12.1: the email address is the only answer that is always required, and it is the document id, so each email address can apply once per event
+   (firestore.rules enforce it). College ID, phone and every other answer come from the event's own questions and their Required tick. */
 const $=id=>document.getElementById(id),root=$('root');
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const qs=new URLSearchParams(location.search),C=window.FB_CONFIG||{};
@@ -85,7 +86,8 @@ else{
   }).catch(()=>fail('Registration unavailable','Could not load this page. Check your connection and try again.'));
  }else loadPage();
 }
-const CID_RE=/college\s*id|student\s*id|roll\s*(no|number)|enrol|registration\s*(no|number|id)|reg\.?\s*(no|number)/i;
+const CID_RE=/college\s*id|student\s*id|roll\s*(no|number)|enrol|registration\s*(no|number|id)|reg\.?\s*(no|number)/i,
+ EM_RE=/e-?mail/i,PH_RE=/phone|mobile|whatsapp/i,EMAIL_OK=/^[^@\s\/]+@[^@\s\/]+\.[^@\s\/]+$/;
 const BG={indigo:'radial-gradient(800px 500px at 0% 0%,rgba(89,72,245,.42),transparent 62%),#10172b',
  sunset:'linear-gradient(135deg,#2b0f3a,#7a1f5c 55%,#d9482b)',ocean:'linear-gradient(135deg,#031d3a,#0b4f8a 60%,#0e8a8a)',forest:'linear-gradient(135deg,#06210f,#145a32 60%,#2e8b3d)',
  graphite:'linear-gradient(135deg,#111418,#232a33 60%,#3a4350)',light:'#f6f7fb'};
@@ -98,15 +100,17 @@ function show(r){
  if(!r.open||(r.until&&Date.now()>r.until))return fail('Registration closed','Registration for this event is closed.');
  const th=r.th||{};applyTheme(th);
  document.title='Register: '+r.name;setTimeout(()=>window.splashDone&&splashDone(),0);
- const fields=r.fields||[],cidF=fields.find(f=>f.type!=='checkbox'&&CID_RE.test(f.label||'')),full=(+r.taken||0)>=(+r.cap||0),left=Math.max(0,(+r.cap||0)-(+r.taken||0));
+ const fields=r.fields||[],pick=(re,not)=>fields.find(f=>f!==not&&f.type!=='checkbox'&&re.test(f.label||'')),
+  cidF=pick(CID_RE),emF=pick(EM_RE),phF=pick(PH_RE,emF),full=(+r.taken||0)>=(+r.cap||0),left=Math.max(0,(+r.cap||0)-(+r.taken||0));
  if(full&&!r.wl)return fail('This event is full','All '+r.cap+' seats are taken and there is no waitlist. Ask the organizers if more seats open up.');
  const when=new Date(r.date+'T'+(r.time||'00:00')),okd=!isNaN(when);
  const dt=okd?when.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long',year:'numeric'})+(r.time?', '+when.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):''):esc(r.date||'');
  const fee=+r.fee||0,upi=r.upi||'',cashL=(fee>0&&!full&&Array.isArray(r.cash))?r.cash.filter(c=>c&&c.id&&c.n):[],cashOn=cashL.length>0;
- const inp=f=>{const n='f_'+esc(f.id),req=f.req?' *':'';
+ const inp=f=>{const n='f_'+esc(f.id),req=(f.req||f===emF)?' *':'';
   if(f.type==='checkbox')return `<label class="chk"><input type="checkbox" name="${n}"> ${esc(f.label)}</label>`;
   if(f.type==='select')return `<label for="${n}">${esc(f.label)}${req}</label><select id="${n}" name="${n}"><option value="">Select</option>${String(f.opts||'').split(',').map(o=>`<option>${esc(o.trim())}</option>`).join('')}</select>`;
-  return `<label for="${n}">${esc(f.label)}${req}</label><input id="${n}" name="${n}" maxlength="200" autocomplete="off">`};
+  const at=f===emF?' maxlength="100" type="email" inputmode="email" autocomplete="email"':f===phF?' maxlength="20" type="tel" inputmode="tel" autocomplete="tel"':' maxlength="200" autocomplete="off"';
+  return `<label for="${n}">${esc(f.label)}${req}</label><input id="${n}" name="${n}"${at}>`};
  const link='upi://pay?pa='+encodeURIComponent(upi)+'&pn='+encodeURIComponent(r.payee||'')+'&am='+fee+'&cu=INR&tn='+encodeURIComponent('Registration: '+r.name);
  let svg='';if(fee>0&&upi&&!full){try{const q=qrcode(0,'M');q.addData(link);q.make();svg=q.createSvgTag(8,4)}catch(e){}}
  const upiOn=!!svg,both=upiOn&&cashOn,how=both?'UPI or cash':upiOn?'UPI':cashOn?'cash':'';
@@ -128,10 +132,9 @@ function show(r){
   ${r.msg?`<p class="meta" style="margin:10px 0 0">${esc(r.msg)}</p>`:''}</div>
  <div class="card" id="fc"><p class="step"><i>1</i> ${full?'Join the waitlist':'Your details'}</p>
   ${fields.map(inp).join('')}
-  ${cidF?'':'<label for="cid">College ID *</label><input id="cid" maxlength="24" autocapitalize="characters" autocomplete="off">'}
-  <label for="em">Email</label><input id="em" type="email" maxlength="100" autocomplete="email">
-  <label for="ph">Phone / WhatsApp</label><input id="ph" type="tel" maxlength="20" inputmode="tel" autocomplete="tel">
-  <p class="meta" style="margin:4px 0 0">Give at least one of email or phone so the organizers can send your ticket.</p>
+  ${emF?'':'<label for="em">Email *</label><input id="em" type="email" maxlength="100" inputmode="email" autocomplete="email">'}
+  ${phF?'':'<label for="ph">Phone / WhatsApp</label><input id="ph" type="tel" maxlength="20" inputmode="tel" autocomplete="tel">'}
+  <p class="meta" style="margin:4px 0 0">The organizers send your ticket to your email address.</p>
   ${payHtml}
   ${full?'<p class="meta" style="margin-top:12px">All seats are taken. If a seat frees up the organizers will promote you from the waitlist and contact you.</p>':''}
   <div class="hp" aria-hidden="true"><label>Leave empty<input id="hp" tabindex="-1" autocomplete="off"></label></div>
@@ -146,28 +149,28 @@ function show(r){
    const v=f.type==='checkbox'?(el.checked?'Yes':'No'):el.value.trim().slice(0,200);vals[f.id]=v;
    if(f.req&&f.type!=='checkbox'&&!v&&!missing)missing=f.label});
   if(missing)return er.textContent='Please fill in: '+missing+'.';
-  const cid=norm(cidF?vals[cidF.id]:$('cid').value);
-  if(cid.length<3||cid.length>24)return er.textContent='Enter your College ID (3 to 24 letters or digits).';
-  const first=fields[0],n=String((first&&vals[first.id])||'').trim();
-  if(!n)return er.textContent='Please enter your name.';
-  const em=$('em').value.trim(),ph=$('ph').value.trim();
-  if(!em&&!ph)return er.textContent='Enter an email or a phone number.';
-  if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return er.textContent='That email address does not look right.';
+  // 3.12.1: only the email address is always required. Everything else is whatever the organizer asked for (their questions and Required ticks).
+  const em=String(emF?vals[emF.id]:$('em').value).trim();
+  if(!em)return er.textContent='Enter your email address.';
+  if(em.length>100||!EMAIL_OK.test(em))return er.textContent='That email address does not look right.';
+  const ph=String(phF?vals[phF.id]:$('ph').value).trim().slice(0,20);
+  const first=fields[0],n=(String((first&&vals[first.id])||'').trim()||em.split('@')[0]).slice(0,80);   // no name question, or left empty by the organizer's choice: use the part of the email before the @
+  const cid=cidF?norm(vals[cidF.id]):'';   // only when the event has a College ID question and the person filled it in
   const pmv=fee>0&&!full?mode():'';
   const ut=pmv==='upi'&&$('utr')?norm($('utr').value):'';
   if(ut&&ut.length<6)return er.textContent='The UTR must be at least 6 characters, or leave it empty.';
   let cc='',cpd=false;
   if(pmv==='cash'){cc=$('cc').value;if(!cc)return er.textContent='Choose who you will pay the cash to.';cpd=(document.querySelector('input[name="cp"]:checked')||{}).value==='1'}
   const x=JSON.stringify(vals);if(x.length>3000)return er.textContent='Some answers are too long.';
-  const doc={n:n.slice(0,80),cid,x,s:full?'waitlist':'pending',at:Date.now()};
-  if(em)doc.em=em;if(ph)doc.ph=ph;if(ut)doc.utr=ut;
+  const doc={n,em,x,s:full?'waitlist':'pending',at:Date.now()};
+  if(cid.length>=3&&cid.length<=24)doc.cid=cid;if(ph)doc.ph=ph;if(ut)doc.utr=ut;
   if(pmv){doc.pm=pmv;if(pmv==='cash'){doc.cc=cc;doc.cp=cpd}}
   er.textContent='';$('go').disabled=true;
-  firebase.firestore().collection('regpages').doc(code).collection('subs').doc(cid).set(doc)
+  Promise.resolve().then(()=>firebase.firestore().collection('regpages').doc(code).collection('subs').doc(em.toLowerCase()).set(doc))
    .then(()=>{const ty=th.ty?`<p style="margin:10px 0 0;white-space:pre-wrap">${esc(th.ty)}</p>`:'';
     const pay=pmv==='cash'?`<p class="meta">Cash: ${cpd?'you said you paid':'please pay'} <b>${esc((cashL.find(c=>c.id===cc)||{}).n||'')}</b>${cpd?'':' before the event'}.</p>`:'';
-    $('fc').innerHTML=`<div class="ok"><b>&#10003;</b><h1>${full?'You are on the waitlist':'Thank you, '+esc(n)}</h1><p class="meta">${full?'We will contact you if a seat opens up.':'The organizers will check your registration and send your ticket to the email or phone you gave.'}</p>${pay}${ty}<p class="meta">Your reference: <b>${esc(cid)}</b></p></div>`})
-   .catch(x=>{$('go').disabled=false;er.textContent=x.code==='permission-denied'?'This College ID has already registered for this event, or registration has just closed. If it is a mistake, ask the organizers.':'Could not send. Please try again.'});
+    $('fc').innerHTML=`<div class="ok"><b>&#10003;</b><h1>${full?'You are on the waitlist':'Thank you, '+esc(n)}</h1><p class="meta">${full?'We will contact you if a seat opens up.':'The organizers will check your registration and send your ticket to your email address.'}</p>${pay}${ty}<p class="meta">Registered with: <b>${esc(em)}</b></p></div>`})
+   .catch(x=>{$('go').disabled=false;er.textContent=x.code==='permission-denied'?'This email address has already registered for this event, or registration has just closed. If it is a mistake, ask the organizers.':'Could not send. Please try again.'});
  };
 }
 </script></body></html>
