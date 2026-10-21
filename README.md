@@ -86,7 +86,7 @@ The Attendees area has two views: **Attendees** and **Registration**.
 **Registration**
 
 - Choose **Open online registration** to generate a public link and QR code. Applicants can submit the form without an account. Review submissions under **Applications to review**, then approve or reject them.
-- The same College ID cannot apply twice. When the event is full, applicants can join a waitlist; use **Promote** to move someone into an available place.
+- Only the email address is always required on the public form. The College ID, phone and all other questions follow the event's own form and its **Required** ticks, so outsiders without a College ID can register. The same email address cannot apply twice. When the event is full, applicants can join a waitlist; use **Promote** to move someone into an available place.
 - Customise the public page with a link name (for example, `techfest-2026`), headline, welcome message, colours, banner image and closing time.
 - Set the ticket price (use `0` for free), UPI ID, payee name, waitlist setting and a message for applicants. The ticket price is configured here, even before online registration opens.
 - Choose event-team members as cash collectors, or enter the name of someone outside the app. Applicants paying online can select UPI or cash and, for cash, choose a collector. Mark a fee as paid only after receiving the cash or verifying the UTR.

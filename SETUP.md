@@ -616,6 +616,31 @@ Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or 
 | Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |
 
 
+## Upgrade to 3.12.1: registration without a College ID (only the email is required)
+
+The public registration page used to demand a College ID from everybody, which locked out outsiders and guests. Now only the **email address** is always required. The College ID, phone and every other answer follow the event's own form (the questions you add and their **Required** tick). Each email address can apply once per event (it used to be each College ID).
+
+**Needs one change in Firebase: republish `firestore.rules`.** The old rules require a College ID and use it as the application's id, so with the old rules the new form is refused. No Worker change, no new variable or secret, no Android plugin.
+
+### Files
+In the repo root replace: `firestore.rules`, `package.json`, `README.md`, `SETUP.md`. Add `release-notes/v3.12.1.md`.
+In `www/` replace: `register.html`, `signup.js`, `help.js`, `ui.js`.
+
+### Steps (about 3 minutes)
+1. **Publish the rules first.** Firebase console > Firestore Database > Rules > select everything, paste the new `firestore.rules` from the repo root > Publish.
+2. Upload the other files, commit, and let the *pages* workflow publish the site.
+3. Open an event > **Attendees** > **Registration** > **Preview page**. You should see **Email \*** and no fixed College ID box. Submit a test application with an email only (and no College ID), then approve it.
+4. Android: run **Actions > Build APK > Run workflow** as usual. The version becomes 3.12.1.
+
+### Small details
+- Events made from a template (Fest, Seminar, Workshop, Cultural, Sports) still start with a **College ID** question ticked **Required**. For an event open to outsiders, untick **Required** (or delete the question) in the event's form. Existing events are not changed.
+- If the event already has an **Email** or a **Phone / Mobile / WhatsApp** question (the Webinar template has Email), the page uses that question instead of showing a second box. The email question always shows the \* because it is always required.
+- If the first question (the name) is not required and is left empty, the part of the email before the @ is used as the name.
+- Applications already received under the old rules are filed under the College ID. They still show up and can be approved. A person who applied that way and applies again with their email is caught at **Approve**, because the app checks the College ID and the email against the attendees.
+
+### Rolling back
+Restore the 3.12.0 versions of `register.html`, `signup.js`, `help.js`, `ui.js` and `firestore.rules` (publish the old rules again). Approve or reject any application received while 3.12.1 was live first: those have no College ID, and the 3.12.0 organizer screen cannot handle that.
+
 ## Upgrade to 3.12.0: Email attendees in three simple steps (ticket or invitation)
 
 The email window is now a short guided flow, so a person who has never heard of SMTP can use it:

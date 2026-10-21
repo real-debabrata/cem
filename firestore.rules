@@ -329,16 +329,19 @@ service cloud.firestore {
       allow delete: if signedIn() && canPay(eid);
 
       match /subs/{sid} {
-        // The document id is the normalised College ID, so one College ID can apply only once per event (a second create becomes an
-        // update, which the public cannot do). The answers travel as one JSON string 'x' (max 3000 characters) so a spammer cannot send huge documents.
+        // v3.12.1: the document id is the applicant's email address in lower case, so one email address can apply only once per event (a second create
+        // becomes an update, which the public cannot do). The email address is the only answer that is always required. 'cid' (College ID) is optional:
+        // it is stored only when the organizer's form has a College ID question and the person filled it in.
+        // The answers travel as one JSON string 'x' (max 3000 characters) so a spammer cannot send huge documents.
         allow create: if request.resource.data.keys().hasOnly(['n','cid','x','em','ph','s','at','utr','pm','cc','cp'])
           && request.resource.data.n is string
           && request.resource.data.n.size() > 0 && request.resource.data.n.size() <= 80
-          && request.resource.data.cid is string
-          && request.resource.data.cid.matches('[A-Z0-9]{3,24}')
-          && request.resource.data.cid == sid
+          && request.resource.data.em is string
+          && request.resource.data.em.size() <= 100
+          && request.resource.data.em.matches('[^@ ]+@[^@ ]+[.][^@ ]+')
+          && request.resource.data.em.lower() == sid
+          && (!('cid' in request.resource.data) || (request.resource.data.cid is string && request.resource.data.cid.matches('[A-Z0-9]{3,24}')))
           && request.resource.data.x is string && request.resource.data.x.size() <= 3000
-          && (!('em' in request.resource.data) || (request.resource.data.em is string && request.resource.data.em.size() <= 100))
           && (!('ph' in request.resource.data) || (request.resource.data.ph is string && request.resource.data.ph.size() <= 20))
           && (!('utr' in request.resource.data) || (request.resource.data.utr is string && request.resource.data.utr.matches('[A-Z0-9]{6,40}')))
           && request.resource.data.s in ['pending','waitlist']
