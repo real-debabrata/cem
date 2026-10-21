@@ -616,6 +616,30 @@ Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or 
 | Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |
 
 
+## Upgrade to 3.12.2: Terms & Conditions page
+
+Adds a Terms & Conditions page (`terms.html`). The sign-in page says "By continuing, you agree to our Terms & Conditions", and the page is also linked from the profile menu and from the bottom of the Account panel.
+
+**Files only.** No Firebase rules change, no Worker change, no new variable or secret, no Android plugin.
+
+### Files
+In the repo root replace: `package.json`, `README.md`, `SETUP.md`. Add `release-notes/v3.12.2.md`.
+In `www/` add: `terms.html`. Replace: `login.html`, `sync.js`, `ui.js`, `help.js`.
+
+### Steps (about 2 minutes)
+1. Upload the files, commit, and let the *pages* workflow publish the site.
+2. Open the sign-in page: you should see the new line under **Forgot password?**, and the link should open the Terms.
+3. Sign in, open the profile menu: **Terms & Conditions** is between **Help & guides** and **Theme**. Open **Account, alerts & join event** and scroll down: the link is above **Sign out**.
+4. Android: run **Actions > Build APK > Run workflow** as usual. The version becomes 3.12.2. The page is bundled inside the app, so it also opens offline.
+
+### Small details
+- **Change the contact or the date.** Open `www/terms.html` and search for `CONTACT` (the contact box in section 17, which uses cem@deba.indevs.in) and `TERMS-DATE` (the "Effective / Last updated" line). Change the date whenever the terms change.
+- **It follows the app's theme.** If the person chose Light or Dark in the profile menu, the Terms page uses it. With Auto it follows the device.
+- **The Back button** returns to the page the person came from (sign-in or the app).
+
+### Rolling back
+Restore the 3.12.1 versions of `login.html`, `sync.js`, `ui.js` and `help.js`. `terms.html` can stay or be deleted.
+
 ## Upgrade to 3.12.1: registration without a College ID (only the email is required)
 
 The public registration page used to demand a College ID from everybody, which locked out outsiders and guests. Now only the **email address** is always required. The College ID, phone and every other answer follow the event's own form (the questions you add and their **Required** tick). Each email address can apply once per event (it used to be each College ID).

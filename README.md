@@ -172,6 +172,7 @@ Open the profile menu to access:
 
 - **Account, alerts & join event:** change your name, join an event, choose notifications, send changes to the event's free ntfy topic for phone alerts or sign out.
 - **Help & guides:** open the searchable guide.
+- **Terms & Conditions:** read the terms for using Campus Events. They are also linked from the sign-in page and at the bottom of the Account panel.
 - **Theme:** switch between Auto, Light and Dark.
 - **About & updates:** view the installed version and check for updates.
 
@@ -195,6 +196,7 @@ CEM runs as an Android app and a website. The project is designed to be publisha
 | [`www/`](./www/) | Web app source code. |
 | [`brand/README.md`](./brand/README.md) | Brand assets, colour list and icon-generator details. |
 | [`LICENCE`](./LICENCE) | Licence terms. |
+| [`www/terms.html`](./www/terms.html) | The app's Terms & Conditions page. Update the date at the top when the terms change. |
 
 The built-in role permissions must match in both `permsOf` in `firestore.rules` and `BASE` in `www/app2.js`.
 
