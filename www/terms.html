@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F7FB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10172B" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="description" content="The terms for using Campus Events: accounts, events, payments, emails, data and your responsibilities.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Campus Events">
+<meta property="og:title" content="Terms &amp; Conditions | Campus Events">
+<meta property="og:description" content="The terms for using Campus Events: accounts, events, payments, emails, data and your responsibilities.">
+<meta property="og:image" content="https://cem.deba.indevs.in/icons/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="fonts.css">
+<title>Terms &amp; Conditions | Campus Events</title>
+<script>
+/* Follow the theme chosen in the app (profile menu > Theme). "auto" or nothing = follow the device. */
+try{var t=localStorage.getItem('campus-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}
+</script>
+<style>
+/* CEM 3.12.2: Terms & Conditions. Static page, no script needed except the Back button and the theme above.
+   To change the contact details or the date, search this file for "CONTACT" and "TERMS-DATE". */
+:root{box-sizing:border-box;--bg:#f6f7fb;--card:#fff;--ink:#10172b;--mute:#5b6380;--line:#e1e4ef;--acc:#5948f5;--accink:#fff;--soft:#eeecff}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10172b;--card:#1a2240;--ink:#f6f7fb;--mute:#a5abc4;--line:#2b3558;--acc:#8f84ff;--accink:#10172b;--soft:#232b55}}
+:root[data-theme="dark"]{--bg:#10172b;--card:#1a2240;--ink:#f6f7fb;--mute:#a5abc4;--line:#2b3558;--acc:#8f84ff;--accink:#10172b;--soft:#232b55}
+*,*:before,*:after{box-sizing:inherit}
+html{scroll-behavior:smooth;scroll-padding-top:calc(76px + env(safe-area-inset-top,0px))}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 'Figtree','Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+a{color:var(--acc);font-weight:600}
+a:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:4px}
+
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right)) 12px max(18px,env(safe-area-inset-left));background:color-mix(in srgb,var(--card) 82%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
+.back{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px;text-decoration:none;color:var(--ink);padding:8px 12px 8px 8px;border-radius:10px;border:1px solid var(--line);background:var(--card)}
+.back:hover{background:var(--soft)}
+.back svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.brand{margin-left:auto;display:flex;align-items:center;gap:9px;font:700 17px 'Bricolage','Poppins',sans-serif;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.brand svg{width:28px;height:28px}
+
+main{max-width:820px;margin:0 auto;padding:34px max(18px,env(safe-area-inset-right)) calc(56px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left))}
+h1{font:700 clamp(30px,6vw,44px)/1.08 'Bricolage','Poppins',sans-serif;letter-spacing:-.03em;margin:0 0 8px;text-wrap:balance}
+.stamp{color:var(--mute);font-size:14px;margin:0 0 22px}
+.sum{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:0 0 22px}
+.sum h2{font:700 17px 'Bricolage','Poppins',sans-serif;margin:0 0 8px;letter-spacing:-.01em;border:0;padding:0}
+.sum ul{margin:0;padding-left:20px}.sum li{margin:5px 0}
+.sum p{margin:10px 0 0;color:var(--mute);font-size:14px}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:0 0 30px}
+.toc b{display:block;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+.toc ol{margin:0;padding-left:22px;columns:2;column-gap:28px}
+.toc li{break-inside:avoid;margin:0;padding:3px 0;font-size:15px}
+.toc a{font-weight:500;text-decoration:none}.toc a:hover{text-decoration:underline}
+@media(max-width:560px){.toc ol{columns:1}}
+
+section{margin:0 0 6px;padding-top:6px}
+h2{font:700 21px/1.25 'Bricolage','Poppins',sans-serif;letter-spacing:-.02em;margin:26px 0 8px;padding-top:18px;border-top:1px solid var(--line)}
+section:first-of-type h2{border-top:0}
+h2 .n{color:var(--acc);margin-right:6px}
+p{margin:0 0 12px}
+ul.t{margin:0 0 12px;padding-left:22px}ul.t li{margin:6px 0}
+.note{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:15px}
+.ct{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+.ct p{margin:0 0 6px}.ct p:last-child{margin:0}
+footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:var(--mute);font-size:14px;display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:space-between}
+code{font-size:.92em;background:var(--soft);padding:1px 6px;border-radius:6px}
+@media print{header,.toc,.back{display:none}body{background:#fff;color:#000}main{max-width:none;padding:0}a{color:#000;font-weight:400}}
+</style></head><body>
+<header>
+ <a class="back" id="bk" href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Back</a>
+ <a class="brand" href="index.html" aria-label="Campus Events home"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></svg><span>Campus Events</span></a>
+</header>
+
+<main>
+ <h1>Terms &amp; Conditions</h1>
+ <!-- TERMS-DATE: change this line whenever the terms change -->
+ <p class="stamp">Effective 21 October 2026 · Last updated 21 October 2026</p>
+
+ <div class="sum">
+  <h2>The short version</h2>
+  <ul>
+   <li>Campus Events is a <b>tool</b> for running events. The people who run an event are responsible for that event, not us.</li>
+   <li>The app <b>records</b> payments and tickets. It does <b>not</b> take, hold or refund money.</li>
+   <li>If you handle other people’s details (attendees, applicants), use them only for the event and keep them safe.</li>
+   <li>Be respectful, keep your account to yourself, and don’t try to break or misuse the app.</li>
+   <li>The app is free and provided as it is. Keep a copy of important data using <b>Export data</b>.</li>
+  </ul>
+  <p>This summary is only a guide. The full terms below are what apply.</p>
+ </div>
+
+ <nav class="toc" aria-label="Contents"><b>Contents</b>
+  <ol>
+   <li><a href="#s1">About these Terms</a></li>
+   <li><a href="#s2">Your account</a></li>
+   <li><a href="#s3">Events, roles and who is responsible</a></li>
+   <li><a href="#s4">Other people’s information</a></li>
+   <li><a href="#s5">Payments, tickets and money records</a></li>
+   <li><a href="#s6">Emailing attendees</a></li>
+   <li><a href="#s7">Acceptable use</a></li>
+   <li><a href="#s8">Your content</a></li>
+   <li><a href="#s9">Your data and privacy</a></li>
+   <li><a href="#s10">Availability, offline use and backups</a></li>
+   <li><a href="#s11">The Android app and updates</a></li>
+   <li><a href="#s12">Ownership</a></li>
+   <li><a href="#s13">Suspension and ending your use</a></li>
+   <li><a href="#s14">No warranty</a></li>
+   <li><a href="#s15">Limit of liability</a></li>
+   <li><a href="#s16">Changes to these Terms</a></li>
+   <li><a href="#s17">Governing law and contact</a></li>
+  </ol>
+ </nav>
+
+ <section id="s1"><h2><span class="n">1.</span>About these Terms</h2>
+  <p>Campus Events (“CEM”, “the app”, “we”, “us”) is an event-management app and website for campus teams. It is made and run by Debabrata Das. These Terms &amp; Conditions (“Terms”) apply when you use the website at cem.deba.indevs.in, the Android app, and the registration, payment and ticket pages that event organizers share with their attendees.</p>
+  <p>By signing in, creating an account or otherwise using the app, you agree to these Terms. If you do not agree, please do not use it.</p>
+ </section>
+
+ <section id="s2"><h2><span class="n">2.</span>Your account</h2>
+  <ul class="t">
+   <li>You can sign in with Google, or with an email address and password. A new email account is confirmed with a 6-digit code sent to your inbox.</li>
+   <li>Give a correct name and email address, and keep them up to date.</li>
+   <li>Keep your password and your device secure. You are responsible for what happens under your account, so do not share it. If you think someone else has got into it, change your password and tell us.</li>
+   <li>You must be 18 or older. If you are younger, you may use the app only with the knowledge and permission of a parent or guardian.</li>
+   <li>On a shared phone or computer, sign out when you are done.</li>
+  </ul>
+ </section>
+
+ <section id="s3"><h2><span class="n">3.</span>Events, roles and who is responsible</h2>
+  <p>Campus Events is software. We do not organize, run, sell tickets to, or supervise any event. Each event belongs to the person or team who created it (the “Organizers”). Venue, dates, safety, prices, refunds, sponsors, vendors and everything else about an event are between the Organizers and the people who take part. We are not a party to those arrangements.</p>
+  <ul class="t">
+   <li><b>Roles.</b> What you can see and do in an event depends on your role (for example Organizer, Manager, Volunteer or a custom role). Organizers and Managers can change roles and remove people from their event.</li>
+   <li><b>Event code.</b> Anyone who has an event’s six-letter code can join it as a Member. Share the code only with people you trust.</li>
+   <li><b>Members can see attendee details.</b> Every member of a shared event can read its attendee list, which can include College IDs, phone numbers and email addresses. Money information is limited to roles that have the Money permission.</li>
+   <li><b>Events that are not shared</b> stay on your own device only (see section 10).</li>
+  </ul>
+ </section>
+
+ <section id="s4"><h2><span class="n">4.</span>Other people’s information</h2>
+  <p>If you are an Organizer or a team member, you may collect, view, export or email details about other people: attendees, applicants, sponsors, vendors and teammates. When you do, you agree to:</p>
+  <ul class="t">
+   <li>collect only what the event actually needs, and tell people what it will be used for;</li>
+   <li>use it only to run that event, and never sell it, share it for marketing, or pass it to people who do not need it;</li>
+   <li>keep exports (CSV and ZIP files) and screenshots safe, and delete them when you no longer need them;</li>
+   <li>follow the laws that apply to you, including India’s Digital Personal Data Protection Act, 2023 where it applies, and the rules of your college or institution.</li>
+  </ul>
+  <p>You are responsible for how you use other people’s information. We provide the tool; you decide what to do with the data in it.</p>
+ </section>
+
+ <section id="s5"><h2><span class="n">5.</span>Payments, tickets and money records</h2>
+  <ul class="t">
+   <li><b>We do not handle money.</b> Campus Events is not a bank, a payment service or a payment gateway. It does not collect, hold, transfer or refund money. It records cash payments and UPI payments that are made directly to the Organizer.</li>
+   <li><b>UPI payment links.</b> A payment-link page shows the Organizer’s payee details and asks the payer for a transaction reference (UTR). The Organizer checks it against their own bank or UPI app. We do not verify any payment ourselves.</li>
+   <li><b>Check before you pay.</b> Confirm the payee name and amount before paying. Amounts, receipts, refunds, taxes (including GST), failed or duplicate payments and disputes are matters between the payer and the Organizer.</li>
+   <li><b>Totals are an aid.</b> Budgets, income and expense totals, break-even estimates, the calculator and the cash count are there to help. Organizers should double-check figures that matter.</li>
+   <li><b>QR tickets.</b> A ticket can be used by whoever holds it, and only once. A second scan shows a warning. Treat your ticket like cash and do not post it publicly.</li>
+  </ul>
+ </section>
+
+ <section id="s6"><h2><span class="n">6.</span>Emailing attendees</h2>
+  <p>The app can help you email attendees, either through your device’s mail app or automatically through your own email account (SMTP).</p>
+  <ul class="t">
+   <li>You are the sender. Email only people who have a real connection to the event, keep messages relevant to it, and do not send spam, scams or misleading messages.</li>
+   <li>You must follow your email provider’s terms and limits, and the laws that apply to email.</li>
+   <li>Use an <b>app password</b> where your provider offers one. If you choose to save your mail login, it is kept on your device only, and <b>Forget the saved login</b> removes it. When you send automatically, the login is used for that request to connect to your mail server. Our sending service does not store or log it.</li>
+  </ul>
+ </section>
+
+ <section id="s7"><h2><span class="n">7.</span>Acceptable use</h2>
+  <p>Please do not:</p>
+  <ul class="t">
+   <li>break any law, or use the app to harass, abuse, threaten, discriminate against or impersonate anyone;</li>
+   <li>post or send content that is unlawful, hateful, sexually explicit, misleading or that you have no right to share, in chat, event details, names, emails or anywhere else;</li>
+   <li>use another person’s account, or join, read or change an event you have not been given access to, including by guessing event codes;</li>
+   <li>try to get around permissions, limits or security, probe the app for weaknesses, or interfere with how it works for others;</li>
+   <li>flood a public registration page with fake applications, or use bots or scripts to scrape or overload the app;</li>
+   <li>copy, resell or redistribute the app or its code in ways its licence does not allow (see section 12).</li>
+  </ul>
+  <p>Event chat is visible to the members of that event, including people who join later. You can edit or delete your own messages for two hours after sending them, and people with the right permission can delete any message.</p>
+ </section>
+
+ <section id="s8"><h2><span class="n">8.</span>Your content</h2>
+  <p>You keep ownership of what you put into the app: event details, attendee lists, tasks, bills, messages and so on. You give us permission to store, process, display and send that content as needed to run the app for you and your event team, for example to show it to event members, export it, email it at your request, and keep it in our database. You promise that you have the right to add it.</p>
+ </section>
+
+ <section id="s9"><h2><span class="n">9.</span>Your data and privacy</h2>
+  <p><b>What the app holds.</b> Your name and email (and, if you use Google, the name and email Google shares with the app); the events you create or join; attendee lists and registration applications; payment, income and expense records; tasks; chat messages; and your notification choices. Some things are also kept on your own device: an offline copy of your events, your theme, calculator values and, if you choose, a saved mail login.</p>
+  <p><b>Who helps run it.</b> Accounts and shared events are stored with Google Firebase. Sign-up codes and automatic emails go through a small service on Cloudflare, and sign-up codes are delivered by Brevo. Google is used for “Continue with Google”. If you switch on ntfy alerts, short notices are sent to an ntfy topic, and <b>anyone who knows or guesses a topic name can read it</b>, so do not rely on it for private information. These services have their own terms and privacy policies.</p>
+  <p><b>What we do not do.</b> We do not sell your personal data and we do not show advertising.</p>
+  <p><b>Your choices.</b> You can change your name in <b>Account, alerts &amp; join event</b>, leave an event, and use <b>Export data</b> to keep a copy of an event’s records. To ask us to correct or delete your account or personal data, contact us (section 17). Deleting an event removes it for everyone in it, so only do that when you are sure.</p>
+ </section>
+
+ <section id="s10"><h2><span class="n">10.</span>Availability, offline use and backups</h2>
+  <ul class="t">
+   <li>The app runs on free plans of third-party services. We try to keep it working but cannot promise it will always be available, fast or error-free.</li>
+   <li>The first sign-in needs internet. After that the app can work offline, and changes sync when you are back online. Chat, payment links and online registration need a connection and a shared event.</li>
+   <li>Events that are <b>not shared</b> live only on your device. Clearing the app’s data or uninstalling it can delete them for good. Use <b>Export data</b> to keep a copy, and do so before and after important events.</li>
+   <li>We may add, change or remove features at any time.</li>
+  </ul>
+ </section>
+
+ <section id="s11"><h2><span class="n">11.</span>The Android app and updates</h2>
+  <p>Download the Android app only from the official download page linked from the project’s website. Installing files from anywhere else is at your own risk. Older versions may stop working: the app can ask you to update before you continue, and a new version installs over the old one when it comes from the same source with the same signing key. The website always uses the latest version.</p>
+ </section>
+
+ <section id="s12"><h2><span class="n">12.</span>Ownership</h2>
+  <p>The app, its source code, design, text, graphics and logo are © 2026 Debabrata Das, all rights reserved, except where stated otherwise. The licence for the source code is in the <code>LICENCE</code> file of the project’s repository. These Terms give you the right to <i>use</i> the app; they do not transfer any ownership or give you any extra rights to the code.</p>
+  <p>Names and logos of other companies and services (for example Google, Gmail, Outlook, Yahoo, Zoho, Brevo and UPI) belong to their owners and are used only to identify them. It does not mean they endorse the app. Open-source components keep their own licences.</p>
+ </section>
+
+ <section id="s13"><h2><span class="n">13.</span>Suspension and ending your use</h2>
+  <p>You can stop using the app at any time: leave your events and sign out, and ask us to delete your account if you want it removed. We may suspend or remove access, or remove content, if you break these Terms, put other people or the service at risk, or the law requires it. Organizers and Managers can also remove people from their own events. Sections that by their nature should continue (ownership, no warranty, limit of liability and governing law) continue after your use ends.</p>
+ </section>
+
+ <section id="s14"><h2><span class="n">14.</span>No warranty</h2>
+  <p>The app is provided “as is” and “as available”, free of charge. We do not promise that it is free of mistakes, always secure, always available, that every calculation is exact, or that it suits your particular purpose. Please verify things that matter, such as attendee counts, money totals and check-in records, before you rely on them.</p>
+ </section>
+
+ <section id="s15"><h2><span class="n">15.</span>Limit of liability</h2>
+  <p>To the extent the law allows, we are not responsible for indirect or consequential loss, or for lost profits, revenue, data or goodwill. We are also not responsible for event cancellations or problems, money lost or disputed between people, or the actions or failures of Organizers, attendees, payers, or third-party services. For any claim connected with the app, our total liability is limited to the amount you paid us for it, if anything.</p>
+  <p>Nothing in these Terms removes any right you have under law that cannot be excluded, such as rights for fraud or for death or personal injury.</p>
+ </section>
+
+ <section id="s16"><h2><span class="n">16.</span>Changes to these Terms</h2>
+  <p>We may update these Terms from time to time. The latest version is always on this page with its date at the top. If a change is significant, we will try to tell you in the app. If you keep using the app after a change, you accept the updated Terms.</p>
+ </section>
+
+ <section id="s17"><h2><span class="n">17.</span>Governing law and contact</h2>
+  <p>These Terms are governed by the laws of India, and the courts of India have jurisdiction, without affecting any consumer rights you have where you live. If something goes wrong, please contact us first so we can try to sort it out.</p>
+  <!-- CONTACT: change the email address here if it ever changes -->
+  <div class="ct">
+   <p><b>Debabrata Das</b>, Campus Events</p>
+   <p>Email: <a href="mailto:cem@deba.indevs.in">cem@deba.indevs.in</a>, for questions, problems, and requests to correct or delete your data.</p>
+   <p>Bug reports and ideas can also go to <a href="https://github.com/real-debabrata/cem/issues" rel="noopener">github.com/real-debabrata/cem/issues</a>.</p>
+   <p style="color:var(--mute);font-size:14px">Issues on GitHub are public, so please do not post passwords, event codes or other people’s personal details there. Use email for anything private.</p>
+  </div>
+ </section>
+
+ <footer><span>© 2026 Debabrata Das · Campus Events</span><a href="#top" onclick="window.scrollTo(0,0);return false">Back to top</a></footer>
+</main>
+<script>
+/* Back: return to where the person came from (sign-in page or the app). With no history, go to the app, which shows sign-in when needed. */
+document.getElementById('bk').addEventListener('click',function(e){if(history.length>1){e.preventDefault();history.back()}});
+</script>
+</body></html>

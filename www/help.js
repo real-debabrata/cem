@@ -174,6 +174,7 @@ const SECS=()=>[
  L(['<b>Account, alerts &amp; join event</b> (profile icon): change <b>Your name</b> (2 to 40 characters; it changes in all your events, old chat messages keep the name they were sent with), join an event with a code, choose what you are notified about (Tasks, People, Money, Event changes, Chat messages, Chat mentions), send your changes to the ntfy topic, read recent updates, and sign out.',
   '<b>Theme</b> cycles Auto, Light and Dark.',
   '<b>About &amp; updates</b> shows the version. In the Android app it also checks for a newer one, and a new APK installs over the old one when it is built from the same repository with the same signing key. The website is always the latest version, so it never shows an update banner; if it looks old, tap <b>Reload</b>.',
+  '<b>Terms &amp; Conditions</b> are in the profile menu and at the bottom of Account, alerts &amp; join event. The sign-in page links to them too.',
   'You can sign in with Google or with email and password. Creating an account with email sends a 6-digit code.'])],
 ['fix','Good to know and troubleshooting',
  L(['<b>&ldquo;No permission&rdquo;</b> means your role does not allow that, or the latest <code>firestore.rules</code> are not published in Firebase. Ask the Organizer or a Manager.',

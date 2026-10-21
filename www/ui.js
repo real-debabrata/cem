@@ -1,9 +1,10 @@
-/* CEM 3.8.0: smooth motion (see motion.js). This file is unchanged apart from the version.
+/* CEM 3.12.2: Terms & Conditions page (terms.html), linked from the sign-in page, the profile menu and the Account panel.
+   CEM 3.8.0: smooth motion (see motion.js). This file is unchanged apart from the version.
    CEM 3.7.2: update banner / update check only in the Android app, never on the website (the website is always the latest deployed version).
    CEM 3.7.0: new brand (Indigo #5948F5, Amber, Midnight Navy, Cloud White, Fresh Mint) and new logo.
    Campus Events: menu bar, UI polish, app version control. Loads after sync.js/app2.js; no core code is modified. */
 (function(){
-const APP_VERSION='3.12.1',BUILD='2026-10-21';   // bump these on every release
+const APP_VERSION='3.12.2',BUILD='2026-10-21';   // bump these on every release
 const $=s=>document.querySelector(s),LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const root=document.documentElement;
 let theme=localStorage.getItem('campus-theme')||'auto',CFG=LS('campus-ver',null);
@@ -109,7 +110,7 @@ function about(){
 function openUM(){
  const u=window.firebase&&firebase.apps.length?firebase.auth().currentUser:null;
  um.innerHTML=`<div class="uh"><b>${esc(window.MYNAME||'Guest')}</b><span>${esc(u?u.email:'Not signed in')}</span></div>
- <button data-u="acct">Account, alerts & join event</button><button data-u="help">Help & guides</button><button data-u="theme">Theme <small>${theme}</small></button>
+ <button data-u="acct">Account, alerts & join event</button><button data-u="help">Help & guides</button><button data-u="terms">Terms & Conditions</button><button data-u="theme">Theme <small>${theme}</small></button>
  <button data-u="about">About & updates <small>v${APP_VERSION}</small></button>${u?'<button data-u="out" class="dg">Sign out</button>':''}`;
  um.classList.toggle('hid');
 }
@@ -122,6 +123,7 @@ document.addEventListener('click',e=>{
  if(u==='acct'){const p=$('#tp');if(tb&&(!p||p.classList.contains('hid')))tb.click()}   // open (never toggle shut) the account / alerts / join panel
  else if(u==='theme'){theme={auto:'light',light:'dark',dark:'auto'}[theme];localStorage.setItem('campus-theme',theme);applyTheme();toast('Theme: '+theme)}
  else if(u==='help'){if(window.openHelp)openHelp();else toast('Help did not load. Reload the app.')}
+ else if(u==='terms')location.href='terms.html';
  else if(u==='about')about();
  else if(u==='chk')check(true);
  else if(u==='upd')update();

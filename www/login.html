@@ -44,6 +44,7 @@ input:focus-visible,button:focus-visible{outline:2px solid #5948f5;outline-offse
 .lnk{background:none;border:0;color:#5948f5;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0;margin-top:10px}
 #msg{min-height:20px;font-size:13px;margin:10px 0 0;color:var(--bad)}#msg.ok{color:#087a62}
 .hide{display:none}
+.tos{font-size:12.5px;line-height:1.45;margin:14px 0 0;text-align:center}.tos a{color:var(--acc,#5948f5);font-weight:600}
 .otp{letter-spacing:.5em;text-align:center;font-size:22px;font-weight:700;padding-left:calc(12px + .5em)}
 #cf{margin-top:12px}#cf:empty{margin:0}
 .lnk.sm{display:block;margin-top:8px}.lnk:disabled{color:var(--mute);cursor:default}
@@ -76,6 +77,7 @@ input:focus-visible,button:focus-visible{outline:2px solid #5948f5;outline-offse
  <p id="msg" role="alert"></p>
  <button class="go" id="go">Sign in</button>
  <button class="lnk" id="fp">Forgot password?</button>
+ <p class="meta tos" id="tos">By continuing, you agree to our <a href="terms.html">Terms &amp; Conditions</a>.</p>
  <p class="meta" style="margin-top:14px">The first sign-in needs internet. After that, the app keeps working offline. New email accounts are confirmed with a code sent to your inbox; signing in never asks for one. Google accounts need no code.</p>
 </div></section>
 <script src="firebase-config.js"></script>
