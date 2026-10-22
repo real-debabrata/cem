@@ -13,8 +13,20 @@ jobs:
       url: ${{ steps.d.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
       - uses: actions/configure-pages@v5
+
+      # The website = the app in www/ + the tutorials page (tutorials/ -> /tutorials/).
+      # tutorials/ sits OUTSIDE www/ on purpose: the Android build only packs www/, so tutorials never end up inside the app.
+      - name: Assemble the site
+        run: |
+          set -euo pipefail
+          mkdir _site
+          cp -R www/. _site/
+          node scripts/build-tutorials.js tutorials _site/tutorials
+
       - uses: actions/upload-pages-artifact@v3
-        with: { path: www }
+        with: { path: _site }
       - id: d
         uses: actions/deploy-pages@v4
