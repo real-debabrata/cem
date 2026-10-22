@@ -194,6 +194,7 @@ CEM runs as an Android app and a website. The project is designed to be publisha
 | [`SETUP.md`](./SETUP.md) | Publish the website, build the Android app and configure Firebase. |
 | [`firestore.rules`](./firestore.rules) | Database-enforced permission rules; publish these rules to your Firebase project. |
 | [`www/`](./www/) | Web app source code. |
+| [`tutorials/`](./tutorials/README.md) | Animated how-to pages, published at `/tutorials/` on the website and not included in the app. Upload an `.html` file there and the tutorials page gets a new button. |
 | [`brand/README.md`](./brand/README.md) | Brand assets, colour list and icon-generator details. |
 | [`LICENCE`](./LICENCE) | Licence terms. |
 | [`www/terms.html`](./www/terms.html) | The app's Terms & Conditions page. Update the date at the top when the terms change. |
