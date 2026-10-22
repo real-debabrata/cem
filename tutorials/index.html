@@ -26,6 +26,17 @@ a:focus-visible{outline:2px solid var(--amb);outline-offset:3px}
 .hero{padding:54px 0 34px}
 h1{font:700 clamp(32px,5vw,52px)/1.04 var(--d);letter-spacing:-.03em;margin:0;max-width:16ch;text-wrap:balance}
 .lead{margin:16px 0 0;max-width:52ch;color:var(--soft);font-size:16px}
+.search{position:relative;max-width:460px;margin:26px 0 0}
+.search svg{position:absolute;left:16px;top:50%;width:18px;height:18px;margin-top:-9px;fill:none;stroke:var(--mute);stroke-width:2;stroke-linecap:round;pointer-events:none}
+.search input{width:100%;height:48px;font:500 15px var(--t);color:#fff;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:99px;padding:0 44px 0 44px;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-appearance:none;appearance:none}
+.search input::placeholder{color:var(--mute)}
+.search input::-webkit-search-cancel-button{display:none}
+.search input:focus{outline:0;border-color:var(--acc);background:rgba(255,255,255,.1);box-shadow:0 0 0 3px rgba(89,72,245,.3)}
+.search button{position:absolute;right:8px;top:50%;width:32px;height:32px;margin-top:-16px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font:700 14px var(--t);cursor:pointer;display:none}
+.search.has button{display:block}
+.search button:hover{background:rgba(255,255,255,.2)}
+.search button:focus-visible{outline:2px solid var(--amb);outline-offset:2px}
+.card[hidden],.empty[hidden]{display:none}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px}
 .card{display:flex;flex-direction:column;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:transform .25s cubic-bezier(.2,.9,.3,1.1),border-color .2s,background .2s,box-shadow .25s}
 .card:hover,.card:focus-visible{transform:translateY(-4px);border-color:var(--acc);background:rgba(255,255,255,.08);box-shadow:0 22px 50px -22px rgba(89,72,245,.7)}
@@ -59,9 +70,28 @@ h2{font:700 22px/1.15 var(--d);letter-spacing:-.02em;margin:2px 0 0;text-wrap:ba
   <section class="hero">
     <h1>Learn Campus Events, one step at a time.</h1>
     <p class="lead">Short animated walkthroughs. Pick one, watch it play on a phone, then follow along in the app.</p>
+    <form class="search" role="search" onsubmit="return false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search tutorials" aria-label="Search tutorials" autocomplete="off" spellcheck="false" enterkeyhint="search">
+      <button type="button" id="qx" aria-label="Clear search">&#10005;</button>
+    </form>
   </section>
   <section class="grid" aria-label="Tutorials"><!--TUTORIAL_CARDS-->
+    <div class="empty" id="none" hidden><b>No tutorials found</b><span>Try a different word, like &ldquo;sign in&rdquo; or &ldquo;event&rdquo;.</span></div>
   </section>
-  <footer class="foot"><span><!--TUTORIAL_COUNT--></span><a href="../">Back to Campus Events</a></footer>
+  <footer class="foot"><span id="cnt" aria-live="polite"><!--TUTORIAL_COUNT--></span><a href="../">Back to Campus Events</a></footer>
 </main>
+<script>
+/* Search: every word typed must appear in a card's title, description or keywords. */
+(function(){var q=document.getElementById('q'),x=document.getElementById('qx'),f=q.form,cards=[].slice.call(document.querySelectorAll('.card')),none=document.getElementById('none'),cnt=document.getElementById('cnt'),all=cnt.textContent;
+function run(){var w=q.value.toLowerCase().split(/\s+/).filter(Boolean),n=0;
+cards.forEach(function(c){var t=c.getAttribute('data-q')||c.textContent.toLowerCase(),ok=w.every(function(s){return t.indexOf(s)>-1});c.hidden=!ok;if(ok)n++});
+f.classList.toggle('has',!!q.value);if(none)none.hidden=!(cards.length&&!n);
+cnt.textContent=w.length?n+' of '+cards.length+' tutorial'+(cards.length===1?'':'s'):all}
+q.addEventListener('input',run);
+x.addEventListener('click',function(){q.value='';run();q.focus()});
+q.addEventListener('keydown',function(e){if(e.key==='Escape'&&q.value){q.value='';run()}});
+document.addEventListener('keydown',function(e){if(e.key==='/'&&!/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();q.focus()}});
+if(cards.length<2)f.hidden=true;})();
+</script>
 </body></html>
