@@ -108,10 +108,11 @@ function about(){
 }
 
 // ---- account menu ----
+const TUT_URL='https://cem.deba.indevs.in/tutorials/';
 function openUM(){
  const u=window.firebase&&firebase.apps.length?firebase.auth().currentUser:null;
  um.innerHTML=`<div class="uh"><b>${esc(window.MYNAME||'Guest')}</b><span>${esc(u?u.email:'Not signed in')}</span></div>
- <button data-u="acct">Account, alerts & join event</button><button data-u="help">Help & guides</button><button data-u="terms">Terms & Conditions</button><button data-u="privacy">Privacy Policy</button><button data-u="theme">Theme <small>${theme}</small></button>
+ <button data-u="acct">Account, alerts & join event</button><button data-u="help">Help & guides</button><button data-u="tut">Tutorials</button><button data-u="terms">Terms & Conditions</button><button data-u="privacy">Privacy Policy</button><button data-u="theme">Theme <small>${theme}</small></button>
  <button data-u="about">About & updates <small>v${APP_VERSION}</small></button>${u?'<button data-u="out" class="dg">Sign out</button>':''}`;
  um.classList.toggle('hid');
 }
@@ -124,6 +125,7 @@ document.addEventListener('click',e=>{
  if(u==='acct'){const p=$('#tp');if(tb&&(!p||p.classList.contains('hid')))tb.click()}   // open (never toggle shut) the account / alerts / join panel
  else if(u==='theme'){theme={auto:'light',light:'dark',dark:'auto'}[theme];localStorage.setItem('campus-theme',theme);applyTheme();toast('Theme: '+theme)}
  else if(u==='help'){if(window.openHelp)openHelp();else toast('Help did not load. Reload the app.')}
+ else if(u==='tut')window.open(TUT_URL,'_blank','noopener,noreferrer');   // website tutorials page: new tab on the web, the phone's own browser in the app
  else if(u==='terms')location.href='terms.html';
  else if(u==='privacy')location.href='privacy.html';
  else if(u==='about')about();
