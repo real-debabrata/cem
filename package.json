@@ -1,6 +1,6 @@
 {
   "name": "campus-events",
-  "version": "3.12.2",
+  "version": "3.12.3",
   "private": true,
   "dependencies": {
     "@capacitor-firebase/authentication": "^6.3.1",

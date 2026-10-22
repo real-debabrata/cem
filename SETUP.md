@@ -616,6 +616,38 @@ Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or 
 | Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |
 
 
+## Upgrade to 3.12.3: Privacy Policy page
+
+Adds a public Privacy Policy page (`privacy.html`) and links it next to the Terms everywhere: the sign-in page ("By continuing, you agree to our Terms & Conditions. Read our Privacy Policy."), the profile menu, and the bottom of the Account panel. The Terms page now links to it, and its wording about the saved mail login is corrected (the "Remember this login" box is ticked by default).
+
+**Files only.** No Firebase rules change, no Worker change, no new variable or secret, no Android plugin. This version also contains the 3.12.2 changes (Terms page), so you can go straight from 3.12.1.
+
+### Files
+In the repo root replace: `package.json`, `README.md`, `SETUP.md`. Add `release-notes/v3.12.2.md` and `release-notes/v3.12.3.md`.
+In `www/` add: `terms.html`, `privacy.html`. Replace: `login.html`, `sync.js`, `ui.js`, `help.js`.
+
+### Steps (about 3 minutes)
+1. Upload the files, commit, and let the *pages* workflow publish the site.
+2. Open `https://cem.deba.indevs.in/privacy.html` in a private window. It must open without signing in.
+3. On the sign-in page, check the new line under **Forgot password?** and that both links work.
+4. Sign in and open the profile menu: **Terms & Conditions** and **Privacy Policy** sit between **Help & guides** and **Theme**. Both are also at the bottom of **Account, alerts & join event**.
+5. Android: run **Actions > Build APK > Run workflow** as usual. The version becomes 3.12.3. Both pages are bundled inside the app.
+
+### Show the app name and logo on Google's sign-in screen
+This is set in Google Cloud Console (same project as Firebase), not in the app. Google shows the name and logo only after it verifies your branding.
+1. **Google Auth Platform > Branding:** set App name (Campus Events), the logo, and your support and developer email.
+2. Under **App domain** enter: Home page `https://cem.deba.indevs.in/`, Privacy policy `https://cem.deba.indevs.in/privacy.html`, Terms of service `https://cem.deba.indevs.in/terms.html`.
+3. Add your domain under **Authorized domains** and verify it in Google Search Console.
+4. **Audience:** External, In production. Then **Verify branding** and, once approved, **Publish branding**.
+The Privacy Policy and Terms must stay public (no sign-in needed) and the home page must link to the Privacy Policy. The sign-in page does both.
+
+### Small details
+- **Change the contact or the date.** In `www/privacy.html` search for `CONTACT` and `POLICY-DATE`. In `www/terms.html` search for `CONTACT` and `TERMS-DATE`. The contact is cem@deba.indevs.in. Change the date whenever a policy changes.
+- **Keep the policy true.** If you add a new service that handles personal data (analytics, a new email provider, a new payment tool), add it to the table in section 5 of the Privacy Policy.
+
+### Rolling back
+Restore the 3.12.1 versions of `login.html`, `sync.js`, `ui.js` and `help.js`. `terms.html` and `privacy.html` can stay or be deleted.
+
 ## Upgrade to 3.12.2: Terms & Conditions page
 
 Adds a Terms & Conditions page (`terms.html`). The sign-in page says "By continuing, you agree to our Terms & Conditions", and the page is also linked from the profile menu and from the bottom of the Account panel.
