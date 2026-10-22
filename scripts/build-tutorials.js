@@ -7,7 +7,7 @@
    What it does
    1. Copies everything in tutorials/ to the output folder.
    2. Finds every top-level tutorial page (tutorials/*.html, except index.html).
-   3. Reads each page's <title> (the part before " | ") and optional <meta> tags.
+   3. Reads each page's <title> (the part before " | ") and optional <meta> tags (description, keywords, tutorial-order).
    4. Writes the tutorials hub page (index.html) with one button per tutorial.
 
    Never copied or listed: files or folders whose name starts with "_" or "." (use "_name.html" for a draft),
@@ -60,11 +60,11 @@ function readInfo(file) {
   }
   const m = metas(head);
   const order = parseFloat(m['tutorial-order']);
-  return { file, title, desc: m.description || '', order: Number.isFinite(order) ? order : Infinity };
+  return { file, title, desc: m.description || '', keys: m.keywords || '', order: Number.isFinite(order) ? order : Infinity };
 }
 
 const card = (t, i) => `
-<a class="card" href="${esc(urlName(t.file))}">
+<a class="card" href="${esc(urlName(t.file))}" data-q="${esc((t.title + ' ' + t.desc + ' ' + t.keys).toLowerCase())}">
   <div class="thumb">
     <span class="num">${String(i + 1).padStart(2, '0')}</span>
     <svg class="art" viewBox="0 0 320 150" aria-hidden="true" focusable="false">
