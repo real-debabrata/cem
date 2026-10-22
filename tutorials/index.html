@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10172B">
+<title>Tutorials | Campus Events</title>
+<meta name="description" content="Short animated walkthroughs that show how to use Campus Events, step by step.">
+<link rel="icon" href="../favicon.ico">
+<!-- TEMPLATE: the two placeholders below are filled in by scripts/build-tutorials.js when the website is deployed.
+     Do not edit the generated cards by hand. Upload a tutorial .html file to this folder and it gets its own card. -->
+<style>
+@font-face{font-family:Bricolage;font-weight:200 800;font-display:swap;src:url(../fonts/bricolage-latin-wght.woff2) format('woff2')}
+@font-face{font-family:Figtree;font-weight:300 900;font-display:swap;src:url(../fonts/figtree-latin-wght.woff2) format('woff2')}
+:root{--ink:#10172b;--mute:#9fa6c4;--soft:#c6c9e0;--line:#2a3358;--acc:#5948f5;--amb:#ffb547;--d:'Bricolage','Poppins',system-ui,sans-serif;--t:'Figtree','Poppins',system-ui,sans-serif}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;color:#fff;font:15px/1.5 var(--t);background:radial-gradient(900px 520px at 0 0,rgba(89,72,245,.42),transparent 62%),#10172b;background-attachment:fixed}
+a{color:inherit;text-decoration:none}
+a:focus-visible{outline:2px solid var(--amb);outline-offset:3px}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 24px 56px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font:700 20px var(--d);letter-spacing:-.02em}
+.brand svg{width:34px;height:34px}
+.brand em{font:600 12px var(--t);font-style:normal;background:rgba(255,255,255,.12);padding:2px 10px;border-radius:99px;color:var(--soft)}
+.app{font:600 14px var(--t);color:#fff;background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:99px;padding:9px 16px;transition:background .2s,border-color .2s}
+.app:hover{background:rgba(255,255,255,.14);border-color:#3a4470}
+.hero{padding:54px 0 34px}
+h1{font:700 clamp(32px,5vw,52px)/1.04 var(--d);letter-spacing:-.03em;margin:0;max-width:16ch;text-wrap:balance}
+.lead{margin:16px 0 0;max-width:52ch;color:var(--soft);font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px}
+.card{display:flex;flex-direction:column;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:transform .25s cubic-bezier(.2,.9,.3,1.1),border-color .2s,background .2s,box-shadow .25s}
+.card:hover,.card:focus-visible{transform:translateY(-4px);border-color:var(--acc);background:rgba(255,255,255,.08);box-shadow:0 22px 50px -22px rgba(89,72,245,.7)}
+.thumb{position:relative;height:150px;overflow:hidden;background:radial-gradient(260px 160px at 50% 0,rgba(143,132,255,.5),transparent 70%),linear-gradient(160deg,#2b2a8f,#1a2050)}
+.art{position:absolute;inset:0;width:100%;height:100%}
+.num{position:absolute;left:14px;top:12px;z-index:1;font:700 13px var(--d);letter-spacing:.04em;color:#fff;background:rgba(16,23,43,.55);padding:3px 10px;border-radius:99px}
+.rip{transform-box:fill-box;transform-origin:center;opacity:0}
+.cur{transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.card:hover .rip,.card:focus-visible .rip{animation:rp 1.1s ease-out infinite}
+@keyframes rp{0%{transform:scale(.6);opacity:.95}100%{transform:scale(3);opacity:0}}
+.body{display:flex;flex-direction:column;gap:8px;flex:1;padding:18px 20px 20px}
+.tag{align-self:flex-start;font-size:12px;font-weight:700;color:#ffd08a;background:rgba(255,181,71,.12);padding:2px 10px;border-radius:99px}
+h2{font:700 22px/1.15 var(--d);letter-spacing:-.02em;margin:2px 0 0;text-wrap:balance}
+.body p{margin:0;color:var(--mute);font-size:14px}
+.go{margin-top:auto;padding-top:10px;font-weight:700;font-size:14px;color:#fff;display:inline-flex;align-items:center;gap:8px}
+.go i{font-style:normal;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--acc);transition:transform .25s}
+.card:hover .go i,.card:focus-visible .go i{transform:translateX(4px)}
+.empty{grid-column:1/-1;display:grid;gap:4px;justify-items:center;text-align:center;border:1px dashed #3a4470;border-radius:20px;padding:56px 20px;color:var(--mute)}
+.empty b{color:#fff;font:700 20px var(--d)}
+.foot{margin-top:40px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--mute);font-size:13px}
+.foot a{color:var(--soft);font-weight:600}.foot a:hover{color:#fff}
+@media(max-width:600px){.wrap{padding:18px 16px 40px}.hero{padding:34px 0 24px}}
+@media(prefers-reduced-motion:reduce){.card,.go i,.cur{transition:none}.card:hover .rip,.card:focus-visible .rip{animation:none}.card:hover{transform:none}}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="lg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></symbol></svg>
+<main class="wrap">
+  <header class="top">
+    <div class="brand"><svg viewBox="0 0 512 512" aria-hidden="true"><use href="#lg"/></svg>Campus Events<em>Tutorials</em></div>
+    <a class="app" href="../">Open Campus Events</a>
+  </header>
+  <section class="hero">
+    <h1>Learn Campus Events, one step at a time.</h1>
+    <p class="lead">Short animated walkthroughs. Pick one, watch it play on a phone, then follow along in the app.</p>
+  </section>
+  <section class="grid" aria-label="Tutorials"><!--TUTORIAL_CARDS-->
+  </section>
+  <footer class="foot"><span><!--TUTORIAL_COUNT--></span><a href="../">Back to Campus Events</a></footer>
+</main>
+</body></html>
