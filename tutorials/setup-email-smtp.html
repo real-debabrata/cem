@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to send emails automatically (SMTP) | Campus Events tutorial</title>
+<meta name="description" content="Email tickets or invitations to every attendee by itself, using Gmail or Brevo (free) over SMTP.">
+<meta name="keywords" content="smtp, email, automatic, gmail, brevo, app password, zoho, yahoo, outlook, tickets, invitation, send, mail">
+<link rel="preload" href="../fonts/bricolage-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/figtree-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="shared/tutorial.css">
+<style>
+.pop{position:absolute;left:24px;top:30px;width:190px;background:#fff;color:#10172b;border:2px solid var(--amb);border-radius:12px;padding:9px 11px;font:600 12.5px/1.4 var(--t);box-shadow:0 12px 30px rgba(0,0,0,.4);opacity:0;transform:scale(.85);transform-origin:0 0;transition:opacity .2s,transform .25s cubic-bezier(.2,.9,.3,1.3);z-index:21}
+.pop.on{opacity:1;transform:none}.pop.L{left:auto;right:-8px;transform-origin:100% 0}.pop.U{top:auto;bottom:34px}.pop.U.L{transform-origin:100% 100%}.pop.U:not(.L){transform-origin:0 100%}
+.pop b{color:var(--acc)}
+.gh{background:#fff!important;color:var(--acc)!important;border:1px solid var(--line)}
+.pn{padding:0 20px 20px}
+.mh{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 2px;font:700 20px var(--d)}
+.stp{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 20px}
+.stp span{text-align:center;font:600 12px var(--t);padding:7px 0;border-radius:8px;background:#eceef6;color:var(--mute)}
+.stp .on{background:var(--acc);color:#fff}.stp .dn{background:#35c9a5;color:#10172b}
+.s3{grid-template-columns:repeat(3,1fr)!important}.s3 span{font-size:12px!important;padding:8px 2px!important}
+.li{padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}.li small{display:block;color:var(--mute);font-size:12px}
+.tkr{display:flex;gap:10px;margin:6px 0 0;font-weight:400}.tkr em{display:block;font-style:normal;color:var(--mute);font-size:12px}
+.cb{flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid #b4b9cf;display:grid;place-items:center;font:700 13px var(--t);font-style:normal;color:#fff}.cb.on{background:var(--acc);border-color:var(--acc)}
+.ta{height:auto;min-height:96px;white-space:normal;align-items:flex-start;padding:10px 13px;line-height:1.45;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.chips span{font-size:12px;font-weight:600;padding:5px 10px;border-radius:99px;background:rgba(89,72,245,.1);color:var(--acc)}
+.opt{border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:10px;background:#fff}.opt b{display:block;font-size:14px}.opt em{font-style:normal;color:var(--mute);font-size:12px}.opt.on{border-color:var(--acc);background:rgba(89,72,245,.06)}
+.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.pv{border:1.5px solid var(--line);border-radius:12px;padding:9px 4px;text-align:center;font:600 11.5px/1.25 var(--t);background:#fff}
+.pv i{display:grid;place-items:center;width:26px;height:26px;margin:0 auto 5px;border-radius:7px;color:#fff;font:700 13px var(--d);font-style:normal}.pv.on{border-color:var(--acc);box-shadow:0 0 0 3px rgba(89,72,245,.18)}
+.gd{background:#f3f4fb;border-radius:12px;padding:10px 14px 10px 8px;margin-top:8px;font-size:12.5px}.gd ol{margin:0;padding-left:20px}
+.two{display:grid;grid-template-columns:1.3fr 1fr;gap:10px}
+.rw2{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.rw2 .btn{margin-top:0}
+.stt{font-size:13px;margin:10px 0 0;min-height:18px;color:#087a62;font-weight:600}
+.h4{font:700 15px var(--d);margin:16px 0 0}
+.url{display:flex;gap:8px;align-items:center;margin:6px 16px 0;padding:8px 12px;border-radius:99px;background:#eceef6;font-size:12px}
+.rw{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.rw i{width:20px;height:20px;border-radius:50%;border:1.5px solid #b4b9cf;display:grid;place-items:center;font-style:normal;font-size:12px;color:#fff;flex:none}.rw.ok i{background:#35c9a5;border-color:#35c9a5}.rw.ok i:before{content:"\2713"}
+.kk{margin-top:14px;border:1.5px dashed var(--acc);border-radius:12px;padding:12px;background:rgba(89,72,245,.06);font:600 14px/1.5 var(--t);word-break:break-all}.kk small{display:block;color:var(--mute);font-weight:500;font-size:12px}
+#pb{transition:width .5s}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><symbol id="lg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></symbol></svg>
+<main class="page">
+<div class="info">
+ <div class="hd"><div class="brand"><svg viewBox="0 0 512 512"><use href="#lg"/></svg>Campus Events<em>Tutorial</em></div>
+  <div class="seg"><button id="tA" class="on">Gmail</button><button id="tB">Brevo (free)</button></div>
+  <h1 id="h"></h1></div>
+ <div class="sl"><ol id="steps"></ol><p id="tip"></p></div>
+</div>
+<div class="stage">
+ <div class="fitbox" id="fb"><div class="phone" id="ph">
+  <div class="scr" id="scr">
+   <div class="sbar"><span>9:41</span><i class="cam"></i><span class="sig">5G<i class="bat"></i></span></div>
+   <div id="body">
+    <div id="atn">
+     <div class="dh"><div class="b2"><svg viewBox="0 0 512 512"><use href="#lg"/></svg>Tech Fest 2026</div><i class="av">R</i></div>
+     <div class="pn"><h3 class="cu" style="margin:6px 0 2px">Attendees</h3><p class="meta" style="margin:0">26 registered, 24 with an email</p>
+      <div class="rw2"><span class="btn gh sm">Register attendee</span><span class="btn sm" id="eb">Email attendees</span></div>
+      <div class="li"><b>Asha Rao</b><small>asha.rao@college.edu</small></div><div class="li"><b>Dev Patel</b><small>dev.p@college.edu</small></div><div class="li"><b>Meera Nair</b><small>meera.n@college.edu</small></div></div>
+    </div>
+    <div id="ml" class="hide">
+     <div class="mh">Email attendees<span class="btn gh sm" style="margin:0">Close</span></div>
+     <p class="meta" style="margin:0 20px">Tech Fest 2026</p>
+     <div class="stp" id="stp"><span>1 People</span><span>2 Message</span><span>3 Send</span></div>
+     <div class="pn" id="p1"><div class="seg2 s3" id="tb1"><span id="t1"></span><span id="t2"></span><span id="t3"></span></div><div id="l1"></div></div>
+     <div class="pn hide" id="p2">
+      <div class="tkr" id="tk"><i class="cb on">&#10003;</i><span><b>Send a ticket with a QR code</b><em>Each person gets their own ticket to show at the entrance. Untick this for an event that needs no ticket.</em></span></div>
+      <label>Subject</label><div class="in">Your ticket for {event}</div>
+      <label>Message</label><div class="in ta" id="xm">Hi {first_name},<br>Your ticket for {event} is below.<br>{qr}</div>
+      <div class="chips"><span>First name</span><span>Event name</span><span>Date</span><span id="cq">Ticket QR</span></div>
+     </div>
+     <div class="pn hide" id="p3">
+      <p class="h4" style="margin-top:4px">How do you want to send?</p>
+      <div class="opt" id="oApp"><b>This device’s mail app</b><em>No setup. You tap Send once per person.</em></div>
+      <div class="opt" id="oAu"><b>My email account (automatic)</b><em>Sign in once. The app sends every email for you (SMTP).</em></div>
+      <div id="auto" class="hide">
+       <p class="h4">Choose your email provider</p><div class="pg" id="pg"></div>
+       <p class="meta" id="hint" style="margin:8px 0 0"></p>
+       <span class="btn gh sm" id="gd">How do I get this password?</span>
+       <div class="gd hide" id="gde"><ol id="gdl"></ol></div>
+       <label id="lu" style="margin-top:14px"></label><div class="in" id="em"></div>
+       <label id="lp"></label><div class="in" id="pw"><span class="shw" id="sh">Show</span></div>
+       <div id="frw" class="hide"><label>Sender email (the one you verified in Brevo)</label><div class="in" id="fr"></div></div>
+       <span class="btn gh sm" id="sv">Server settings</span>
+       <div id="srv" class="two hide"><div><label>Server</label><div class="in" id="xh"></div></div><div><label>Port</label><div class="in" id="xp"></div></div></div>
+       <div style="display:flex;gap:10px;align-items:center;margin-top:14px;font-size:13px"><i class="cb on">&#10003;</i>Remember this login on this device</div>
+       <div class="rw2"><span class="btn gh sm" id="tc">Test connection</span><span class="btn gh sm" id="ts">Send a test email to me</span></div>
+       <p class="stt" id="st"></p>
+       <div class="go" id="sn">Send to 24 people</div>
+       <div id="pgs" class="hide"><div class="bar"><i id="pb" style="width:0"></i></div><p class="meta" id="px"></p></div>
+       <span class="btn gh sm hide" id="fg">Forget the saved login</span>
+      </div>
+     </div>
+     <div class="pn" style="display:flex;justify-content:space-between"><span class="btn gh sm" id="mBk">Back</span><span class="btn sm" id="mNx" style="margin-left:auto">Next</span></div>
+    </div>
+    <div id="web" class="hide">
+     <div class="url"><span>&#128274;</span><b id="wu"></b></div>
+     <div class="card"><h3 id="wt" style="font-size:19px"></h3><div id="wr"></div><div id="wk" class="kk hide"></div></div>
+    </div>
+   </div>
+   <div id="note"><div class="ni">&#9993;</div><div><small>Mail, now</small><div class="nt">Test: Your ticket for Tech Fest 2026</div><p>The QR ticket is inside the email and also attached as ticket-riya-sharma.png.</p></div></div>
+   <div class="kb" id="kb"></div>
+   <i class="home"></i>
+  </div>
+  <div id="cur"><svg width="26" height="26" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.9L21 10.5z" fill="#fff" stroke="#10172b" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+ </div></div>
+ <div class="ctl"><button id="bP">Back</button><button id="bPl" class="main">Pause</button><button id="bN">Next</button><button id="bR">Restart</button><button id="bS">Sound on</button></div>
+ <div class="prog" id="prog"></div>
+</div>
+</main>
+<script src="shared/tutorial.js"></script>
+<script>
+let sent=0,showPw=0,CUR;
+const PV={
+gm:{n:'Gmail',c:'#EA4335',h:'smtp.gmail.com',o:'465 (SSL)',u:'Your Gmail address',p:'App password (16 letters)',t:'Gmail needs a special app password, not your normal password.',i:'<b>Gmail</b>: smtp.gmail.com, port 465. Needs an app password.',g:['Open your Google account and go to Security.','Make sure 2-Step Verification is on.','Open App passwords, type Campus Events as the name and tap Create.','Copy the 16-letter password and paste it below.']},
+ol:{n:'Outlook',c:'#0078D4',h:'smtp.office365.com',o:'587 (STARTTLS)',i:'<b>Outlook</b>: smtp.office365.com, port 587. Microsoft ends password SMTP at the end of Dec 2026, so choose another if you can.'},
+yh:{n:'Yahoo Mail',c:'#6001D2',h:'smtp.mail.yahoo.com',o:'465 (SSL)',i:'<b>Yahoo</b>: smtp.mail.yahoo.com, port 465. Needs an app password.'},
+zi:{n:'Zoho Mail (India)',c:'#E42527',h:'smtp.zoho.in',o:'465 (SSL)',i:'<b>Zoho India</b>: smtp.zoho.in, port 465. For accounts on zoho.in.'},
+zw:{n:'Zoho Mail (World)',c:'#E42527',h:'smtp.zoho.com',o:'465 (SSL)',i:'<b>Zoho World</b>: smtp.zoho.com, port 465. For accounts on zoho.com.'},
+bv:{n:'Brevo',c:'#0B996E',h:'smtp-relay.brevo.com',o:'587 (STARTTLS)',fr:1,u:'SMTP login from Brevo',p:'SMTP key',t:'Free for 300 emails a day. The login is the SMTP login Brevo shows you.',i:'<b>Brevo</b>: smtp-relay.brevo.com, port 587. Free, 300 a day.',g:['Sign up at brevo.com and verify your sender email address under Senders.','Open SMTP and API and create an SMTP key.','Paste the SMTP login and the SMTP key below.','Type your verified sender address in Sender email.']},
+ot:{n:'Other',c:'#626a86',h:'',o:'587 (STARTTLS)',i:'<b>Other</b>: ask your mail admin for the server, port (465 or 587), username and password.'}};
+const CF={
+A:{k:'gm',h:'Send emails automatically with Gmail',em:'riya.events@gmail.com',pw:'abcdefghijklmnop',
+ d5:'Tap How do I get this password? Gmail needs an app password: turn on 2-Step Verification, then create one named Campus Events.',t5:'App passwords missing? Your college may have switched it off. Use the Brevo tab instead.',
+ d6:'Type your full Gmail address, then paste the 16-letter app password. Tap Show to check it.',t6:'Your normal Gmail password will not work.',t9:'Limit: about 500 recipients a day on personal Gmail, 2,000 on Google Workspace.',
+ w:{u:'myaccount.google.com/apppasswords',t:'Google Account \u203a Security',r:[['2-Step Verification is on','Required first. Turn it on under <b>Security</b>.'],['Open <b>App passwords</b>','A separate password just for apps like this one.'],['Name it <b>Campus Events</b>, tap Create','The name is only a label for you.']],k:[['Your app password','abcd efgh ijkl mnop']],n:'Copy the 16 letters, then go back to Campus Events.'}},
+B:{k:'bv',h:'Send emails automatically with Brevo (free)',em:'a1b2c3@smtp-brevo.com',pw:'mysmtpkey2026',fr:'events@college.edu',
+ d5:'Sign up at brevo.com, verify your sender email under Senders, then create an SMTP key in SMTP and API.',t5:'Brevo is free for 300 emails a day and works when college Gmail blocks app passwords.',
+ d6:'Enter the SMTP login Brevo shows, paste the SMTP key, and type your verified sender address in Sender email.',t6:'Use the SMTP login Brevo shows, not your account email.',t9:'Free plan limit: 300 emails a day.',
+ w:{u:'app.brevo.com/settings/keys/smtp',t:'Brevo \u203a SMTP and API',r:[['Sender verified under <b>Senders</b>','Brevo only sends from an address you verified through its email link.'],['Open <b>SMTP and API</b>','Use the SMTP tab, not API keys.'],['Create a new <b>SMTP key</b>','This key is the password. Copy it now.']],k:[['SMTP login','a1b2c3@smtp-brevo.com'],['SMTP key','(copy the key Brevo shows)']],n:'Copy the login and the key, then go back to Campus Events.'}}};
+
+/* helpers */
+const show=(k,on)=>E[k].classList.toggle('hide',!on);
+const view=v=>{['atn','ml','web'].forEach(k=>show(k,k===v));E.body.scrollTop=0};
+const tile=k=>E.pg.querySelector('[data-k="'+k+'"]');
+const rows=a=>a.map(r=>`<div class="li"><b>${r[0]}</b><small>${r[1]}</small></div>`).join('');
+const st=t=>E.st.textContent=t;
+['em','pw','fr'].forEach(k=>E[k].insertAdjacentHTML('afterbegin','<span class="v"></span><i class="ca"></i>'));
+E.pg.innerHTML=Object.keys(PV).map(k=>`<span class="pv" data-k="${k}"><i style="background:${PV[k].c}">${PV[k].n[0]}</i>${PV[k].n}</span>`).join('');
+const pop=E.cur.appendChild(Object.assign(document.createElement('div'),{className:'pop'}));
+async function say(t,ms){if(fast)return;pop.innerHTML=t;pop.className='pop'+(cx>190?' L':'')+(cy>540?' U':'');void pop.offsetWidth;pop.classList.add('on');await W(ms||1100+t.replace(/<[^>]+>/g,'').length*24);pop.classList.remove('on');await W(150)}
+async function hov(el,t,fx=.5,fy=.5){if(el.closest('#body'))await see(el);el.classList.add('hl');const[x,y]=pt(el,fx,fy);await move(x,y);await say(t);el.classList.remove('hl')}
+function draw(k){let t=F[k];if(k==='pw'&&!showPw)t='\u2022'.repeat(t.length);E[k].querySelector('.v').textContent=t}
+function pane(n){[1,2,3].forEach(k=>show('p'+k,k===n));[...E.stp.children].forEach((s,i)=>s.className=i+1===n?'on':i+1<n?'dn':'');show('mNx',n<3);show('mBk',n>1);E.body.scrollTop=0}
+const R3=[['Asha Rao','asha.rao@college.edu'],['Dev Patel','dev.p@college.edu'],['Meera Nair','meera.n@college.edu']];
+function tabs(n){[...E.tb1.children].forEach((s,i)=>s.className=i+1===n?'on':'');E.t1.textContent='Not emailed '+(sent?0:24);E.t2.textContent='Emailed '+(sent?24:0);E.t3.textContent='No email 2';
+ E.l1.innerHTML=n===1?(sent?'<div class="empty" style="padding:24px 12px">Everyone with an email address has been emailed.</div>':'<p class="meta">These people have not been emailed yet.</p>'+rows(R3)):n===2?(sent?'<p class="meta">Each row shows the date and Ticket emailed.</p>'+rows(R3.map(r=>[r[0],'Ticket emailed, today'])):'<div class="empty" style="padding:24px 12px">Nobody has been emailed yet.</div>'):'<p class="meta">Type an address for each person.</p><div class="li"><b>Kabir Das</b><div class="in" style="margin-top:6px;height:40px"><span class="ph">name@example.com</span></div></div>'}
+function pick(k){const p=PV[k];document.querySelectorAll('.pv').forEach(t=>t.classList.toggle('on',t.dataset.k===k));E.hint.textContent=p.t||'';E.lu.textContent=p.u||'Your email address';E.lp.textContent=p.p||'Password';show('frw',!!p.fr);E.xh.textContent=p.h;E.xp.textContent=p.o}
+function reset(){F={em:'',pw:'',fr:''};showPw=0;sent=0;['em','pw','fr'].forEach(draw);E.sh.textContent='Show';foc(null);view('atn');pane(1);tabs(1);
+ ['auto','gde','srv','pgs','fg','wk','frw'].forEach(k=>show(k,false));E.oAu.classList.remove('on');E.sv.textContent='Server settings';document.querySelectorAll('.pv').forEach(t=>t.classList.remove('on'));
+ E.hint.textContent='';E.lu.textContent='Your email address';E.lp.textContent='Password';E.xh.textContent='';E.xp.textContent='';st('');E.pb.style.width='0';E.note.classList.remove('on');E.kb.className='kb';E.scr.style.setProperty('--kb','0px');pop.className='pop';
+ document.querySelectorAll('.hl,.tp').forEach(e=>e.classList.remove('hl','tp'));cx=370;cy=730;E.cur.style.transitionDuration='0s';E.cur.style.transform=`translate(${cx}px,${cy}px)`}
+function keys(){E.kb.innerHTML='<div class="tb"><span id="kbh"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7" fill="none" stroke="#5b6380" stroke-width="2.4" stroke-linecap="round"/></svg></span></div>'+['1234567890','qwertyuiop','asdfghjkl','zxcvbnm'].map((r,i)=>`<div class="kr" style="padding:0 ${[0,0,16,36][i]}px">`+[...r].map(k=>`<b data-k="${k}">${k}</b>`).join('')+'</div>').join('')+'<div class="kr"><b style="flex:1.5">?123</b><b data-k="@">@</b><b style="flex:5"></b><b data-k=".">.</b><b class="ok" style="flex:1.5">&#10003;</b></div>'}
+async function kbo(){if(E.kb.classList.contains('up'))return;keys();void E.kb.offsetWidth;E.kb.classList.add('up');E.scr.style.setProperty('--kb','270px');await W(380)}
+const hideKb=async()=>{await tap($('#kbh'));await kbc();foc(null)};
+async function webRun(c){const w=c.w;view('web');E.wu.textContent=w.u;E.wt.textContent=w.t;E.wr.innerHTML=w.r.map(r=>`<div class="rw"><i></i><span>${r[0]}</span></div>`).join('');show('wk',false);await W(700);
+ for(let i=0;i<w.r.length;i++){const el=E.wr.children[i];await hov(el,w.r[i][1],.2);await tap(el,.2);el.classList.add('ok')}
+ E.wk.innerHTML=w.k.map(x=>`<small>${x[0]}</small>${x[1]}`).join('<br>');show('wk',true);await hov(E.wk,w.n);await W(300)}
+
+/* tutorial steps (same flow for each provider) */
+const mk=c=>{const p=PV[c.k];return{h:c.h,st:[
+{t:'Open Email attendees',d:'Open your event, go to the Attendees tab and tap Email attendees. A short window walks you through three steps.',tip:'You need internet, a signed-in account, and the email service set up once by the administrator (SETUP.md, Upgrade to 3.10.0).',run:async()=>{view('atn');await W(500);await hov(E.eb,'Every role with <b>Attendees and check-in</b> sees this button.');await tap(E.eb);view('ml');pane(1);await W(400)}},
+{t:'Step 1: People',d:'Check who will get the email. Not emailed are waiting, Emailed already have one, No email need an address first.',tip:'Nothing is sent twice unless you tick Email these again too.',run:async()=>{await hov(E.t1,'<b>Not emailed</b>: this number is how many people get the next send.');await tap(E.t2);tabs(2);await say('<b>Emailed</b> shows who was done, and when.');await tap(E.t3);tabs(3);await say('<b>No email</b>: type a missing address here.');await tap(E.t1);tabs(1);await tap(E.mNx);pane(2)}},
+{t:'Step 2: Write the message',d:'Keep Send a ticket with a QR code ticked for tickets, or untick it for a plain invitation. Edit the subject and message.',tip:'Your message is remembered on this device for each event.',run:async()=>{await hov(E.tk,'Ticked: every email carries the attendee’s own <b>QR ticket</b>. Untick for a plain invitation.',.1);await hov(E.xm,'Tags like <b>{first_name}</b> become each person’s own details.');await hov(E.cq,'<b>Ticket QR</b> adds the ticket. Keep it in the message or nobody gets a ticket.',.3);await tap(E.mNx);pane(3)}},
+{t:'Step 3: Pick Automatic',d:'Choose My email account (automatic). The app signs in to your mailbox over SMTP and sends every email for you.',tip:'Your login stays on this device, never in the event. Each organiser uses their own mailbox.',run:async()=>{await hov(E.oApp,'<b>Mail app</b>: no setup, but you tap Send for every person.');await hov(E.oAu,'<b>Automatic</b> uses <b>SMTP</b>: how mail programs hand email to a mail server.');await tap(E.oAu);E.oAu.classList.add('on');show('auto',true);await W(400)}},
+{t:'Choose your provider',d:`Tap ${p.n}. The server and port are filled in for you. Hover the others to see their settings.`,tip:'Not sure? Gmail is the easiest, Brevo is the best free backup.',run:async()=>{for(const k of Object.keys(PV).filter(k=>k!==c.k).concat(c.k)){const t=tile(k);await hov(t,PV[k].i);if(k===c.k){await tap(t);pick(k);await W(300)}}}},
+{t:'Get the password',d:c.d5,tip:c.t5,run:async()=>{await tap(E.gd);show('gde',true);E.gdl.innerHTML=p.g.map(x=>`<li>${x}</li>`).join('');await say('The app lists the exact steps. Follow them in your browser.');await webRun(c);view('ml')}},
+{t:'Enter your login',d:c.d6,tip:c.t6+' Your login stays on this device.',run:async()=>{await tap(E.em);foc('em');await kbo();await see(E.em);await type('em',c.em);await tap(E.pw,.3);foc('pw');await type('pw',c.pw);if(c.fr){await tap(E.fr);foc('fr');await type('fr',c.fr)}await hideKb();await hov(E.sh,'<b>Show</b> lets you check what you typed.');showPw=1;draw('pw');E.sh.textContent='Hide';await W(1000);showPw=0;draw('pw');E.sh.textContent='Show';await W(300)}},
+{t:'Check the server',d:'Tap Server settings to see the server and port. They are filled in already; only Other needs you to type them.',tip:'Use port 465 (SSL) or 587 (STARTTLS). Port 25 is not available. “Could not connect” means a wrong server or port.',run:async()=>{await tap(E.sv);show('srv',true);E.sv.textContent='Hide server settings';await say('Always an encrypted link. The app refuses servers that cannot encrypt.')}},
+{t:'Test before you send',d:'Tap Test connection, then Send a test email to me. The test looks exactly like what attendees receive.',tip:'“Refused the login” means a normal password was used. Use an app password or SMTP key.',run:async()=>{await tap(E.tc);st('Connected and logged in. You can send now.');await say('Always test first.');await tap(E.ts);st('Test email sent to '+c.em);show('fg',true);await W(500);E.note.classList.add('on');snd('ding');await W(3200);E.note.classList.remove('on');await W(500)}},
+{t:'Send to everyone',d:'Tap Send to 24 people. Emails go out about 4 at a time with a progress bar. Stay on the screen until it finishes.',tip:c.t9,run:async()=>{await tap(E.sn);show('pgs',true);for(let n=4;n<=24;n+=4){E.pb.style.width=n/24*100+'%';E.px.textContent='Sending… '+n+' of 24';await W(550)}E.px.textContent='Finished. 24 sent, 0 failed.';snd('ok');sent=1;await say('Any that fail stay in <b>Not emailed</b>. Fix the address and send again.')}},
+{t:'Finish safely',d:'On a shared phone or computer tap Forget the saved login. Then check the Emailed tab to see who got their email.',tip:'Emails in Spam? Ask attendees to mark them not spam, and send a test to yourself first.',run:async()=>{await hov(E.fg,'On a shared device, <b>forget the login</b> when you finish.');await tap(E.fg);show('fg',false);await tap(E.mBk);pane(2);await tap(E.mBk);pane(1);tabs(1);await tap(E.t2);tabs(2);await say('Done. Everyone is listed as <b>Emailed</b>.',2600);await W(1200)}}
+]}};
+const TT={A:mk(CF.A),B:mk(CF.B)};
+function mount(n){CUR=CF[n];T=TT[n];E.tA.className=n==='A'?'on':'';E.tB.className=n==='B'?'on':'';E.h.textContent=T.h;E.steps.innerHTML=T.st.map((s,k)=>`<li data-n="${k+1}"><b>${s.t}</b><p>${s.d}</p></li>`).join('');E.prog.innerHTML=T.st.map(()=>'<i></i>').join('')}
+addEventListener('resize',fit);fit();mount('A');play(0);
+</script></body></html>
