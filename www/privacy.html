@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F7FB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10172B" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="description" content="How Campus Events collects, uses, stores and shares personal data, and the choices you have.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Campus Events">
+<meta property="og:title" content="Privacy Policy | Campus Events">
+<meta property="og:description" content="How Campus Events collects, uses, stores and shares personal data, and the choices you have.">
+<meta property="og:image" content="https://cem.deba.indevs.in/icons/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="fonts.css">
+<title>Privacy Policy | Campus Events</title>
+<script>
+/* Follow the theme chosen in the app (profile menu > Theme). "auto" or nothing = follow the device. */
+try{var t=localStorage.getItem('campus-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}
+</script>
+<style>
+/* CEM 3.12.3: Privacy Policy. Static page, no script needed except the Back button and the theme above.
+   To change the contact details or the date, search this file for "CONTACT" and "POLICY-DATE". */
+:root{box-sizing:border-box;--bg:#f6f7fb;--card:#fff;--ink:#10172b;--mute:#5b6380;--line:#e1e4ef;--acc:#5948f5;--accink:#fff;--soft:#eeecff}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10172b;--card:#1a2240;--ink:#f6f7fb;--mute:#a5abc4;--line:#2b3558;--acc:#8f84ff;--accink:#10172b;--soft:#232b55}}
+:root[data-theme="dark"]{--bg:#10172b;--card:#1a2240;--ink:#f6f7fb;--mute:#a5abc4;--line:#2b3558;--acc:#8f84ff;--accink:#10172b;--soft:#232b55}
+*,*:before,*:after{box-sizing:inherit}
+html{scroll-behavior:smooth;scroll-padding-top:calc(76px + env(safe-area-inset-top,0px))}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 'Figtree','Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+a{color:var(--acc);font-weight:600}
+a:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:4px}
+
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right)) 12px max(18px,env(safe-area-inset-left));background:color-mix(in srgb,var(--card) 82%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
+.back{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px;text-decoration:none;color:var(--ink);padding:8px 12px 8px 8px;border-radius:10px;border:1px solid var(--line);background:var(--card)}
+.back:hover{background:var(--soft)}
+.back svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.brand{margin-left:auto;display:flex;align-items:center;gap:9px;font:700 17px 'Bricolage','Poppins',sans-serif;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.brand svg{width:28px;height:28px}
+
+main{max-width:820px;margin:0 auto;padding:34px max(18px,env(safe-area-inset-right)) calc(56px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left))}
+h1{font:700 clamp(30px,6vw,44px)/1.08 'Bricolage','Poppins',sans-serif;letter-spacing:-.03em;margin:0 0 8px;text-wrap:balance}
+.stamp{color:var(--mute);font-size:14px;margin:0 0 22px}
+.sum{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:0 0 22px}
+.sum h2{font:700 17px 'Bricolage','Poppins',sans-serif;margin:0 0 8px;letter-spacing:-.01em;border:0;padding:0}
+.sum ul{margin:0;padding-left:20px}.sum li{margin:5px 0}
+.sum p{margin:10px 0 0;color:var(--mute);font-size:14px}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:0 0 30px}
+.toc b{display:block;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+.toc ol{margin:0;padding-left:22px;columns:2;column-gap:28px}
+.toc li{break-inside:avoid;margin:0;padding:3px 0;font-size:15px}
+.toc a{font-weight:500;text-decoration:none}.toc a:hover{text-decoration:underline}
+@media(max-width:560px){.toc ol{columns:1}}
+
+section{margin:0 0 6px;padding-top:6px}
+h2{font:700 21px/1.25 'Bricolage','Poppins',sans-serif;letter-spacing:-.02em;margin:26px 0 8px;padding-top:18px;border-top:1px solid var(--line)}
+section:first-of-type h2{border-top:0}
+h2 .n{color:var(--acc);margin-right:6px}
+p{margin:0 0 12px}
+ul.t{margin:0 0 12px;padding-left:22px}ul.t li{margin:6px 0}
+.note{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:15px}
+.ct{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+.ct p{margin:0 0 6px}.ct p:last-child{margin:0}
+.tw{overflow-x:auto;margin:10px 0 14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14.5px;line-height:1.5}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line)}
+th{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--mute)}
+tr:last-child td{border-bottom:0}
+@media(max-width:560px){table{min-width:0}thead{display:none}tbody tr{display:block;padding:10px 14px;border-bottom:1px solid var(--line)}tbody tr:last-child{border-bottom:0}td{display:block;border:0;padding:2px 0}td:nth-child(1){font-weight:700;font-size:15px}td:nth-child(3):before{content:"May receive: ";color:var(--mute)}}
+h3{font:700 16px/1.3 'Bricolage','Poppins',sans-serif;margin:16px 0 6px}
+footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:var(--mute);font-size:14px;display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:space-between}
+code{font-size:.92em;background:var(--soft);padding:1px 6px;border-radius:6px}
+@media print{header,.toc,.back{display:none}body{background:#fff;color:#000}main{max-width:none;padding:0}a{color:#000;font-weight:400}}
+</style></head><body>
+<header>
+ <a class="back" id="bk" href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Back</a>
+ <a class="brand" href="index.html" aria-label="Campus Events home"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></svg><span>Campus Events</span></a>
+</header>
+
+<main>
+ <h1>Privacy Policy</h1>
+ <!-- POLICY-DATE: change this line whenever the policy changes -->
+ <p class="stamp">Effective 22 October 2026 · Last updated 22 October 2026</p>
+
+ <div class="sum">
+  <h2>The short version</h2>
+  <ul>
+   <li>We keep only what is needed to run events: your account details, and the event information that you and your team enter.</li>
+   <li>We <b>do not sell</b> personal data and we <b>do not show ads</b>. The app has no advertising or analytics trackers.</li>
+   <li>People on an event team can see attendee details. The Organizers decide how that information is used and are responsible for it.</li>
+   <li>Your data is held with Google Firebase and a few helper services, all listed below.</li>
+   <li>You can ask us to correct or delete your data at <a href="mailto:cem@deba.indevs.in">cem@deba.indevs.in</a>.</li>
+  </ul>
+  <p>This summary is only a guide. The full policy below is what applies.</p>
+ </div>
+
+ <nav class="toc" aria-label="Contents"><b>Contents</b>
+  <ol>
+   <li><a href="#p1">Who we are</a></li>
+   <li><a href="#p2">Who decides what: us and Organizers</a></li>
+   <li><a href="#p3">What we collect</a></li>
+   <li><a href="#p4">How we use it</a></li>
+   <li><a href="#p5">Who can see your information</a></li>
+   <li><a href="#p6">Where your data is stored</a></li>
+   <li><a href="#p7">How long we keep it</a></li>
+   <li><a href="#p8">Your rights and choices</a></li>
+   <li><a href="#p9">Security</a></li>
+   <li><a href="#p10">Children</a></li>
+   <li><a href="#p11">Cookies and storage on your device</a></li>
+   <li><a href="#p12">Changes to this policy</a></li>
+   <li><a href="#p13">Contact and grievances</a></li>
+  </ol>
+ </nav>
+
+ <section id="p1"><h2><span class="n">1.</span>Who we are</h2>
+  <p>Campus Events (“CEM”, “the app”, “we”, “us”) is an event-management app and website for campus teams, made and run by Debabrata Das. This policy explains what personal data the app handles, why, who can see it, and what choices you have. It covers the website at cem.deba.indevs.in, the Android app, and the registration, payment and ticket pages that Organizers share with attendees.</p>
+  <p>“Personal data” means any information about a person who can be identified from it. Please read this policy together with our <a href="terms.html">Terms &amp; Conditions</a>.</p>
+ </section>
+
+ <section id="p2"><h2><span class="n">2.</span>Who decides what: us and Organizers</h2>
+  <p>Two different people are involved whenever personal data is in the app:</p>
+  <ul class="t">
+   <li><b>Us.</b> We run the app, the sign-in system and the services behind it. We decide how that works and how it is kept safe.</li>
+   <li><b>Organizers and event teams.</b> They decide which details to collect from attendees, applicants, sponsors and teammates, and why. The Terms (section 4) require them to collect only what the event needs, use it only for the event, and keep it safe.</li>
+  </ul>
+  <p>If your details were collected for an event (for example you registered for one), the Organizer of that event is the first person to ask about how they use them. You can also write to us and we will help.</p>
+ </section>
+
+ <section id="p3"><h2><span class="n">3.</span>What we collect</h2>
+
+  <h3>Your account</h3>
+  <ul class="t">
+   <li>Your <b>name</b> and <b>email address</b>, and a unique account ID.</li>
+   <li>If you sign in with email, your <b>password</b> is kept by Google Firebase Authentication, which stores only a scrambled version of it. When you first create the account, the password passes once through our sign-up service so it can create the account. We do not store or log it, and after that we cannot read it.</li>
+   <li>If you sign in with Google, Google shares your name and email address with the app. We do not ask for access to your Gmail, Drive, contacts or any other Google data.</li>
+  </ul>
+
+  <h3>Events you create or join</h3>
+  <ul class="t">
+   <li>Event details, members and their roles, tasks, notes, budgets, income and expenses, bills, sponsors and vendors, attendee lists, check-in records and event chat messages.</li>
+   <li>Attendee lists can include names, College IDs, email addresses, phone numbers and the answers to an Organizer’s own questions.</li>
+  </ul>
+
+  <h3>Registrations and payments (no account needed)</h3>
+  <ul class="t">
+   <li>When someone applies through a public registration page, we store what they enter: name, email address, optional College ID and phone number, answers to the Organizer’s questions, how they plan to pay, and any payment reference (UTR) they give.</li>
+   <li>When someone uses a payment link, we store their name, the amount and the UTR they enter.</li>
+   <li>We do not take or hold the money. UPI payments go straight from the payer to the Organizer.</li>
+  </ul>
+
+  <h3>Tickets and the camera</h3>
+  <ul class="t">
+   <li>A ticket link carries the ticket details (such as name, event and date) in the part of the web address after the “#”. Browsers do not send that part to a server, so the ticket is drawn on the person’s own device.</li>
+   <li>The camera is used only to scan QR tickets. The scan is read on your device. We do not record, keep or upload camera images.</li>
+  </ul>
+
+  <h3>Sign-up codes</h3>
+  <ul class="t">
+   <li>To confirm a new email account we send a 6-digit code to that address. We keep the email address and a one-way scrambled version of the code (not the code itself) for a short time, plus a count of requests from your network (IP) address, to stop abuse.</li>
+  </ul>
+
+  <h3>Emails you send through the app</h3>
+  <ul class="t">
+   <li>If you email attendees automatically, your message, the recipients and your mail login pass through our sending service for that one request, and are used to connect to your mail provider and send. Our service does not store or log them. We keep only a daily count of messages sent, to respect limits.</li>
+   <li>The app offers “Remember this login on this device”, which is ticked by default. If it stays ticked, your mail login is saved in this device’s own storage. Untick it, or use <b>Forget the saved login</b>, to remove it.</li>
+  </ul>
+
+  <h3>Technical information</h3>
+  <ul class="t">
+   <li>The website is hosted on GitHub Pages, and the services we use (Google, Cloudflare) may record standard technical details such as IP address, browser or device type and time of access. This is normal for running a service. We do not use it to track you.</li>
+  </ul>
+
+  <p>We do not collect your precise location, your contacts or your photos.</p>
+ </section>
+
+ <section id="p4"><h2><span class="n">4.</span>How we use it</h2>
+  <ul class="t">
+   <li>To let you sign in and to run events: roles, tasks, budgets, chat, registrations, tickets, check-in, payment records and exports.</li>
+   <li>To send sign-up codes and, when you ask, to send emails to attendees.</li>
+   <li>To keep the service safe, for example by limiting sign-up codes and emails and blocking misuse.</li>
+   <li>To answer your questions and requests, and to meet legal duties.</li>
+  </ul>
+  <p>We do not use your data for advertising, we do not build profiles of you, and we do not sell it.</p>
+  <p><b>Google user data.</b> We use the name and email address Google gives us only to sign you in and to show your name in the app. We do not sell it, use it for ads, or share it except as this policy says. Campus Events’ use of information received from Google APIs follows the Google API Services User Data Policy, including its Limited Use requirements.</p>
+ </section>
+
+ <section id="p5"><h2><span class="n">5.</span>Who can see your information</h2>
+  <p><b>People in your events.</b> What a team member can see depends on their role. Every member of an event can read its attendee list, event chat is visible to its members (including people who join later), and money records are limited to roles with the Money permission.</p>
+  <p><b>Services that help us run the app.</b> Each receives only what it needs to do its job:</p>
+  <div class="tw"><table>
+   <thead><tr><th>Service</th><th>What it does</th><th>What it may receive</th></tr></thead>
+   <tbody>
+    <tr><td>Google Firebase</td><td>Accounts, sign-in, and the database for shared events</td><td>Account details and all event data you store</td></tr>
+    <tr><td>Google sign-in</td><td>“Continue with Google”</td><td>Your Google account choice; shares your name and email with us</td></tr>
+    <tr><td>Cloudflare</td><td>Runs our small sign-up and email-sending service; stores short-lived records; optional bot check (Turnstile)</td><td>Email address, network (IP) address, your password once at sign-up (to create the account), and the contents of a message while it is being sent</td></tr>
+    <tr><td>Brevo</td><td>Delivers sign-up code emails</td><td>The email address and the code</td></tr>
+    <tr><td>Your own mail provider</td><td>Sends the emails you choose to send</td><td>Your mail login, the recipients and the message</td></tr>
+    <tr><td>GitHub Pages</td><td>Hosts the website</td><td>Standard visit details such as IP address</td></tr>
+    <tr><td>ntfy (only if an Organizer turns it on)</td><td>Optional phone alerts</td><td>The event name and a line saying there is a new chat message from a named member, never the message itself</td></tr>
+   </tbody></table></div>
+  <p>ntfy topics are open to anyone who knows or guesses the topic name, so they should not be used for private information. These services have their own privacy policies.</p>
+  <p><b>The law.</b> We may share information if the law requires it, or to protect people’s safety or our rights.</p>
+  <p>We do not sell personal data or share it for advertising.</p>
+ </section>
+
+ <section id="p6"><h2><span class="n">6.</span>Where your data is stored</h2>
+  <p>Google, Cloudflare, Brevo and GitHub run data centres in many countries, so your data may be processed outside India. We rely on these providers’ own security and legal safeguards. If you do not want that, please do not use the app.</p>
+ </section>
+
+ <section id="p7"><h2><span class="n">7.</span>How long we keep it</h2>
+  <ul class="t">
+   <li><b>Accounts and event data</b> stay until an Organizer deletes the event, or until you ask us to delete your account.</li>
+   <li><b>Sign-up codes and request counts</b> are short-lived. Codes expire after 10 minutes, and the records expire on their own within about an hour. The daily email count expires within two days.</li>
+   <li><b>On your device,</b> data stays until you sign out, clear the app’s data or uninstall the app.</li>
+   <li>Provider backups and logs may hold copies for a short time after deletion.</li>
+   <li>Organizers decide how long to keep attendee details for their event, and should delete them when they are no longer needed.</li>
+  </ul>
+ </section>
+
+ <section id="p8"><h2><span class="n">8.</span>Your rights and choices</h2>
+  <p>Under India’s Digital Personal Data Protection Act, 2023, and in general, you can ask us to:</p>
+  <ul class="t">
+   <li>tell you what personal data of yours we hold and how it is used;</li>
+   <li>correct or complete it (you can change your name yourself in <b>Account, alerts &amp; join event</b>);</li>
+   <li>delete it, and withdraw consent you have given;</li>
+   <li>pass on a grievance, or name someone to exercise these rights for you if you cannot.</li>
+  </ul>
+  <p>To make a request, email <a href="mailto:cem@deba.indevs.in">cem@deba.indevs.in</a>. To protect your account, we may ask you to write from the email address that is on it. We aim to reply within 30 days.</p>
+  <p><b>What deletion means.</b> We will delete your sign-in account and the personal details in your profile. Things you added to an event that belongs to other people, such as chat messages or check-in records, may stay in that event. Tell us if you want those removed or made anonymous, and we will look at each request. If you ask an Organizer to remove your registration details, the Organizer can delete them from their event.</p>
+  <p>You can also leave an event, and use <b>Export data</b> to keep a copy of an event’s records. If you are not satisfied with our answer, you may have the right to complain to the Data Protection Board of India under the Act.</p>
+ </section>
+
+ <section id="p9"><h2><span class="n">9.</span>Security</h2>
+  <ul class="t">
+   <li>Connections use HTTPS.</li>
+   <li>Database rules decide who can read or change each event’s data, based on membership and role.</li>
+   <li>Sign-up codes are stored only as a one-way scramble, and mail passwords are not stored by our sending service.</li>
+   <li>Passwords are kept by Google Firebase Authentication as a scrambled version, and our sign-up service does not store or log them.</li>
+  </ul>
+  <p>No system is completely secure. Please keep your password and your device safe, and use an app password for your mail account. If a data breach affects you, we will tell you as the law requires.</p>
+ </section>
+
+ <section id="p10"><h2><span class="n">10.</span>Children</h2>
+  <p>The app is not meant for children. As our Terms say, you must be 18 or older, or use the app with a parent’s or guardian’s knowledge and permission. If we find that we hold a child’s data without a parent’s permission, we will delete it. A parent who thinks that has happened can write to us.</p>
+ </section>
+
+ <section id="p11"><h2><span class="n">11.</span>Cookies and storage on your device</h2>
+  <p>We do not use advertising or tracking cookies. The app keeps some information in your browser’s or app’s own storage so it works: your sign-in, an offline copy of your events, your theme and settings, notes, calculator values, and, if you leave the option ticked, your saved mail login. Google’s sign-in screen may use its own cookies. You can clear this storage from your browser or phone settings, or by signing out.</p>
+ </section>
+
+ <section id="p12"><h2><span class="n">12.</span>Changes to this policy</h2>
+  <p>We may update this policy. The latest version is always on this page with its date at the top. If a change is significant, we will try to tell you in the app.</p>
+ </section>
+
+ <section id="p13"><h2><span class="n">13.</span>Contact and grievances</h2>
+  <!-- CONTACT: change the email address here if it ever changes -->
+  <div class="ct">
+   <p><b>Debabrata Das</b>, Campus Events</p>
+   <p>Email: <a href="mailto:cem@deba.indevs.in">cem@deba.indevs.in</a>, for questions, requests about your data, and complaints.</p>
+   <p style="color:var(--mute);font-size:14px">Please do not send passwords or event codes by email.</p>
+  </div>
+ </section>
+
+ <footer><span>© 2026 Debabrata Das · Campus Events · <a href="terms.html">Terms &amp; Conditions</a></span><a href="#top" onclick="window.scrollTo(0,0);return false">Back to top</a></footer>
+</main>
+<script>
+/* Back: return to where the person came from (sign-in page or the app). With no history, go to the app, which shows sign-in when needed. */
+document.getElementById('bk').addEventListener('click',function(e){if(history.length>1){e.preventDefault();history.back()}});
+</script>
+</body></html>
