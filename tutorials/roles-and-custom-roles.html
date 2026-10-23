@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to give roles and create custom roles | Campus Events tutorial</title>
+<meta name="description" content="Give a teammate a role, build your own custom role with the permissions you choose, then assign, edit or delete it.">
+<meta name="keywords" content="roles, custom role, permissions, treasurer, manager, volunteer, people tab, new role, assign role, organizer">
+<link rel="preload" href="../fonts/bricolage-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/figtree-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="shared/tutorial.css">
+<style>
+.seg{grid-template-columns:repeat(3,auto)}.seg button{padding:9px 13px}
+#who{width:max-content;max-width:100%;margin:0 auto 10px;background:rgba(255,255,255,.1);border-radius:99px;padding:4px 14px;font-size:13px;color:#c6c9e0}
+#bC{background:#35c9a5;border-color:#35c9a5;color:#10172b}
+.tabs{display:flex;gap:6px;padding:0 20px;overflow:hidden;margin-top:4px}.tabs span{white-space:nowrap;padding:7px 13px;border-radius:99px;font-size:13px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--mute);transition:transform .12s}.tabs .on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.sh{display:flex;justify-content:space-between;align-items:center}.sh h3{font-size:19px!important}
+.pr,.li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--line);margin-top:0}.pr b,.li b{font-size:15px}.pr small,.li small{display:block;color:var(--mute);font-size:12px}.li small{display:inline;margin-left:6px}
+.sel{border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;font-weight:600;background:#fff;white-space:nowrap;transition:transform .12s}.sel i{font-style:normal;margin-left:6px;color:var(--mute)}
+.fx{background:rgba(89,72,245,.1);color:var(--acc);border-radius:99px;padding:5px 12px;font-size:13px;font-weight:700}
+.ch{margin-top:2px}.pc2{display:inline-block;font-size:11px;font-weight:600;background:rgba(89,72,245,.1);color:var(--acc);padding:2px 8px;border-radius:99px;margin:4px 4px 0 0}
+.ac{display:flex;gap:6px}.gb{display:inline-block;border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600;background:#fff;transition:transform .12s}.dl{color:#c2331f}
+.in.sl{justify-content:space-between}.in.sl i{font-style:normal;color:var(--mute)}
+fieldset{border:0;padding:0;margin:14px 0 0}legend{font:700 12px var(--t);letter-spacing:.06em;text-transform:uppercase;color:var(--acc);padding:0 0 4px}
+.pk{display:flex;gap:10px;padding:8px 6px;border-top:1px solid var(--line);border-radius:8px;transition:transform .12s}.pk b{font-size:14px}.pk small{display:block;color:var(--mute);font-size:12px;line-height:1.35}
+.cb{width:20px;height:20px;border:1.5px solid #b4b9cf;border-radius:6px;flex:none;margin-top:2px;display:grid;place-items:center;background:#fff}.pk.on .cb{background:var(--acc);border-color:var(--acc)}.pk.on .cb:after{content:"\2713";color:#fff;font-size:13px}.pk.lk{opacity:.55}
+.jr{display:flex;gap:8px;align-items:center;margin-top:16px}.jr .go{flex:1;margin:0}
+#dd{position:absolute;left:16px;right:16px;z-index:12;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(16,23,43,.4);padding:6px}
+#dd .g{margin:6px 10px 2px;font:700 11px var(--t);letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}#dd .o{padding:7px 10px;border-radius:8px;font-weight:600;font-size:14px}
+#toast{position:absolute;left:50%;bottom:92px;z-index:30;transform:translate(-50%,20px);opacity:0;transition:.3s;background:var(--ink);color:#fff;padding:9px 16px;border-radius:99px;font-weight:600;font-size:13px;white-space:nowrap}#toast.on{transform:translate(-50%,0);opacity:1}
+#pop{position:absolute;z-index:21;width:216px;background:var(--ink);color:#fff;border:1.5px solid var(--amb);border-radius:12px;padding:9px 11px;font:500 12.5px/1.4 var(--t);box-shadow:0 10px 28px rgba(0,0,0,.45);opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;pointer-events:none}
+#pop.on{opacity:1;transform:none}#pop b{display:block;color:var(--amb);font-size:12px;margin-bottom:2px}
+#pop:after{content:"";position:absolute;left:var(--ax,20px);width:10px;height:10px;background:var(--ink);border:0 solid var(--amb)}
+#pop.up:after{top:-6px;border-width:1.5px 0 0 1.5px;transform:rotate(45deg)}#pop.dn2:after{bottom:-6px;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+.v:empty:before{content:attr(data-ph);color:#b4b9cf}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><symbol id="lg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></symbol></svg>
+<main class="page">
+<div class="info">
+ <div class="hd"><div class="brand"><svg viewBox="0 0 512 512"><use href="#lg"/></svg>Campus Events<em>Tutorial</em></div>
+  <div class="seg"><button id="tA" class="on">1 Give a role</button><button id="tB">2 Create a custom role</button><button id="tC">3 Use and manage it</button></div>
+  <h1 id="h"></h1></div>
+ <div class="sl"><ol id="steps"></ol><p id="tip"></p></div>
+</div>
+<div class="stage">
+ <div id="who">Organiser’s phone: Riya · Tech Fest 2026</div>
+ <div class="fitbox" id="fb"><div class="phone" id="ph">
+  <div class="scr" id="scr">
+   <div class="sbar"><span>9:41</span><i class="cam"></i><span class="sig">5G<i class="bat"></i></span></div>
+   <div id="body">
+    <div class="dh"><div class="b2"><svg viewBox="0 0 512 512"><use href="#lg"/></svg>Campus Events</div><i class="av">R</i></div>
+    <div class="tabs"><span id="t0">Details</span><span>Attendees</span><span>Tasks</span><span id="t3">People</span><span>Payments</span></div>
+    <div id="det"><div class="card" style="padding:20px;border-left:6px solid #d9482b"><span class="tag" style="color:#d9482b;background:#d9482b1a">Fest</span><h3 style="margin-top:8px">Tech Fest 2026</h3><p class="meta">7 Nov 2026 · Main Auditorium</p><p class="meta" style="margin-top:10px">Your role: <b>Organizer</b></p></div></div>
+    <div id="ppl" class="hide" style="padding-bottom:24px"><div class="card"><div class="sh"><h3>People</h3></div><div id="pl"></div></div><div class="card" id="cr"></div></div>
+   </div>
+   <div id="dd" class="hide"></div>
+   <div id="toast"></div>
+   <div class="kb" id="kb"></div>
+   <i class="home"></i>
+  </div>
+  <div id="pop"></div>
+  <div id="cur"><svg width="26" height="26" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.9L21 10.5z" fill="#fff" stroke="#10172b" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+ </div></div>
+ <div class="ctl"><button id="bP">Back</button><button id="bPl" class="main">Pause</button><button id="bN">Next</button><button id="bR">Restart</button><button id="bS">Sound on</button><button id="bC" class="hide">Next part &#8250;</button></div>
+ <div class="prog" id="prog"></div>
+</div>
+</main>
+<script src="shared/tutorial.js"></script>
+<script>
+/* Demo team = the Tech Fest 2026 team from the invite tutorial: Riya (Organizer), Arjun, Meera, Kabir. Permission lists copy www/app2.js (PCAT, BASE). */
+const PCAT=[['Everyday work',[['tick','Tick off own tasks','Mark the tasks given to them as done.'],['write','Team member basics','Tick own tasks, add people who report to them and register attendees (no check-in).']]],['Running the event',[['tasks','Manage tasks','Create task groups and tasks and give them to anyone.'],['items','Items to buy','Add items to buy and give them to people.'],['people','Volunteer list','Add and remove people without an account and set who reports to whom.'],['regs','Attendees and check-in','Register, check in, scan tickets, mark fees paid, import a list and make participant teams.']]],['Admin',[['event','Edit event and registrations','Edit the event details, remove registrations and delete any chat message.'],['pay','Payments and online registration','Verify payments, payment link settings, UPI settings, online registration and cash collectors.'],['exp','Money','See and manage the budget, vendors, bills, sponsors and the Income and Expenses tabs.']]]];
+const PN=PCAT.flatMap(g=>g[1]),ALLP=PN.map(k=>k[0]),pd=k=>PN.find(x=>x[0]===k)[2];
+const LB={manager:'Manager',treasurer:'Treasurer',lead:'Team lead',coord:'Coordinator',spons:'Sponsorship lead',logi:'Logistics lead',desk:'Registration desk',member:'Member',vol:'Volunteer',viewer:'Viewer'};
+const IN={treasurer:'Verifies payments and manages budget, bills, vendors and income, plus everything a Member can do.',desk:'Registers walk-ins, checks in attendees, scans tickets and marks fees paid.',logi:'Manages task groups, tasks and items to buy, given to anyone.',member:'Ticks own tasks, adds people who report to them and registers attendees.',manager:'Edits the event and manages people, roles, tasks, payments and money.'};
+const BASE={logi:['tick','write','tasks','items']},BI=Object.keys(LB);
+let TAB=0,RL,CR,FM,FP;
+const rn=r=>LB[r]||(CR.find(c=>c.id===r)||{}).n||'Role removed';
+const draw=k=>{const e=$('#'+k);if(e)e.querySelector('.v').textContent=F[k]};
+const chips=p=>PN.filter(k=>p.includes(k[0])||(k[0]==='tick'&&p.includes('write'))).map(k=>`<span class="pc2">${k[1]}</span>`).join('')||'<small>View only</small>';
+function drawP(){E.pl.innerHTML='<div class="pr" id="r_Riya"><div><b>Riya</b><small>You</small></div><span class="fx">Organizer</span></div>'+['Arjun','Meera','Kabir'].map(n=>`<div class="pr" id="r_${n}"><div><b>${n}</b><small>No tasks yet</small></div><span class="sel" id="s_${n}">${rn(RL[n])}<i>&#9662;</i></span></div>`).join('')}
+function paint(){ALLP.forEach(k=>{const e=$('#pk_'+k);if(!e)return;const lk=k==='tick'&&FP.includes('write');e.classList.toggle('on',FP.includes(k)||lk);e.classList.toggle('lk',lk)});draw('cn');const t=$('#crt');if(t)t.textContent=FM.from||'Choose a role (optional)'}
+function drawCR(){const rows=CR.map(c=>{const n=Object.values(RL).filter(r=>r===c.id).length;return `<div class="li"><div><b>${c.n}</b><small>${n} ${n==1?'person':'people'}</small><div class="ch">${chips(c.p)}</div></div><div class="ac"><span class="gb" id="ed_${c.id}">Edit</span><span class="gb dl" id="dx_${c.id}">Delete</span></div></div>`}).join('');
+ const f=FM?`<label>Role name *</label><div class="in" id="cn"><span class="v" data-ph="Stage manager, Photographer"></span><i class="ca"></i></div><label>Copy permissions from</label><div class="in sl" id="crs"><span id="crt"></span><i>&#9662;</i></div>`+PCAT.map(g=>`<fieldset><legend>${g[0]}</legend>${g[1].map(k=>`<div class="pk" id="pk_${k[0]}"><i class="cb"></i><span><b>${k[1]}</b><small>${k[2]}</small></span></div>`).join('')}</fieldset>`).join('')+`<div class="jr"><div class="go" id="sub">${FM.id?'Save role':'Create role'}</div><span class="gb" id="cc">Cancel</span></div>`:'';
+ E.cr.innerHTML=`<div class="sh"><h3>Custom roles (${CR.length})</h3>${FM?'':'<span class="btn sm" id="nr" style="margin:0">+ New role</span>'}</div>`+f+(rows||(FM?'':'<p class="meta" style="margin:10px 0 0">No custom roles yet.</p>'));if(FM)paint()}
+function tabs(){E.det.classList.toggle('hide',TAB!==0);E.ppl.classList.toggle('hide',TAB!==3);E.t0.className=TAB===0?'on':'';E.t3.className=TAB===3?'on':'';drawP();drawCR();E.body.scrollTop=0}
+const tg=k=>{FP=FP.includes(k)?FP.filter(z=>z!==k):[...FP,k];paint()};
+const setRole=(n,r)=>{RL[n]=r;drawP();drawCR()};
+/* pop text box that follows the cursor */
+const unpop=()=>E.pop.classList.remove('on');
+function popAt(t,x,px,py){if(fast)return;const w=216,p=E.pop;p.innerHTML='<b>'+t+'</b>'+x;p.className='';const l=Math.max(24,Math.min(404-24-w,px-w/2));p.style.left=l+'px';p.style.setProperty('--ax',Math.max(14,Math.min(w-24,px-l-5))+'px');const h=p.offsetHeight,up=py>430;p.style.top=Math.max(44,Math.min(770-h,up?py-h-16:py+28))+'px';void p.offsetWidth;p.className='on '+(up?'dn2':'up')}
+async function sp(el,t,x,fx=.5,fy=.5,hold){if(el.closest('#body'))await see(el);el.classList.add('hl');const[px,py]=pt(el,fx,fy);await move(px,py);popAt(t,x,px,py);await W(hold||800+x.length*26);unpop();el.classList.remove('hl');await W(200)}
+async function tp(el,t,x,fx=.5,fy=.5,hold){if(el.closest('#body'))await see(el);el.classList.add('hl');const[px,py]=pt(el,fx,fy);await move(px,py);if(x){popAt(t,x,px,py);await W(hold||800+x.length*26);unpop()}await W(150);E.cur.classList.add('dn');rip(px,py);el.classList.add('tp');await W(170);E.cur.classList.remove('dn');el.classList.remove('tp','hl');await W(150)}
+const tst=async(t,ms=1500)=>{E.toast.textContent=t;E.toast.classList.add('on');snd('ok');await W(ms);E.toast.classList.remove('on')};
+/* drop-down list that opens under the tapped control */
+function ddOpen(a,gs){const[,ay]=pt(a);E.dd.innerHTML=gs.map(g=>`<p class="g">${g[0]}</p>`+g[1].map(r=>`<div class="o" data-o="${r}">${rn(r)}</div>`).join('')).join('');E.dd.classList.remove('hide');const h=E.dd.offsetHeight;E.dd.style.top=Math.max(44,Math.min(750-h,ay-12+20))+'px'}
+const ddClose=()=>E.dd.classList.add('hide'),opt=r=>$('#dd [data-o="'+r+'"]');
+const gsFor=()=>[['Roles',BI.filter(r=>r!=='manager'||1)]].concat(CR.length?[['Custom roles',CR.map(c=>c.id)]]:[]);
+E.kb.innerHTML='<div class="tb"><span id="kbh"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7" fill="none" stroke="#5b6380" stroke-width="2.4" stroke-linecap="round"/></svg></span></div>'+['qwertyuiop','asdfghjkl','zxcvbnm'].map((r,i)=>`<div class="kr" style="padding:0 ${[0,16,36][i]}px">`+[...r].map(k=>`<b data-k="${k}">${k}</b>`).join('')+'</div>').join('')+'<div class="kr"><b style="flex:1.5">?123</b><b data-k=",">,</b><b data-k=" " style="flex:5"></b><b data-k=".">.</b><b class="ok" style="flex:1.5">&#10003;</b></div>';
+async function kbo(){if(E.kb.classList.contains('up'))return;void E.kb.offsetWidth;E.kb.classList.add('up');E.scr.style.setProperty('--kb','270px');await W(380)}
+const hideKb=async()=>{if(!E.kb.classList.contains('up'))return;await tp($('#kbh'));await kbc();foc(null)};
+const nxt=()=>{if(T!==TC)E.bC.classList.remove('hide')};
+const newForm=()=>{FM={id:'',from:''};FP=[];F.cn='';drawCR()};
+async function give(n,r,t,x){await tp($('#s_'+n),t,x);ddOpen($('#s_'+n),gsFor());await W(500);await tp(opt(r),rn(r),IN[r]||'Gives '+n+' this role straight away.');ddClose();setRole(n,r);await W(400)}
+function reset(){const m=T.m;F={cn:''};TAB=m==='A'?0:3;RL=m==='A'?{Arjun:'member',Meera:'member',Kabir:'member'}:{Arjun:'treasurer',Meera:'desk',Kabir:'member'};CR=m==='C'?[{id:'c_stage',n:'Stage manager',p:['write','tasks','people']}]:[];FM=null;FP=[];tabs();
+ E.scr.style.setProperty('--kb','0px');E.kb.className='kb';ddClose();E.toast.classList.remove('on');unpop();foc(null);document.querySelectorAll('.hl,.tp').forEach(e=>e.classList.remove('hl','tp'));E.bC.classList.add('hide');
+ cx=370;cy=730;E.cur.style.transitionDuration='0s';E.cur.style.transform=`translate(${cx}px,${cy}px)`}
+const TA={m:'A',h:'Give a role to a teammate',st:[
+{t:'Open the People tab',d:'Open your event (Events, then Tech Fest 2026). Tap the People tab. It lists everyone who joined with the event code.',tip:'Only the Organizer and Managers can change roles. If you joined as Member, you will not see role drop-downs.',run:async()=>{await W(900);await sp($('#det .card'),'Tech Fest 2026','Our demo event. The team already joined using the code from the invite tutorial.',.5,.3);await tp(E.t3,'People tab','Everyone in the event is listed here, with their role.');TAB=3;tabs();await W(500)}},
+{t:'See each person’s role',d:'You are the Organizer. Arjun, Meera and Kabir joined with the code, so they all start as Member.',tip:'New joiners always start as Member. Never wait for them to ask: open People and upgrade them.',run:async()=>{await sp($('#r_Riya'),'Your role: Organizer','Fixed. Full access, including deleting the event. It cannot be changed here.',.7,.5);await sp($('#r_Arjun'),'New joiner = Member','Members tick their own tasks, add people who report to them and register attendees. Nothing more.',.7,.5)}},
+{t:'Tap Arjun’s role drop-down',d:'Tap the role box beside Arjun’s name. A list of every role you can hand out opens.',tip:'The Organizer can hand out any role except Organizer. A Manager cannot give or change the Manager role.',run:async()=>{await tp($('#s_Arjun'),'Role drop-down','Opens all roles. Custom roles you make later appear in their own group at the bottom.');ddOpen($('#s_Arjun'),gsFor());await W(500);await sp(opt('manager'),'Manager','Edits the event and manages people, roles, tasks, payments and money. Only the Organizer can give this.',.5,.5);await sp(opt('viewer'),'Viewer','Can read everything but change nothing. Good for a faculty guest or an observer.',.5,.5)}},
+{t:'Choose Treasurer for Arjun',d:'Tap Treasurer. The change is saved at once and Arjun’s box now says Treasurer.',tip:'Arjun does not need to restart the app. His buttons and tabs change as soon as his phone syncs.',run:async()=>{await tp(opt('treasurer'),'Treasurer',IN.treasurer+' Also unlocks the Income and Expenses tabs.');ddClose();setRole('Arjun','treasurer');await W(500);await sp($('#s_Arjun'),'Arjun is Treasurer','Money data is hidden from roles without the Money permission, so only give this to someone you trust.',.5,.5)}},
+{t:'Give Meera another role',d:'Same steps for Meera: tap her role box and choose Registration desk, so she can run the gate.',tip:'Pick the smallest role that does the job. You can always upgrade later.',run:async()=>{await give('Meera','desk','Meera’s role box','Same drop-down, different person.');await sp($('#s_Meera'),'Registration desk','Registers walk-ins, checks in attendees, scans tickets and marks fees paid. No access to money.',.5,.5)}},
+{t:'Know the limits',d:'Kabir stays Member for now. You cannot change your own role, and the Organizer’s role is fixed.',tip:'Need something between two built-in roles? Continue to part 2 and make a custom role.',run:async()=>{await sp($('#s_Kabir'),'Kabir: still Member','Leave people on Member until they have a real job. Next we make a role that fits a custom job.',.5,.5,2800);nxt()}}]};
+const TB={m:'B',h:'Create a custom role',st:[
+{t:'Find the Custom roles card',d:'On the People tab, scroll below the list. The Custom roles card shows how many roles exist. Right now there are none.',tip:'Only the Organizer and Managers see this card, and only in shared events.',run:async()=>{await W(900);await sp(E.cr,'Custom roles (0)','Build roles for jobs the built-in ones do not cover, such as Stage manager or Photographer. Up to 12 per event.',.5,.1)}},
+{t:'Tap “+ New role”',d:'Tap + New role. A form opens inside the card with a name box, a copy option and the permission tick-boxes.',tip:'Nothing is saved until you tap Create role.',run:async()=>{await tp($('#nr'),'+ New role','Opens the role form.');newForm();await W(600)}},
+{t:'Name the role',d:'Tap Role name and type a name of 2 to 24 letters. We use Stage manager.',tip:'The name must be new. Built-in names like Member, and names already used, are refused with “There is already a role with that name”.',run:async()=>{await tp($('#cn'),'Role name','2 to 24 letters. Name the job, not the person, so you can reuse it.');foc('cn');await kbo();await see($('#cn'));await type('cn','Stage manager');await W(400);await hideKb()}},
+{t:'Copy permissions to save time',d:'Tap Copy permissions from and pick Logistics lead. Its ticks are copied into the form and you can then change them.',tip:'This is optional. Skip it to start with every box empty. A role with nothing ticked is read only, like a Viewer.',run:async()=>{await tp($('#crs'),'Copy permissions from','Starts you from an existing role so you only tweak the differences.');ddOpen($('#crs'),[['Built-in roles',BI],]);await W(500);await tp(opt('logi'),'Logistics lead','Copies Manage tasks and Items to buy. Tick-boxes fill in below.');ddClose();FM.from='Logistics lead';FP=[...BASE.logi];paint();await W(500)}},
+{t:'Tick and untick permissions',d:'Tap a box to tick or untick it. Untick Items to buy, then tick Volunteer list, so the stage manager handles people, not shopping.',tip:'Team member basics already includes Tick off own tasks, so that box is ticked and locked.',run:async()=>{await sp($('#pk_tasks'),'Already ticked',pd('tasks')+' Copied from Logistics lead.',.3,.5);await tp($('#pk_items'),'Untick Items to buy',pd('items'),.3,.5);tg('items');await W(300);await tp($('#pk_people'),'Tick Volunteer list',pd('people'),.3,.5);tg('people');await W(400)}},
+{t:'Tap “Create role”',d:'Tap Create role. A message says Role created, and Stage manager appears in the card with its permissions as small tags.',tip:'You can change the role later with Edit. It is now available in every role drop-down.',run:async()=>{await tp($('#sub'),'Create role','Saves the role for this event only.');const p=FP.includes('write')?FP.filter(k=>k!=='tick'):FP;CR.push({id:'c_stage',n:'Stage manager',p});FM=null;drawCR();await tst('Role created',1300);await sp($('.li'),'Stage manager','0 people hold it yet. The tags list exactly what it allows.',.5,.4);nxt()}}]};
+const TC={m:'C',h:'Use and manage your custom role',st:[
+{t:'Give the custom role to someone',d:'In the People list, open Kabir’s drop-down. Your custom role is listed under Custom roles. Tap Stage manager.',tip:'You can also give a custom role to a new joiner. They arrive as Member first, then you switch them.',run:async()=>{await tp($('#s_Kabir'),'Kabir’s role box','Custom roles appear in their own group below the built-in roles.');ddOpen($('#s_Kabir'),gsFor());await W(500);await tp(opt('c_stage'),'Stage manager','Kabir gets exactly the permissions you ticked.');ddClose();setRole('Kabir','c_stage');await W(500);await sp($('.li'),'1 person','The card now counts who holds the role.',.5,.3)}},
+{t:'Edit the role',d:'Tap Edit beside Stage manager. The form opens filled in. Tick Attendees and check-in, then tap Save role.',tip:'Editing changes everyone who holds the role straight away, not just new people.',run:async()=>{await tp($('#ed_c_stage'),'Edit','Reopens the form with the current name and ticks.');FM={id:'c_stage',from:''};FP=[...CR[0].p];F.cn='Stage manager';drawCR();await W(500);await tp($('#pk_regs'),'Tick Attendees and check-in',pd('regs')+' Lets Kabir check in performers.',.3,.5);tg('regs');await W(300);await tp($('#sub'),'Save role','Kabir’s new permission applies immediately.');CR[0].p=FP.filter(k=>k!=='tick');FM=null;drawCR();await tst('Role saved',1300)}},
+{t:'Know when you can delete',d:'Delete removes a role for good, but only when nobody holds it. Kabir still holds Stage manager, so first move him to another role.',tip:'If a role disappears while someone still has it, their name shows “Role removed”. Give them a new role.',run:async()=>{await sp($('#dx_c_stage'),'Delete is locked in use','A role can be deleted only when nobody holds it. Change Kabir’s role first.',.5,.5,2800)}},
+{t:'Move Kabir back to Member',d:'Open Kabir’s drop-down again and choose Member.',tip:'Pick the role the person should have now, not the role they had before.',run:async()=>{await give('Kabir','member','Kabir’s role box','Switch him to a different role so Stage manager is free.')}},
+{t:'Delete the role',d:'Tap Delete beside Stage manager. The card goes back to Custom roles (0).',tip:'Summary: People tab, role drop-down to give roles; Custom roles card to create, edit and delete them. Only the Organizer and Managers can do this.',run:async()=>{await tp($('#dx_c_stage'),'Delete','Nobody holds the role now, so it can be deleted.');CR=[];drawCR();await W(700);await sp(E.cr,'All done','Roles are enforced by the database rules, not just hidden buttons.',.5,.2)}}]};
+const PARTS={A:TA,B:TB,C:TC};
+function mount(n){T=PARTS[n];['A','B','C'].forEach(k=>E['t'+k].className=k===n?'on':'');E.h.textContent=T.h;E.steps.innerHTML=T.st.map((s,k)=>`<li data-n="${k+1}"><b>${s.t}</b><p>${s.d}</p></li>`).join('');E.prog.innerHTML=T.st.map(()=>'<i></i>').join('')}
+E.tC.onclick=()=>{mount('C');play(0)};E.bC.onclick=()=>{mount(T===TA?'B':'C');play(0)};
+addEventListener('resize',fit);fit();mount('A');play(0);
+</script></body></html>
