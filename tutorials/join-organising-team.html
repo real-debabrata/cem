@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to get a team invite code and join a team | Campus Events tutorial</title>
+<meta name="description" content="Get your event’s 6-letter invite code, send it to your organising team on WhatsApp, and join the team with it.">
+<meta name="keywords" content="invite code, event code, join team, share with team, whatsapp, organiser, member, role, teammates">
+<link rel="preload" href="../fonts/bricolage-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/figtree-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="shared/tutorial.css">
+<style>
+.seg{grid-template-columns:repeat(3,auto)}.seg button{padding:9px 13px}
+#who{width:max-content;max-width:100%;margin:0 auto 10px;background:rgba(255,255,255,.1);border-radius:99px;padding:4px 14px;font-size:13px;color:#c6c9e0}
+#bC{background:#35c9a5;border-color:#35c9a5;color:#10172b}
+.hb{display:flex;gap:8px;align-items:center}.jb{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);display:grid;place-items:center;background:#fff;transition:transform .12s}
+.tabs{display:flex;gap:6px;padding:0 20px;overflow:hidden;margin-top:4px}.tabs span{white-space:nowrap;padding:7px 13px;border-radius:99px;font-size:13px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--mute)}.tabs .on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:12px 0 0;font-size:14px}.kv dt{color:var(--mute)}.kv dd{margin:0;font-weight:600}
+.gb{display:inline-block;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;transition:transform .12s;background:#fff}
+.code{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}.code b{font:800 26px var(--d);letter-spacing:.2em;background:rgba(89,72,245,.1);color:var(--acc);padding:6px 16px;border-radius:10px}
+#toast{position:absolute;left:50%;bottom:92px;z-index:30;transform:translate(-50%,20px);opacity:0;transition:.3s;background:var(--ink);color:#fff;padding:9px 16px;border-radius:99px;font-weight:600;font-size:13px;white-space:nowrap}#toast.on{transform:translate(-50%,0);opacity:1}
+#pop{position:absolute;z-index:21;width:216px;background:var(--ink);color:#fff;border:1.5px solid var(--amb);border-radius:12px;padding:9px 11px;font:500 12.5px/1.4 var(--t);box-shadow:0 10px 28px rgba(0,0,0,.45);opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;pointer-events:none}
+#pop.on{opacity:1;transform:none}#pop b{display:block;color:var(--amb);font-size:12px;margin-bottom:2px}
+#pop:after{content:"";position:absolute;left:var(--ax,20px);width:10px;height:10px;background:var(--ink);border:0 solid var(--amb)}
+#pop.up:after{top:-6px;border-width:1.5px 0 0 1.5px;transform:rotate(45deg)}#pop.dn2:after{bottom:-6px;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+#wa{position:absolute;left:0;right:0;top:0;bottom:var(--kb);z-index:5;display:flex;flex-direction:column;background:#efeae2;color:#111b21;transition:bottom .3s ease}
+.wh{flex:none;position:relative;background:#008069;color:#fff;padding:38px 14px 10px;display:flex;align-items:center;gap:10px}.wh b{font:700 16px var(--t)}.wh small{display:block;font-size:12px;opacity:.85}.ar{font-size:24px;line-height:1}
+.wav{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 15px var(--d);font-style:normal}
+#wl{flex:1;background:#fff}.cr{display:flex;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid #eef0f2;transition:transform .12s}.cr b{display:block;font-size:15px}.cr small{color:#667781;font-size:13px}
+#wc{flex:1;min-height:0;display:flex;flex-direction:column}
+#sb{position:absolute;inset:0;display:none;align-items:center;justify-content:space-between;background:#fff;color:#111b21;padding:38px 16px 10px;font-weight:700}#sb.on{display:flex}
+#msgs{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px;scrollbar-width:none}#msgs::-webkit-scrollbar{display:none}
+.dc{align-self:center;background:#fff;font-size:11.5px;color:#54656f;padding:3px 10px;border-radius:8px;margin:4px 0}
+.m{max-width:80%;padding:6px 9px 4px;border-radius:9px;font-size:14px;line-height:1.35;box-shadow:0 1px 1px rgba(0,0,0,.13);animation:fi .3s;transition:transform .12s}
+.m.i{align-self:flex-start;background:#fff}.m.o{align-self:flex-end;background:#d9fdd3}.m.sel{background:#a6dfc9}
+.m u{display:block;text-decoration:none;font-weight:700;font-size:12.5px}.m s{text-decoration:none;font-size:10.5px;color:#667781;float:right;margin:6px 0 0 10px}.m s i{color:#53bdeb;font-style:normal}
+.m.cd2{font:800 19px var(--t);letter-spacing:.18em}
+.cmp{flex:none;display:flex;gap:8px;align-items:flex-end;padding:6px 8px 22px}
+.cmi{flex:1;min-height:42px;max-height:98px;overflow:hidden;background:#fff;border-radius:22px;padding:10px 14px;font-size:15px;line-height:1.35;white-space:pre-wrap;word-break:break-word;transition:transform .12s}
+.v:empty:before{content:attr(data-ph);color:#b4b9cf;letter-spacing:0;font-size:15px;font-weight:400;text-transform:none}.cmi .v:empty:before{color:#8696a0}
+.cmi .ca{display:none;width:1.5px;height:16px;background:#00a884;vertical-align:-3px;animation:bl 1s steps(1) infinite}.cmi.f .ca{display:inline-block}
+#sbtn{flex:none;width:42px;height:42px;border-radius:50%;background:#00a884;display:grid;place-items:center;transition:transform .12s}
+#pst{position:absolute;left:16px;bottom:calc(var(--kb) + 70px);z-index:9;display:none;background:#fff;color:var(--ink);border-radius:10px;padding:9px 20px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3);transition:transform .12s}#pst.on{display:block}
+#mod{position:absolute;left:0;right:0;top:0;bottom:var(--kb);z-index:7;display:grid;place-items:center;padding:16px;background:rgba(16,23,43,.55);transition:bottom .3s ease}
+#mod .box{width:100%;background:#fff;border-radius:18px;padding:20px}#mod h3{font:700 20px var(--d);margin:0 0 4px}
+.jci{justify-content:center;letter-spacing:.3em;font-size:20px;font-weight:700;margin-top:14px;text-transform:uppercase}
+.jr{display:flex;gap:8px;align-items:center;margin-top:16px}.jr .go{flex:1;margin:0}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><symbol id="lg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></symbol></svg>
+<main class="page">
+<div class="info">
+ <div class="hd"><div class="brand"><svg viewBox="0 0 512 512"><use href="#lg"/></svg>Campus Events<em>Tutorial</em></div>
+  <div class="seg"><button id="tA" class="on">1 Get the code</button><button id="tB">2 Send on WhatsApp</button><button id="tC">3 Join the team</button></div>
+  <h1 id="h"></h1></div>
+ <div class="sl"><ol id="steps"></ol><p id="tip"></p></div>
+</div>
+<div class="stage">
+ <div id="who"></div>
+ <div class="fitbox" id="fb"><div class="phone" id="ph">
+  <div class="scr" id="scr">
+   <div class="sbar"><span>9:41</span><i class="cam"></i><span class="sig">5G<i class="bat"></i></span></div>
+   <div id="body">
+    <div class="dh"><div class="b2"><svg viewBox="0 0 512 512"><use href="#lg"/></svg>Campus Events</div><span class="hb"><i class="jb" id="jt"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10172b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3.2-5.5 6.5-5.5s6 2 6.5 5.5M19 8v6M16 11h6"/></svg></i><i class="av" id="av">R</i></span></div>
+    <div id="dash"><h3 class="cu" style="margin-top:14px">Coming up</h3><div id="dsh"></div></div>
+    <div id="evs" class="hide"><h3 class="cu" style="margin-top:14px">Events</h3><div id="evl"></div></div>
+    <div id="det" class="hide">
+     <div class="tabs"><span class="on">Details</span><span>Attendees</span><span>Tasks</span><span>People</span><span>Payments</span></div>
+     <div class="card" style="padding:20px;border-left:6px solid #d9482b"><span class="tag" style="color:#d9482b;background:#d9482b1a">Fest</span><h3 style="margin-top:8px">Tech Fest 2026</h3><dl class="kv"><dt>Date</dt><dd>7 Nov 2026</dd><dt>Venue</dt><dd>Main Auditorium</dd><dt>Seats</dt><dd>200 (0 registered)</dd></dl></div>
+     <div class="card" id="inv" style="padding:20px"></div>
+     <div class="card" id="role" style="padding:20px"></div>
+    </div>
+   </div>
+   <div id="bn"><span class="on">Dashboard</span><span>Events</span><span>My tasks</span><span>New event</span></div>
+   <div id="wa" class="hide">
+    <div id="wl"><div class="wh"><b style="font-size:20px">WhatsApp</b></div>
+     <div class="cr" id="g1"><i class="wav" style="background:#5948f5">T</i><div><b>Tech Fest 2026 Organisers</b><small>Arjun: See you at 5 pm</small></div></div>
+     <div class="cr"><i class="wav" style="background:#0e8a8a">F</i><div><b>Food court vendors</b><small>Sam: Quote attached</small></div></div>
+     <div class="cr"><i class="wav" style="background:#b02a82">M</i><div><b>Meera</b><small>Ok, thanks!</small></div></div></div>
+    <div id="wc" class="hide">
+     <div class="wh"><span class="ar">&#8249;</span><i class="wav" style="background:#5948f5">T</i><div><b>Tech Fest 2026 Organisers</b><small id="ws"></small></div>
+      <div id="sb"><span>&#10005; &nbsp;1</span><span class="gb" id="cpy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10172b" stroke-width="2" style="vertical-align:-3px"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg> Copy</span></div></div>
+     <div id="msgs"></div>
+     <div class="cmp"><div class="cmi" id="mi"></div><div id="sbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M3 20l18-8L3 4v6l11 2-11 2z"/></svg></div></div>
+    </div>
+   </div>
+   <div id="pst">Paste</div>
+   <div id="mod" class="hide"><div class="box"><h3>Join a team</h3><p class="meta" style="margin:0">Enter the 6-letter event code your organiser shared with you.</p><div class="in jci" id="jc"></div>
+    <div class="jr"><div class="go" id="jgo">Join</div><span class="gb">Cancel</span></div></div></div>
+   <div id="toast"></div>
+   <div class="kb" id="kb"></div>
+   <i class="home"></i>
+  </div>
+  <div id="pop"></div>
+  <div id="cur"><svg width="26" height="26" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.9L21 10.5z" fill="#fff" stroke="#10172b" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+ </div></div>
+ <div class="ctl"><button id="bP">Back</button><button id="bPl" class="main">Pause</button><button id="bN">Next</button><button id="bR">Restart</button><button id="bS">Sound on</button><button id="bC" class="hide">Next part &#8250;</button></div>
+ <div class="prog" id="prog"></div>
+</div>
+</main>
+<script src="shared/tutorial.js"></script>
+<script>
+const CODE='KXMRTD',K=['jc','mi'],PH={jc:'Event code',mi:'Message'},NAME='Tech Fest 2026 Organisers';
+let SH=0,NM=1,ROLE='Organizer';
+K.forEach(k=>E[k].insertAdjacentHTML('afterbegin','<span class="v" data-ph="'+PH[k]+'"></span><i class="ca"></i>'));
+const draw=k=>{E[k].querySelector('.v').textContent=F[k];E[k].scrollTop=1e5};
+const CO={Riya:'#5948f5',Arjun:'#a2650a',Meera:'#b02a82',Kabir:'#0e8a8a'};
+const MS=[['Riya','Hi team! Please join our Tech Fest 2026 team on Campus Events. The code is in my next message. In the app, tap Join team.'],['Riya',CODE,1],['Riya','Reply \u201CJoined\u201D once you are in. Thanks!'],['Arjun','Joined!'],['Meera','Done, I am in!'],['Kabir','It says Invalid code. Help?'],['Riya','Type exactly '+CODE+': 6 letters, no spaces. Capitals do not matter.'],['Kabir','Works now, thanks!']];
+const msg=(i,me)=>{const[w,t,c]=MS[i],o=w===me;return `<div class="m ${o?'o':'i'}${c?' cd2':''}" id="m${i}">${o?'':`<u style="color:${CO[w]}">${w}</u>`}${t}<s>10:4${i}${o?' <i>&#10003;&#10003;</i>':''}</s></div>`};
+const chat=(n,me)=>{E.msgs.innerHTML='<div class="dc">TODAY</div>'+Array.from({length:n},(_,i)=>msg(i,me)).join('');E.msgs.scrollTop=1e5;E.ws.textContent=me==='Riya'?'Arjun, Meera, Kabir, You':'Riya, Meera, Kabir, You'};
+const add=(i,me)=>{E.msgs.insertAdjacentHTML('beforeend',msg(i,me));E.msgs.scrollTop=1e5;if(MS[i][0]!==me)snd('ding')};
+const wa=m=>{E.wl.classList.toggle('hide',m!=='l');E.wc.classList.toggle('hide',m!=='c')};
+const sel=on=>{E.sb.classList.toggle('on',!!on);const m=$('#m1');if(m)m.classList.toggle('sel',!!on)};
+const card=id=>`<div class="ev"${id?` id="${id}"`:''}><span class="tag">Fest</span><h4>Tech Fest 2026</h4><p class="meta">7 Nov 2026 &middot; Main Auditorium</p></div>`;
+function drawInv(){E.inv.innerHTML='<h3 style="font-size:19px">Invite your team</h3>'+(SH?`<div class="code"><b id="cd">${CODE}</b><span class="gb" id="cp">Copy code</span></div><p class="meta" id="mem" style="margin:10px 0 0">${NM} member(s). ntfy topic: ntfy.sh/campus-${CODE.toLowerCase()}-&hellip;</p>`:'<p class="meta">Share the event so teammates can join with a code.</p><span class="btn sm" id="shr">Share with team</span>');E.role.innerHTML=`<h3 style="font-size:19px">Your role: ${ROLE}</h3><p class="meta">${ROLE==='Member'?'New people always start as Member.':'You have full access, including deleting the event.'}</p>`}
+function view(v){['dash','evs','det'].forEach(k=>E[k].classList.toggle('hide',k!==v));E.wa.classList.toggle('hide',v!=='wa');E.scr.classList.toggle('dk',v==='wa');E.body.scrollTop=0;[...E.bn.children].forEach((s,i)=>s.className=(v==='dash'&&!i)||((v==='evs'||v==='det')&&i===1)?'on':'')}
+const tst=async(t,ms=1500)=>{E.toast.textContent=t;E.toast.classList.add('on');snd('ok');await W(ms);E.toast.classList.remove('on')};
+const unpop=()=>E.pop.classList.remove('on');
+function popAt(t,x,px,py){if(fast)return;const w=216,p=E.pop;p.innerHTML='<b>'+t+'</b>'+x;p.className='';const l=Math.max(24,Math.min(404-24-w,px-w/2));p.style.left=l+'px';p.style.setProperty('--ax',Math.max(14,Math.min(w-24,px-l-5))+'px');const h=p.offsetHeight,up=py>430;p.style.top=Math.max(44,Math.min(770-h,up?py-h-16:py+28))+'px';void p.offsetWidth;p.className='on '+(up?'dn2':'up')}
+async function sp(el,t,x,fx=.5,fy=.5,hold){if(el.closest('#body'))await see(el);el.classList.add('hl');const[px,py]=pt(el,fx,fy);await move(px,py);popAt(t,x,px,py);await W(hold||700+x.length*24);unpop();el.classList.remove('hl');await W(200)}
+async function tp(el,t,x,fx=.5,fy=.5,hold){if(el.closest('#body'))await see(el);el.classList.add('hl');const[px,py]=pt(el,fx,fy);await move(px,py);if(x){popAt(t,x,px,py);await W(hold||700+x.length*24);unpop()}await W(150);E.cur.classList.add('dn');rip(px,py);el.classList.add('tp');await W(170);E.cur.classList.remove('dn');el.classList.remove('tp','hl');await W(150)}
+E.kb.innerHTML='<div class="tb"><span id="kbh"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7" fill="none" stroke="#5b6380" stroke-width="2.4" stroke-linecap="round"/></svg></span></div>'+['qwertyuiop','asdfghjkl','zxcvbnm'].map((r,i)=>`<div class="kr" style="padding:0 ${[0,16,36][i]}px">`+[...r].map(k=>`<b data-k="${k}">${k}</b>`).join('')+'</div>').join('')+'<div class="kr"><b style="flex:1.5">?123</b><b data-k=",">,</b><b data-k=" " style="flex:5"></b><b data-k=".">.</b><b class="ok" style="flex:1.5">&#10003;</b></div>';
+async function kbo(){if(E.kb.classList.contains('up'))return;void E.kb.offsetWidth;E.kb.classList.add('up');E.scr.style.setProperty('--kb','270px');await W(380)}
+const hideKb=async()=>{if(!E.kb.classList.contains('up'))return;await tp($('#kbh'));await kbc();foc(null);E.mi.classList.remove('f')};
+async function typeQ(k,txt){for(let i=0;i<txt.length;i+=2){F[k]+=txt.slice(i,i+2);draw(k);key(txt[i]);await W(40)}}
+const send=async(i,me)=>{await tp(E.sbtn);F.mi='';draw('mi');add(i,me);await W(500)};
+const nxt=()=>{if(T!==TC)E.bC.classList.remove('hide')};
+function reset(){const m=T.m;F={jc:'',mi:''};K.forEach(draw);foc(null);E.mi.classList.remove('f');
+ E.scr.style.setProperty('--kb','0px');E.kb.className='kb';E.mod.classList.add('hide');E.toast.classList.remove('on');E.pst.classList.remove('on');unpop();sel(0);
+ document.querySelectorAll('.hl,.tp').forEach(e=>e.classList.remove('hl','tp'));
+ SH=m==='A'?0:1;NM=m==='A'?1:4;ROLE=m==='C'?'Member':'Organizer';drawInv();
+ E.av.textContent=m==='C'?'A':'R';E.who.textContent=m==='C'?'Teammate\u2019s phone: Arjun':'Organiser\u2019s phone: Riya';E.bC.classList.add('hide');
+ E.dsh.innerHTML=m==='A'?card():'<div class="empty">No upcoming events. Create one from New event.</div>';E.evl.innerHTML=m==='A'?card('evc'):'';
+ if(m==='A')view('dash');else{view('wa');wa(m==='B'?'l':'c');if(m==='C')chat(3,'Arjun')}
+ cx=370;cy=730;E.cur.style.transitionDuration='0s';E.cur.style.transform=`translate(${cx}px,${cy}px)`}
+const TA={m:'A',h:'Get your team invite code',st:[
+{t:'Sign in to Campus Events',d:'Open the app and sign in with Google, or with your email and password. Sharing an event needs a signed-in account.',tip:'Events you have not shared stay only on your phone. No event yet? Follow the Create an event tutorial first.',run:async()=>{await W(1000);await sp(E.av,'You are signed in','Your profile icon shows your initial. A signed-in account lets teammates be added to the event by name.')}},
+{t:'Open your event',d:'Tap Events in the menu, then tap the event you want your team to work on.',tip:'You can share any event you created. Teammates will see exactly this event.',run:async()=>{await tp(E.bn.children[1],'Events','Every event on this account is listed here.');view('evs');await W(500);await tp($('#evc'),'Your event','Tap the event you want to share.');view('det');await W(600)}},
+{t:'Find “Invite your team”',d:'You land on the Details tab. Scroll down to the Invite your team card.',tip:'The card is on the Details tab only. The tabs above it (Attendees, Tasks, People) will not show it.',run:async()=>{await sp(E.inv,'Not shared yet','Right now this event lives only on your phone, so there is no code yet.',.5,.2)}},
+{t:'Tap “Share with team”',d:'Tap the button. The app makes a code and turns your event into a shared event, with you as its Organizer.',tip:'Do this once per event. After that the same code stays on the Details tab.',run:async()=>{await tp($('#shr'),'Share with team','This creates the code. Your event is now stored online so teammates on other phones can open it.');await W(700);SH=1;drawInv();await tst('Shared. Code: '+CODE,1400)}},
+{t:'Meet your event code',d:'The Invite your team card now shows your six-letter event code. Every event has its own code.',tip:'The code on screen is only an example. Yours will be different. It is letters only, and never contains I or O.',run:async()=>{await sp($('#cd'),'Your event code','Exactly 6 letters, A to Z. Anyone who has it can join this event, so share it carefully.',.5,.5,3400)}},
+{t:'Copy the code',d:'Tap Copy code. A short message says Code copied, and the code is ready to paste anywhere.',tip:'If the phone blocks copying, the app shows the code in the message so you can type it yourself.',run:async()=>{await tp($('#cp'),'Copy code','Puts the code on your clipboard. Next you will paste it into WhatsApp.');await tst('Code copied')}},
+{t:'See who has joined',d:'Under the code you will see how many members the event has. It starts at 1, which is you.',tip:'Find the code again any time: Events, your event, Details, Invite your team. The ntfy line is for optional phone alerts.',run:async()=>{await sp($('#mem'),'Member count','Counts you plus everyone who joins with the code. Ignore the ntfy topic for now.',.4,.5,3000);nxt()}}]};
+const TB={m:'B',h:'Send the code on WhatsApp',st:[
+{t:'Open your team’s group',d:'Open WhatsApp and tap the group that has only your organising team in it.',tip:'Everyone who joins can read the attendee list, including phones and emails. Use a private group, never a public one.',run:async()=>{await W(1000);await tp(E.g1,'Use a private group','Only share the code with people you trust. Members can see attendee details.');wa('c');chat(0,'Riya');await W(500)}},
+{t:'Write the invitation',d:'Tap the message box and write what the code is for and what to do. Keep it short and clear.',tip:'Mention the app name and the Join team button. People join faster with clear steps.',run:async()=>{await tp(E.mi,'Write a short invite','Say which event it is, and tell people to tap Join team in the app.');E.mi.classList.add('f');await kbo();await typeQ('mi',MS[0][1]);await W(400)}},
+{t:'Send the invitation',d:'Tap the green send button. Your team sees the invitation first.',tip:'The code goes in a separate message, which makes it easy to copy.',run:async()=>{await send(0,'Riya')}},
+{t:'Send the code on its own',d:'Press and hold the message box, tap Paste, then send. This pastes the code you copied in Campus Events.',tip:'Send the code alone. Long-pressing it then copies only the six letters, and the app’s join box holds exactly six.',run:async()=>{await tp(E.mi,'Long-press the box','Press and hold, then choose Paste. This is the code you copied in the last part.');E.mi.classList.add('f');E.pst.classList.add('on');await W(500);await tp(E.pst);E.pst.classList.remove('on');F.mi=CODE;draw('mi');await W(500);await send(1,'Riya')}},
+{t:'Ask them to confirm',d:'Send one more message asking everyone to reply Joined once they are in the team.',tip:'Replies let you tick people off. You can also check the member count on the Details tab.',run:async()=>{await tp(E.mi);await typeQ('mi',MS[2][1]);await W(300);await tp(E.sbtn,'Ask for a reply','Asking for “Joined” shows who still needs the code.');F.mi='';draw('mi');add(2,'Riya');await W(500)}},
+{t:'Teammates reply',d:'Replies arrive. If someone sees Invalid code, ask them to type the six letters again.',tip:'Check for spaces and extra letters. Capitals do not matter. If it still fails, resend the code.',run:async()=>{await hideKb();for(const i of[3,4,5]){await W(1200);add(i,'Riya')}await sp($('#m5'),'Invalid code?','Ask them to retype it with no spaces. Capitals do not matter, and I or O are never in a code.');add(6,'Riya');await W(1300);add(7,'Riya');await W(1400);nxt()}}]};
+const TC={m:'C',h:'Join the organising team',st:[
+{t:'Copy the code from WhatsApp',d:'In the group, press and hold the message with the code, then tap Copy.',tip:'Prefer typing? Just read the six letters. Both ways work.',run:async()=>{await W(900);await tp($('#m1'),'Long-press the code','Press and hold the message that has only the code.');sel(1);await W(600);await tp(E.cpy,'Copy','Copies just the six letters, ready to paste.');sel(0);await tst('Copied')}},
+{t:'Open Campus Events and sign in',d:'Open the app and sign in with Google or email. The Join team button only shows once you are signed in.',tip:'Use the account your organiser should add. Your name in the team comes from it.',run:async()=>{view('dash');await W(700);await sp(E.av,'Sign in first','No Join team button? You are probably signed out.')}},
+{t:'Tap “Join team”',d:'Tap the Join team icon, the person with a plus, in the top bar. A Join a team box opens.',tip:'Another way: tap your profile icon, then Account, alerts & join event, then Join an event.',run:async()=>{await tp(E.jt,'Join team','The person-with-plus icon. On a wide screen it also says “Join team”.');E.mod.classList.remove('hide');await W(600)}},
+{t:'Enter the 6-letter code',d:'Tap the box and type or paste the code. It must be exactly six letters.',tip:'Errors you may see: “Enter the 6-letter event code”, “Invalid code. Check it with your organiser”, “You are already in this event”.',run:async()=>{await tp(E.jc,'Event code','Type or paste the code. Exactly 6 letters, no spaces.');foc('jc');await kbo();await type('jc','kxmrtd');await sp(E.jc,'Capitals are automatic','Typed in small letters? The app shows and checks them as capitals.',.5,.5,2400)}},
+{t:'Tap Join',d:'Tap Join. A message says Joined the team, and the event appears in your Events list.',tip:'Joined the wrong event? Ask the Organizer to remove you from the People tab.',run:async()=>{await hideKb();await tp(E.jgo,'Join','Adds you to the event.');E.jgo.classList.add('busy');await W(800);E.jgo.classList.remove('busy');E.mod.classList.add('hide');E.evl.innerHTML=card('evc');view('evs');await tst('Joined the team',1300);await sp($('#evc'),'You are in','The event is now in your Events list.')}},
+{t:'Check your role',d:'Open the event. The Details tab shows the code and Your role: Member.',tip:'The Organizer or a Manager can change your role in the People tab, using the drop-down beside your name.',run:async()=>{await tp($('#evc'));view('det');await W(500);await sp($('#cd'),'Same code for everyone','Members can see the code too. Share it only with people you trust.');await sp(E.role,'Your role: Member','New people always start as Member. An Organizer or Manager can give you a bigger role.',.5,.5,3200)}}]};
+const PARTS={A:TA,B:TB,C:TC};
+function mount(n){T=PARTS[n];['A','B','C'].forEach(k=>E['t'+k].className=k===n?'on':'');E.h.textContent=T.h;E.steps.innerHTML=T.st.map((s,k)=>`<li data-n="${k+1}"><b>${s.t}</b><p>${s.d}</p></li>`).join('');E.prog.innerHTML=T.st.map(()=>'<i></i>').join('')}
+E.tC.onclick=()=>{mount('C');play(0)};
+E.bC.onclick=()=>{mount(T===TA?'B':'C');play(0)};
+addEventListener('resize',fit);fit();mount('A');play(0);
+</script></body></html>
