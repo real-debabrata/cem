@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to create a payment link and verify a payment | Campus Events tutorial</title>
+<meta name="description" content="Create a UPI payment link, make a demo payment as the payer, then check the UTR and verify it in the Payments tab.">
+<meta name="keywords" content="payment link, upi, utr, qr code, verify payment, payments tab, income tab, registration fee, donation, treasurer, reject, demo payment, fee, pay">
+<link rel="preload" href="../fonts/bricolage-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/figtree-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="shared/tutorial.css">
+<style>
+/* Poppins is the font of the public payment page (pay.html); the rest of the app uses Bricolage and Figtree. */
+@font-face{font-family:Poppins;font-weight:400;font-display:swap;src:url(../fonts/poppins-400.woff2) format('woff2')}
+@font-face{font-family:Poppins;font-weight:600;font-display:swap;src:url(../fonts/poppins-600.woff2) format('woff2')}
+@font-face{font-family:Poppins;font-weight:700;font-display:swap;src:url(../fonts/poppins-700.woff2) format('woff2')}
+@font-face{font-family:Poppins;font-weight:800;font-display:swap;src:url(../fonts/poppins-800.woff2) format('woff2')}
+:root{--ok:#087a62;--bad:#c2331f;--warn:#a4610a;--tint:rgba(89,72,245,.09)}
+.seg{grid-template-columns:repeat(3,auto)}.seg button{padding:9px 13px}
+#who{width:max-content;max-width:100%;margin:0 auto 10px;background:rgba(255,255,255,.1);border-radius:99px;padding:4px 14px;font-size:13px;color:#c6c9e0}
+#bC{background:#35c9a5;border-color:#35c9a5;color:#10172b}
+.tabs{position:relative;display:flex;gap:6px;padding:0 20px;overflow-x:auto;scrollbar-width:none;margin-top:4px}.tabs::-webkit-scrollbar{display:none}.tabs span{flex:none;white-space:nowrap;padding:7px 13px;border-radius:99px;font-size:13px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--mute);transition:transform .12s}.tabs .on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tabs em{display:inline-block;font-style:normal;font-size:11px;font-weight:700;line-height:17px;min-width:17px;padding:0 5px;margin-left:6px;border-radius:9px;text-align:center;background:var(--line);color:var(--ink)}.tabs em.hot{background:var(--amb);color:#10172b}
+#org{padding-bottom:96px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:12px 0 0;font-size:14px}.kv dt{color:var(--mute)}.kv dd{margin:0;font-weight:600}
+.code{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}.code b{font:800 26px var(--d);letter-spacing:.2em;background:rgba(89,72,245,.1);color:var(--acc);padding:6px 16px;border-radius:10px}
+.sh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}.sh h3{font-size:19px!important}
+.gb{display:inline-block;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;transition:transform .12s;background:#fff}
+.btn{transition:transform .12s}.btn.ghost{background:none;color:var(--ink);border:1px solid var(--line)}.btn.del{color:var(--bad)}
+.pill{display:inline-flex;align-items:center;font-size:12px;font-weight:700;line-height:1.5;padding:1px 9px;border-radius:20px;white-space:nowrap;background:rgba(98,106,134,.16);color:var(--mute)}
+.pill.ok{background:rgba(8,122,98,.16);color:var(--ok)}.pill.bad{background:rgba(194,51,31,.16);color:var(--bad)}.pill.warn{background:rgba(164,97,10,.18);color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 11px;font:600 13px var(--t);color:var(--mute);transition:transform .12s}.chip.on{background:var(--tint);border-color:transparent;color:var(--acc)}
+.pli{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;padding:11px 0;border-bottom:1px solid var(--line)}.pli:last-child{border-bottom:0}
+.pli .main{flex:1 1 120px;min-width:0}.pli .ttl{font-weight:600;overflow-wrap:anywhere}.pli .sub{color:var(--mute);font-size:13px;overflow-wrap:anywhere}
+.pli .amt{font:700 16px Poppins,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pli .act{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-left:auto}.pli .btn{margin:0;padding:6px 12px;font-size:13px}
+.fp{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}.fp .in{background:#fff}.fp label{margin:10px 0 4px}.fp label.first{margin-top:0}
+.fp .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.fp .acts .btn{margin:0}
+.lc{border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:12px;background:#fff}
+.qr{background:#fff;padding:8px;display:inline-block;border-radius:8px;line-height:0}.qr svg{display:block;width:150px;height:150px}
+.lkin{height:40px;font-size:13px}.lkin .v{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.row{display:flex;gap:8px;align-items:center}.row .btn{margin:0}
+.v:empty:before{content:attr(data-ph);color:#b4b9cf}
+#toast{position:absolute;left:50%;bottom:92px;z-index:30;transform:translate(-50%,20px);opacity:0;transition:.3s;background:var(--ink);color:#fff;padding:9px 16px;border-radius:99px;font-weight:600;font-size:13px;white-space:nowrap}#toast.on{transform:translate(-50%,0);opacity:1}
+#pop{position:absolute;z-index:21;width:216px;background:var(--ink);color:#fff;border:1.5px solid var(--amb);border-radius:12px;padding:9px 11px;font:500 12.5px/1.4 var(--t);box-shadow:0 10px 28px rgba(0,0,0,.45);opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;pointer-events:none}
+#pop.on{opacity:1;transform:none}#pop b{display:block;color:var(--amb);font-size:12px;margin-bottom:2px}
+#pop:after{content:"";position:absolute;left:var(--ax,20px);width:10px;height:10px;background:var(--ink);border:0 solid var(--amb)}
+#pop.up:after{top:-6px;border-width:1.5px 0 0 1.5px;transform:rotate(45deg)}#pop.dn2:after{bottom:-6px;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+/* the public payment page the payer sees (copies www/pay.html) */
+.bb{position:absolute;left:0;right:0;top:0;height:80px;z-index:5;background:#10172b;padding:40px 12px 0}
+.bu{height:34px;border-radius:99px;background:rgba(255,255,255,.1);color:#c6c9e0;font:500 12.5px var(--t);display:flex;align-items:center;gap:7px;padding:0 14px;overflow:hidden;white-space:nowrap;transition:transform .12s}.bu svg{flex:none}
+#body.dkp{top:80px;padding:12px 0 24px;background:radial-gradient(800px 500px at 0% 0%,rgba(89,72,245,.42),transparent 62%),#10172b}
+.pm{font:15px/1.5 Poppins,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#fff;padding:0 14px}
+.pm .b3{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;margin:6px 0 16px}
+.pm .pcard{background:#fff;color:var(--ink);border-radius:18px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.4);margin-bottom:14px}
+.pm .h1{font-size:22px;font-weight:700;margin:0 0 4px}.pm .meta{color:#5b6380;font-size:13px;margin:0}
+.pm .step{display:flex;gap:10px;align-items:center;font-weight:700;margin:0 0 10px}.pm .step i{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--acc);color:#fff;font-style:normal;font-size:13px}
+.pm .qr2{text-align:center;margin:12px 0;line-height:0}.pm .qr2 svg{max-width:240px;width:100%;height:auto;border:1px solid #e1e4ef;border-radius:12px;padding:6px;background:#fff}
+.pm .amt{font-size:30px;font-weight:800;text-align:center}
+.pm .det{background:#eef0f7;border-radius:12px;padding:10px 12px;margin:10px 0;font-size:14px}.pm .det b{word-break:break-all}
+.pm label{font-weight:600;font-size:13px;margin:12px 0 4px}
+.pm .in{border-color:#e1e4ef}
+.pm .row{justify-content:center;flex-wrap:wrap}
+.pm .alt{display:inline-block;background:#edeff8;color:var(--ink);padding:8px 12px;font-size:13px;font-weight:700;border-radius:10px;transition:transform .12s}
+.pm .go{margin-top:16px;padding:11px 14px;font-weight:700}
+.pm .err{color:#c2331f;min-height:18px;font-size:13px;margin:8px 0 0}
+.pm .done{text-align:center}.pm .done b{font-size:44px;display:block;color:#087a62}
+/* a generic, unbranded UPI app used only for the demo payment and for the bank check */
+#upi{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;background:#f3f5fb;color:var(--ink)}
+.uh{flex:none;display:flex;align-items:center;gap:10px;padding:42px 16px 12px;background:#fff;border-bottom:1px solid var(--line)}
+.uh b{font:700 17px var(--d)}.uh .ar2{font-size:26px;line-height:1;color:var(--mute)}
+.uh em{margin-left:auto;font:700 11px var(--t);font-style:normal;letter-spacing:.08em;color:var(--warn);background:rgba(255,181,71,.22);padding:3px 9px;border-radius:99px}
+#ub{flex:1;overflow:hidden;padding:20px 20px 0}
+.uc{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px 20px;text-align:center}
+.uav{width:56px;height:56px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;background:#0e8a8a;color:#fff;font:700 22px var(--d);font-style:normal}.uav.ok{background:var(--ok)}
+.un{font:700 17px var(--d)}.us{color:var(--mute);font-size:13px}
+.ua{font:700 40px/1.1 var(--d);letter-spacing:-.03em;margin:8px 0 4px}
+.ur{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--line);font-size:14px;text-align:left;border-radius:8px}.ur:first-child{border-top:0}.ur span{color:var(--mute)}.ur b{text-align:right;overflow-wrap:anywhere}.ur b.utr{letter-spacing:.06em}
+#upi .go{margin:16px 0 0;background:#0e8a8a}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><symbol id="lg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></symbol></svg>
+<main class="page">
+<div class="info">
+ <div class="hd"><div class="brand"><svg viewBox="0 0 512 512"><use href="#lg"/></svg>Campus Events<em>Tutorial</em></div>
+  <div class="seg"><button id="tA" class="on">1 Create link</button><button id="tB">2 Pay (demo)</button><button id="tC">3 Verify</button></div>
+  <h1 id="h"></h1></div>
+ <div class="sl"><ol id="steps"></ol><p id="tip"></p></div>
+</div>
+<div class="stage">
+ <div id="who"></div>
+ <div class="fitbox" id="fb"><div class="phone" id="ph">
+  <div class="scr" id="scr">
+   <div class="sbar"><span>9:41</span><i class="cam"></i><span class="sig">5G<i class="bat"></i></span></div>
+   <div id="body">
+    <div id="org">
+     <div class="dh"><div class="b2"><svg viewBox="0 0 512 512"><use href="#lg"/></svg>Campus Events</div><i class="av">R</i></div>
+     <div class="tabs" id="tb"><span id="t_det" class="on">Details</span><span>Attendees</span><span>Tasks</span><span>People</span><span id="t_pay">Payments</span><span id="t_inc">Income</span><span>Expenses</span><span>Chat</span></div>
+     <div id="det">
+      <div class="card" style="padding:20px;border-left:6px solid #d9482b"><span class="tag" style="color:#d9482b;background:#d9482b1a">Fest</span><h3 style="margin-top:8px">Tech Fest 2026</h3><dl class="kv"><dt>Date</dt><dd>7 Nov 2026</dd><dt>Venue</dt><dd>Main Auditorium</dd><dt>Seats</dt><dd>200 (0 registered)</dd></dl></div>
+      <div class="card" style="padding:20px"><h3 style="font-size:19px">Invite your team</h3><div class="code"><b id="cdb">KXMRTD</b><span class="gb">Copy code</span></div><p class="meta" style="margin:10px 0 0">4 member(s). ntfy topic: ntfy.sh/campus-kxmrtd-&hellip;</p></div>
+     </div>
+     <div id="inc" class="hide">
+      <div class="stats"><div class="stat"><b>₹0</b><span>Received so far</span></div><div class="stat"><b>₹0</b><span>Still expected</span></div><div class="stat"><b>₹0</b><span>Budget (cost)</span></div><div class="stat"><b>₹0</b><span>Surplus if every seat sells</span></div></div>
+      <div class="card" style="padding:20px"><div class="sh"><h3>Break-even</h3></div><p class="meta" style="margin:0">Add a budget or some costs in Expenses to see the break-even point.</p></div>
+      <div class="card" style="padding:20px"><div class="sh"><h3>Sponsors and other income (0)</h3><span class="btn sm" style="margin:0">+ Add</span></div><p class="meta" style="margin:0">No sponsors yet.</p></div>
+      <div class="card" id="pl" style="padding:20px"></div>
+     </div>
+     <div id="pyt" class="hide">
+      <div class="stats" id="pst"></div>
+      <div class="card" id="pc" style="padding:20px"></div>
+     </div>
+    </div>
+    <div id="pg" class="pm hide">
+     <div class="b3"><svg width="30" height="30" viewBox="0 0 512 512"><use href="#lg"/></svg>Campus Events</div>
+     <div class="pcard">
+      <p class="meta">Tech Fest 2026</p><div class="h1">Registration fee</div><p class="meta">Pay, then send your UTR</p>
+      <div class="amt" id="p_amt">₹250</div>
+      <p class="step"><i>1</i> Pay with any UPI app</p>
+      <div class="qr2" id="p_qr"></div>
+      <div class="row"><span class="alt" id="p_dl">Save QR image</span><span class="alt" id="p_cp">Copy UPI ID</span></div>
+      <div class="det" id="p_det">Pay to: <b>Tech Fest Committee</b><br>UPI ID: <b>techfest@demobank</b></div>
+      <p class="meta">Scan the QR from your UPI app, or save the image and choose it from your gallery inside the app.</p>
+     </div>
+     <div class="pcard" id="p_c2">
+      <div id="p_fc"><p class="step"><i>2</i> Come back and submit your details</p>
+       <label>Your name</label><div class="in" id="pn"></div>
+       <label>Amount paid (₹)</label><div class="in" id="pa"></div>
+       <label>UTR / reference / transaction number</label><div class="in" id="pu"></div>
+       <p class="err"></p><div class="go" id="p_go">Submit payment details</div></div>
+      <div class="done hide" id="p_ok"><b>✓</b><div class="h1"></div><p class="meta"></p></div>
+     </div>
+    </div>
+   </div>
+   <div id="bn"><span>Dashboard</span><span class="on">Events</span><span>My tasks</span><span>New event</span></div>
+   <div id="splash" class="out"><div class="lg"><i class="rg"></i><svg viewBox="0 0 512 512"><use href="#lg"/></svg></div><div class="sn">Campus Events</div><div class="ss">Getting your events ready</div><div class="sb"><i></i></div></div>
+   <div class="bb hide" id="bb"><div class="bu" id="bu"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c6c9e0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>cem.deba.indevs.in/pay.html?f=pl7k2m9xq4</div></div>
+   <div id="upi" class="hide"><div class="uh"><span class="ar2">&#8249;</span><b id="ut">Pay</b><em>DEMO</em></div><div id="ub"></div></div>
+   <div id="toast"></div>
+   <div class="kb" id="kb"></div>
+   <i class="home"></i>
+  </div>
+  <div id="pop"></div>
+  <div id="cur"><svg width="26" height="26" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.9L21 10.5z" fill="#fff" stroke="#10172b" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+ </div></div>
+ <div class="ctl"><button id="bP">Back</button><button id="bPl" class="main">Pause</button><button id="bN">Next</button><button id="bR">Restart</button><button id="bS">Sound on</button><button id="bC" class="hide">Next part &#8250;</button></div>
+ <div class="prog" id="prog"></div>
+</div>
+</main>
+<script src="shared/tutorial.js"></script>
+<script>
+/* Demo: Tech Fest 2026 (the same event as the invite-code and roles tutorials). Riya is the Organizer, Ananya is a payer.
+   Labels, rules and messages copy www/app2.js (payment links, Payments tab) and www/pay.html (the public payment page).
+   The QR below only holds the text "DEMO ONLY", so scanning it can never start a real payment. */
+const QR='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" shape-rendering="crispEdges"><path fill="#fff" d="M0 0h37v37h-37z"/><path class="qrline" stroke="#000" d="M4 4.5h7m2 0h1m1 0h4m1 0h2m1 0h2m1 0h7m-29 1h1m5 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h4m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m2 0h3m4 0h2m1 0h2m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h3m4 0h1m2 0h1m2 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h2m1 0h1m1 0h1m1 0h2m2 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m1 0h2m1 0h2m1 0h1m1 0h5m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-19 1h2m5 0h3m-20 1h1m2 0h1m1 0h2m1 0h3m1 0h1m3 0h3m1 0h2m1 0h1m-23 1h2m1 0h2m4 0h1m2 0h1m1 0h2m3 0h1m2 0h1m1 0h2m-25 1h1m3 0h1m2 0h1m1 0h1m1 0h2m4 0h1m2 0h2m1 0h3m-26 1h2m1 0h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h3m4 0h1m2 0h1m-29 1h3m3 0h4m2 0h1m1 0h2m2 0h1m4 0h3m1 0h1m-27 1h5m7 0h1m1 0h2m4 0h1m2 0h1m2 0h1m-28 1h1m1 0h2m2 0h3m1 0h1m1 0h9m1 0h1m2 0h3m-26 1h1m1 0h1m3 0h1m7 0h1m2 0h1m1 0h5m2 0h1m-29 1h1m2 0h1m2 0h1m3 0h1m1 0h2m2 0h2m1 0h1m1 0h1m1 0h2m1 0h2m-25 1h2m2 0h8m2 0h1m1 0h1m2 0h1m1 0h1m1 0h3m-29 1h1m2 0h2m1 0h3m3 0h1m1 0h1m3 0h1m2 0h2m2 0h4m-24 1h1m1 0h1m2 0h3m1 0h1m3 0h1m3 0h2m2 0h2m-28 1h1m1 0h1m2 0h2m2 0h4m2 0h1m4 0h5m3 0h1m-21 1h3m1 0h1m1 0h3m2 0h2m3 0h2m1 0h2m-29 1h7m2 0h1m2 0h1m3 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m-29 1h1m5 0h1m1 0h2m4 0h1m1 0h3m1 0h1m3 0h2m2 0h1m-29 1h1m1 0h3m1 0h1m2 0h1m6 0h2m2 0h5m1 0h1m-27 1h1m1 0h3m1 0h1m1 0h1m1 0h4m2 0h2m2 0h1m2 0h1m1 0h1m2 0h1m-29 1h1m1 0h3m1 0h1m4 0h3m1 0h1m3 0h3m2 0h2m2 0h1m-29 1h1m5 0h1m5 0h4m3 0h3m1 0h1m1 0h1m1 0h2m-29 1h7m1 0h2m1 0h2m2 0h2m1 0h1m2 0h4m1 0h1"/></svg>';
+const UTR='412398765432',FID='pl7k2m9xq4';
+const P={title:'Registration fee',amt:250,upi:'techfest@demobank',payee:'Tech Fest Committee',note:'Pay, then send your UTR',by:'Riya',until:'7 Nov 2026'};
+let TAB,FM,PL,SB,FIL;
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const inp=(k,ph)=>`<div class="in" id="${k}"><span class="v" data-ph="${ph}">${esc(F[k])}</span><i class="ca"></i></div>`;
+['pn','pa','pu'].forEach(k=>E[k].insertAdjacentHTML('afterbegin','<span class="v"></span><i class="ca"></i>'));
+E.p_qr.innerHTML=QR;
+const draw=k=>{const e=$('#'+k),v=e&&e.querySelector('.v');if(v)v.textContent=F[k]};
+/* ---- organiser screens ---- */
+function drawPL(){
+ const form=FM?`<div class="fp"><div><label class="first">Title *</label>${inp('lt','Registration fee, Donation')}</div><div><label>Amount in ₹ (blank for any)</label>${inp('la','')}</div><div><label>UPI ID *</label>${inp('lu','name@bank')}</div><div><label>Payee name *</label>${inp('lp','')}</div><div><label>Note shown to payers</label>${inp('ln','')}</div><div class="acts"><span class="btn" id="mk">Create link</span><span class="btn ghost" id="cx">Cancel</span></div></div>`:'';
+ const card=PL?`<div class="lc"><div class="sh" style="margin-bottom:4px"><h3>${P.title}</h3><span class="btn ghost sm del" style="margin:0">Delete</span></div><p class="meta" style="margin:0 0 8px" id="lexp">Amount: ₹${P.amt}, created by ${P.by}<br>Valid until ${P.until}</p><div class="qr" id="qr1">${QR}</div><p class="meta" style="margin:8px 0">UPI ID: <b>${P.upi}</b><br>Payee: <b>${P.payee}</b></p><div class="in lkin" id="lnk"><span class="v">https://cem.deba.indevs.in/pay.html?f=${FID}</span></div><div class="row" style="margin-top:8px"><span class="btn sm" id="cpl">Copy link</span><span class="btn ghost sm" id="shl">Share</span></div></div>`:'';
+ E.pl.innerHTML=`<div class="sh"><h3>Payment links (${PL?1:0})</h3><span class="btn sm" id="nl" style="margin:0">${FM?'Close form':'+ New link'}</span></div>${form}${!PL&&!FM?'<p class="meta" style="margin:0">No links yet.</p>':''}${card}`}
+function drawPAY(){
+ const s=SB,sum=k=>s&&s.s===k?s.a:0,ST={pending:'To check',verified:'Verified',rejected:'Rejected'},SC={pending:'warn',verified:'ok',rejected:'bad'};
+ E.pst.innerHTML=`<div class="stat"><b>₹${sum('verified')}</b><span>Verified</span></div><div class="stat"><b>₹${sum('pending')}</b><span>Waiting to be checked</span></div><div class="stat"><b>${s?1:0}</b><span>Submissions</span></div>`;
+ const pend=s&&s.s==='pending'?1:0,show=s&&(FIL==='all'||FIL===s.s);
+ const chips=[['all','All'],['pending','To check'],['verified','Verified'],['rejected','Rejected']].map(c=>`<span class="chip${FIL===c[0]?' on':''}" id="c_${c[0]}">${c[1]}</span>`).join('');
+ const row=show?`<div class="pli" id="row"><div class="main"><div class="ttl">${s.n}</div><div class="sub">${P.title}, ${s.d}, UTR ${s.utr}</div></div><span class="amt">₹${s.a}</span><span class="pill ${SC[s.s]}">${ST[s.s]}</span><div class="act">${s.s!=='verified'?'<span class="btn sm" id="vf">Verify</span>':''}${s.s!=='rejected'?'<span class="btn ghost sm" id="rj">Reject</span>':''}<span class="btn ghost sm del" id="dx">Delete</span></div></div>`:'';
+ E.pc.innerHTML=`<div class="sh"><h3>Payments received (${s?1:0})</h3>${pend?`<span class="pill warn">${pend} to check</span>`:''}</div>`+(s?`<div class="chips">${chips}</div>${row||'<p class="meta">Nothing in this filter.</p>'}`:'<p class="meta" style="margin:0">No payments yet.</p>')}
+function badge(){const n=SB&&SB.s==='pending'?1:0;E.t_pay.innerHTML='Payments'+(n?'<em class="hot" id="pb">'+n+'</em>':'')}
+function tabs(){E.det.classList.toggle('hide',TAB!=='det');E.inc.classList.toggle('hide',TAB!=='inc');E.pyt.classList.toggle('hide',TAB!=='pay');
+ E.t_det.className=TAB==='det'?'on':'';E.t_inc.className=TAB==='inc'?'on':'';E.t_pay.className=TAB==='pay'?'on':'';badge();E.body.scrollTop=0}
+/* the tab strip scrolls sideways, like the real one */
+async function tabTo(id){const el=E[id],c=E.tb;c.scrollTo({left:Math.max(0,el.offsetLeft-(c.clientWidth-el.offsetWidth)/2),behavior:fast?'auto':'smooth'});await W(fast?0:500)}
+/* ---- which screen is showing: organiser app, payer's web page, or the demo UPI app ---- */
+function view(v){E.org.classList.toggle('hide',v!=='ev');E.pg.classList.toggle('hide',v!=='pg');E.upi.classList.toggle('hide',v!=='upi');E.bb.classList.toggle('hide',v!=='pg');E.bn.classList.toggle('hide',v!=='ev');E.scr.classList.toggle('dk',v==='pg');E.body.classList.toggle('dkp',v==='pg')}
+function drawUPI(m){
+ const row=(a,b,id,cls)=>`<div class="ur"${id?` id="${id}"`:''}><span>${a}</span><b${cls?` class="${cls}"`:''}>${b}</b></div>`;
+ const det=`<div class="uc" style="margin-top:12px;padding:6px 18px">${row('Date','26 Oct 2026, 3:42 pm')}${row('Status','Success')}${row('UTR / transaction ID',UTR,'u_utr','utr')}</div>`;
+ E.ut.textContent=m==='pay'?'Pay':m==='done'?'Payment status':'Transaction details';
+ E.ub.innerHTML=m==='pay'?`<div class="uc"><i class="uav">T</i><div class="un">${P.payee}</div><div class="us">${P.upi}</div><div class="ua">₹${P.amt}</div><div class="us">${P.title} · read from the QR code</div></div><div class="go" id="u_pay">Pay ₹${P.amt}</div><p class="meta" style="text-align:center;margin-top:14px">Demo screen. No real money moves.</p>`
+ :m==='done'?`<div class="uc"><i class="uav ok">&#10003;</i><div class="un">Payment successful</div><div class="ua">₹${P.amt}</div><div class="us">Paid to ${P.payee}</div></div>${det}<p class="meta" style="text-align:center;margin-top:14px">Demo screen. No real money moves.</p>`
+ :`<div class="uc"><i class="uav ok">+</i><div class="un">Money received</div><div class="ua">+₹${P.amt}</div><div class="us">From Ananya Das</div></div>${det}<p class="meta" style="text-align:center;margin-top:14px">Demo screen. This is your bank or UPI app.</p>`}
+/* ---- keyboard, callouts and toast (same as the other tutorials) ---- */
+function keys(m){E.kb.innerHTML='<div class="tb"><span id="kbh"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7" fill="none" stroke="#5b6380" stroke-width="2.4" stroke-linecap="round"/></svg></span></div>'+(m==='num'?'<div class="np">'+'123456789'.split('').map(k=>`<b data-k="${k}">${k}</b>`).join('')+'<b></b><b data-k="0">0</b><b>&#9003;</b></div>':['1234567890','qwertyuiop','asdfghjkl','zxcvbnm'].map((r,i)=>`<div class="kr" style="padding:0 ${[0,0,16,36][i]}px">`+[...r].map(k=>`<b data-k="${k}">${k}</b>`).join('')+'</div>').join('')+'<div class="kr"><b style="flex:1.5">?123</b><b data-k="@">@</b><b data-k=",">,</b><b data-k=" " style="flex:5"></b><b data-k=".">.</b><b class="ok" style="flex:1.5">&#10003;</b></div>')}
+async function kbo(m){if(E.kb.classList.contains('up')){if(E.kb.dataset.m!==m){keys(m);E.kb.dataset.m=m}return}keys(m);E.kb.dataset.m=m;void E.kb.offsetWidth;E.kb.classList.add('up');E.scr.style.setProperty('--kb','270px');await W(380)}
+const unpop=()=>E.pop.classList.remove('on');
+function popAt(t,x,px,py){if(fast)return;const w=216,p=E.pop;p.innerHTML='<b>'+t+'</b>'+x;p.className='';const l=Math.max(24,Math.min(404-24-w,px-w/2));p.style.left=l+'px';p.style.setProperty('--ax',Math.max(14,Math.min(w-24,px-l-5))+'px');const h=p.offsetHeight,up=py>430;p.style.top=Math.max(44,Math.min(770-h,up?py-h-16:py+28))+'px';void p.offsetWidth;p.className='on '+(up?'dn2':'up')}
+async function sp(el,t,x,fx=.5,fy=.5,hold){if(el.closest('#body'))await see(el);el.classList.add('hl');const[px,py]=pt(el,fx,fy);await move(px,py);popAt(t,x,px,py);await W(hold||800+x.length*26);unpop();el.classList.remove('hl');await W(200)}
+async function tp(el,t,x,fx=.5,fy=.5,hold){if(el.closest('#body'))await see(el);el.classList.add('hl');const[px,py]=pt(el,fx,fy);await move(px,py);if(x){popAt(t,x,px,py);await W(hold||800+x.length*26);unpop()}await W(150);E.cur.classList.add('dn');rip(px,py);el.classList.add('tp');await W(170);E.cur.classList.remove('dn');el.classList.remove('tp','hl');await W(150)}
+const hideKb=async()=>{if(!E.kb.classList.contains('up'))return;await tp($('#kbh'));await kbc();foc(null)};
+const tst=async(t,ms=1500)=>{E.toast.textContent=t;E.toast.classList.add('on');snd('ok');await W(ms);E.toast.classList.remove('on')};
+/* keeps the target clear of the bottom menu (the shared version only knows the keyboard) */
+async function see(el){const b=E.body,r=el.getBoundingClientRect(),c=b.getBoundingClientRect(),s=S(),bi=(E.bn.classList.contains('hide')||E.kb.classList.contains('up'))?20:92;let d=0;if(r.bottom>c.bottom-bi*s)d=r.bottom-c.bottom+(bi+8)*s;else if(r.top<c.top+44*s)d=r.top-c.top-52*s;if(d<0&&b.scrollTop===0)d=0;if(d){b.scrollTo({top:b.scrollTop+d/s,behavior:fast?'auto':'smooth'});await W(fast?0:550)}}
+const nxt=()=>{if(T!==TC)E.bC.classList.remove('hide')};
+function reset(){
+ const m=T.m;
+ F={lt:'',la:'',lu:'',lp:'',ln:'',pn:'',pa:m==='B'?String(P.amt):'',pu:''};
+ FM=false;FIL='all';PL=m==='A'?null:P;SB=m==='C'?{n:'Ananya Das',a:P.amt,utr:UTR,s:'pending',d:'26 Oct'}:null;TAB='det';
+ ['pn','pa','pu'].forEach(draw);
+ E.p_fc.classList.remove('hide');E.p_ok.classList.add('hide');E.p_go.classList.remove('busy');
+ E.who.textContent=m==='B'?'Payer’s phone: Ananya · demo payment, no real money':'Organiser’s phone: Riya · Tech Fest 2026';
+ E.bC.classList.add('hide');E.scr.style.setProperty('--kb','0px');E.kb.className='kb';E.toast.classList.remove('on');unpop();foc(null);
+ document.querySelectorAll('.hl,.tp').forEach(e=>e.classList.remove('hl','tp'));
+ drawPL();drawPAY();E.tb.scrollLeft=0;
+ if(m==='B'){view('pg');E.splash.classList.remove('out')}else{view('ev');E.splash.classList.add('out')}
+ tabs();E.body.scrollTop=0;
+ cx=370;cy=730;E.cur.style.transitionDuration='0s';E.cur.style.transform=`translate(${cx}px,${cy}px)`}
+/* ================= Part 1: create the link ================= */
+const TA={m:'A',h:'Create a payment link',st:[
+{t:'Open the Income tab',d:'Open your event and tap the Income tab. Swipe the tab strip sideways if you cannot see it. Payment links are made here.',tip:'Income shows only for roles with the Money permission: Organizer, Manager and Treasurer. The event must be shared first (Details tab, Share with team).',run:async()=>{await W(900);await sp(E.cdb,'A shared event','KXMRTD is this event’s code. Payment links need a shared event, so share it first if you have not.',.5,.5,3000);await tabTo('t_inc');await tp(E.t_inc,'Income tab','Ticket income, sponsors and your payment links all live here.');TAB='inc';tabs();await W(600)}},
+{t:'Find the Payment links card',d:'Scroll down past Break-even and Sponsors. The Payment links card says how many links you have. Right now there are none.',tip:'Seeing “Set your public site address first”? Save your website address once in that box, or under Link settings. On the Campus Events website it is already set.',run:async()=>{await W(500);await sp(E.pl,'Payment links (0)','Make a link for a registration fee or a donation. Anyone with the link can pay, no account needed.',.5,.1)}},
+{t:'Tap “+ New link”',d:'Tap + New link. A form opens inside the card.',tip:'Nothing is created until you tap Create link. Tap Cancel or Close form to back out.',run:async()=>{await tp($('#nl'),'+ New link','Opens the payment link form inside this card.');FM=true;drawPL();await W(600)}},
+{t:'Name the link and set the amount',d:'Type a Title that payers will see, for example Registration fee. Then type the Amount in rupees, or leave it blank to let payers choose.',tip:'A fixed amount is shown big on the payment page and is filled in for the payer. Leave it blank for donations: the page then says Any amount.',run:async()=>{await tp($('#lt'),'Title','What payers will see, for example Registration fee or Donation.');foc('lt');await kbo('text');await see($('#lt'));await W(250);await type('lt','Registration fee');await W(400);await tp($('#la'),'Amount in ₹','Fixed amounts are filled in for the payer. Leave it blank for any amount.');foc('la');await kbo('num');await see($('#la'));await type('la','250');await W(400);await hideKb()}},
+{t:'Add the UPI ID and payee name',d:'Type the UPI ID where the money should arrive and the Payee name payers should see. Add a short note for payers if you like.',tip:'Use a UPI ID you control. Money goes straight there; the app only records what payers tell you. UPI ID and payee are filled in for you if you saved them in Attendees, Registration, Price and settings.',run:async()=>{await tp($('#lu'),'UPI ID','Where the money lands, like name@bank. Use one you control.');foc('lu');await kbo('text');await see($('#lu'));await type('lu',P.upi);await W(300);await tp($('#lp'));foc('lp');await see($('#lp'));await type('lp',P.payee);await W(300);await tp($('#ln'),'Note (optional)','A short line payers see under the title.');foc('ln');await see($('#ln'));await type('ln',P.note);await W(500);await hideKb()}},
+{t:'Tap “Create link”',d:'Tap Create link. The card now shows your link with its QR code, the amount, the UPI ID and the date it stops working.',tip:'A link stops working at the end of the event day (here 7 Nov 2026). Link settings can keep it open for up to 30 extra days.',run:async()=>{await tp($('#mk'),'Create link','Saves the link and makes its QR code.');PL=P;FM=false;drawPL();await tst('Payment link created',1400);await sp($('#qr1'),'The QR code','Payers scan it with any UPI app. It carries your UPI ID, payee name and the amount.',.5,.5,3000);await sp($('#lexp'),'Valid until','After this date the link says it has expired.',.5,.7,2200)}},
+{t:'Copy or share the link',d:'Tap Copy link to copy the web address, or Share to send it through WhatsApp or any app. Payers can also just scan the QR code.',tip:'The app says “Code copied” even when you copy a link. The link is what was copied. Paste it into your event group, an email or a poster.',run:async()=>{await tp($('#cpl'),'Copy link','Copies the address so you can paste it anywhere.');await tst('Code copied',1300);await sp($('#shl'),'Share','Opens your phone’s share sheet. Pick WhatsApp, email or any app.',.5,.5);nxt()}}]};
+/* ================= Part 2: demo payment ================= */
+const TB={m:'B',h:'Pay it as a demo payer',st:[
+{t:'Open the payment link',d:'The payer taps the link or scans the QR code. The Campus Events payment page opens in the browser. No account and no app are needed.',tip:'Seeing “This payment link has expired”? The event day is over. Ask the organisers to keep links open longer or to make a new link.',run:async()=>{await W(2000);E.splash.classList.add('out');await W(700);await sp(E.bu,'The link','This is the address that was copied: pay.html and the link’s own 12-character code.',.5,.5,2800)}},
+{t:'Check the amount and who you pay',d:'The top card shows the event, what you are paying for and the amount. Check the Pay to name and UPI ID before you pay.',tip:'If the organiser left the amount blank, the page says Any amount and you type how much you paid.',run:async()=>{await sp(E.p_amt,'₹250','The organiser set a fixed amount for this link.',.5,.5);await sp(E.p_det,'Pay to','Make sure the payee name and UPI ID match your event.',.5,.5)}},
+{t:'Pay with any UPI app (demo)',d:'Step 1 on the page: pay with a UPI app. Scan the QR from another screen, or tap Save QR image and pick it from your gallery inside the app. Our demo app pays ₹250.',tip:'No real money moves in this tutorial. The QR in these screens is a demo and cannot start a payment. On a real phone you confirm with your UPI PIN.',run:async()=>{await sp(E.p_qr,'Step 1: pay','Scan this QR with any UPI app.',.5,.5);await tp(E.p_dl,'Save QR image','On the same phone? Save the image, then choose it from the gallery inside your UPI app.');view('upi');drawUPI('pay');await W(900);await sp($('#ub .uc'),'Demo UPI app','It read the QR and filled in the payee, the UPI ID and ₹250.',.5,.45,2800);await tp($('#u_pay'),'Pay','In a real app you now confirm with your UPI PIN.');drawUPI('done');snd('ok');await W(900)}},
+{t:'Note the UTR',d:'When the payment succeeds, the UPI app shows a transaction ID. It is also called the UTR or reference number. Note it down, you need it in the next step.',tip:'A UTR is usually 12 digits. If you lose it, find it again in the history of your UPI app.',run:async()=>{await sp($('#u_utr'),'UTR','Also called the transaction ID or reference number. Every payment has its own.',.7,.5,3200)}},
+{t:'Enter your details',d:'Back on the payment page, step 2: type your name, check the amount paid, then type the UTR.',tip:'Name and amount are required. The UTR needs at least 6 letters or numbers; capitals are added and spaces removed for you.',run:async()=>{view('pg');await W(700);await tp(E.pn,'Your name','As you want the organisers to see it.');foc('pn');await kbo('text');await see(E.pn);await type('pn','Ananya Das');await W(300);await hideKb();await sp(E.pa,'Amount paid','Already filled in because the link has a fixed amount. Change it if you paid something else.',.5,.5);await tp(E.pu,'UTR','Type the UTR from the success screen.');foc('pu');await kbo('num');await see(E.pu);await type('pu',UTR);await W(500);await hideKb()}},
+{t:'Submit payment details',d:'Tap Submit payment details. A thank-you message confirms that the organisers received your details.',tip:'Each UTR can be sent only once, so the same reference twice is refused. The organisers still have to verify it, which comes next.',run:async()=>{await tp(E.p_go,'Submit','Sends your name, amount and UTR to the organisers.');E.p_go.classList.add('busy');await W(900);E.p_fc.classList.add('hide');E.p_ok.classList.remove('hide');E.p_ok.querySelector('.h1').textContent='Thank you, '+F.pn;E.p_ok.querySelector('.meta').textContent='We received your details for ₹'+F.pa+' (reference '+F.pu+'). The organizers will verify your payment.';snd('ok');await W(500);await sp(E.p_ok,'Sent','The organisers can now see it. Nothing more to do for the payer.',.5,.4,2800);nxt()}}]};
+/* ================= Part 3: verify it ================= */
+const TC={m:'C',h:'Check and verify the payment',st:[
+{t:'Spot the badge on Payments',d:'Back on the organiser’s phone, the Payments tab shows an amber number: payments waiting to be checked. Tap the tab.',tip:'Details arrive as soon as a payer submits them. Each one starts as To check.',run:async()=>{await W(900);await tabTo('t_pay');await sp($('#pb'),'1 to check','The amber number counts payments waiting for you. Ananya’s just arrived.',.5,.5,2800);await tp(E.t_pay,'Payments tab','Everything people paid through your links is listed here.');TAB='pay';tabs();await W(600)}},
+{t:'Read the payment',d:'Waiting to be checked shows ₹250. Under Payments received you see the name, link title, date, UTR and amount. The yellow label says To check.',tip:'Nothing is counted as received until you verify it.',run:async()=>{await sp($('#pst .stat:nth-child(2)'),'Waiting to be checked','₹250 stays here until you verify or reject it.',.5,.5);await sp($('#row'),'Ananya Das','Name, link title, date and UTR, then the amount and its label.',.5,.4,3200)}},
+{t:'Check it in your bank or UPI app',d:'Open your own bank or UPI app and look for a credit of ₹250 with the same UTR. Only when both match is the payment real.',tip:'Never verify from a payer’s word or a screenshot alone. A fake screenshot is easy; money in your account is not.',run:async()=>{await W(500);view('upi');drawUPI('hist');await W(900);await sp($('#u_utr'),'Same UTR, same amount','Find a credit of ₹250 with this exact UTR in your own account.',.7,.5,3200);view('ev');await W(700)}},
+{t:'Tap Verify',d:'Back in Campus Events, tap Verify on the payment. The label turns green and says Verified.',tip:'Verified money is added to the green Verified total at the top. Verifying needs the Payments and online registration permission (Organizer, Manager, Treasurer).',run:async()=>{await tp($('#vf'),'Verify','Confirms the money reached your account.');SB.s='verified';drawPAY();badge();snd('ok');await W(500);await sp($('#pst .stat:first-child'),'₹250 verified','The Verified total now includes it and the amber badge has gone.',.5,.5,3000)}},
+{t:'Filter the list',d:'Tap To check, Verified or Rejected above the list to see only those payments. To check is empty now. Tap All to see everything again.',tip:'The To check filter is a quick to-do list: it shows only the payments you still have to look at.',run:async()=>{await tp($('#c_pending'),'To check','Only payments still waiting. None left, so the list is empty.');FIL='pending';drawPAY();await W(900);await tp($('#c_verified'),'Verified','Payments you have already checked.');FIL='verified';drawPAY();await W(900);await tp($('#c_all'));FIL='all';drawPAY();await W(500)}},
+{t:'Reject or delete if something is wrong',d:'If the UTR is not in your bank or UPI app, tap Reject instead of Verify. Delete removes the entry completely.',tip:'You can still Reject a verified payment if you find a mistake later. Export data on the Details tab includes payments as CSV.',run:async()=>{await sp($('#rj'),'Reject','Use it when the UTR or the amount does not match your bank. Tell the payer yourself.',.5,.5,3200);await sp($('#dx'),'Delete','Removes the entry for good. Verify and Reject keep a record.',.5,.5,2600)}}]};
+const PARTS={A:TA,B:TB,C:TC};
+function mount(n){T=PARTS[n];['A','B','C'].forEach(k=>E['t'+k].className=k===n?'on':'');E.h.textContent=T.h;E.steps.innerHTML=T.st.map((s,k)=>`<li data-n="${k+1}"><b>${s.t}</b><p>${s.d}</p></li>`).join('');E.prog.innerHTML=T.st.map(()=>'<i></i>').join('')}
+E.tC.onclick=()=>{mount('C');play(0)};E.bC.onclick=()=>{mount(T===TA?'B':'C');play(0)};
+addEventListener('resize',fit);fit();mount('A');play(0);
+</script></body></html>
