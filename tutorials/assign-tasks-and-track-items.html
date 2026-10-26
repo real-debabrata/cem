@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to assign tasks and track items to buy | Campus Events tutorial</title>
+<meta name="description" content="Make a task group, give a task to a teammate, add an item to buy, then tick things off and watch the progress bar.">
+<meta name="keywords" content="tasks, assign task, task group, items to buy, shopping list, due date, brief, bought, progress, my tasks, budget, volunteer, team lead, logistics">
+<link rel="preload" href="../fonts/bricolage-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/figtree-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="shared/tutorial.css">
+<style>
+:root{--ok:#087a62;--bad:#c2331f;--warn:#a4610a}
+.seg{grid-template-columns:repeat(3,auto)}.seg button{padding:9px 13px}
+#who{width:max-content;max-width:100%;margin:0 auto 10px;background:rgba(255,255,255,.1);border-radius:99px;padding:4px 14px;font-size:13px;color:#c6c9e0}
+#bC{background:#35c9a5;border-color:#35c9a5;color:#10172b}
+.tabs{display:flex;gap:6px;padding:0 20px;overflow:hidden;margin-top:4px}.tabs span{flex:none;white-space:nowrap;padding:7px 13px;border-radius:99px;font-size:13px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--mute);transition:transform .12s}.tabs .on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tabs em{display:inline-block;font-style:normal;font-size:11px;font-weight:700;line-height:17px;min-width:17px;padding:0 5px;margin-left:6px;border-radius:9px;text-align:center;background:var(--amb);color:#10172b}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:12px 0 0;font-size:14px}.kv dt{color:var(--mute)}.kv dd{margin:0;font-weight:600}
+#body .card{padding:18px}.sh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}.sh h3{font-size:19px}
+.row{display:flex;gap:8px;align-items:center}.row .btn,.t2 .btn,.acts .btn{margin:0}
+.btn{transition:transform .12s}.btn.ghost{background:none;color:var(--ink);border:1px solid var(--line)}.btn.del{color:var(--bad)}
+.pill{display:inline-flex;font-size:12px;font-weight:700;line-height:1.5;padding:1px 9px;border-radius:20px;white-space:nowrap;background:rgba(98,106,134,.16);color:var(--mute)}.pill.ok{background:rgba(8,122,98,.16);color:var(--ok)}.pill.bad{background:rgba(194,51,31,.16);color:var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 11px;font-weight:600;font-size:13px;color:var(--mute);transition:transform .12s}.chip.on{background:rgba(89,72,245,.09);border-color:transparent;color:var(--acc)}
+.fp{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}.fp .in{background:#fff}.fp label{margin:10px 0 4px}.fp label.first{margin-top:0}.acts{display:flex;gap:8px;margin-top:14px}
+.ta2{height:auto;min-height:64px;align-items:flex-start;padding:12px 13px;white-space:normal}
+.sw{position:relative}.chev{margin-left:auto;color:var(--mute)}
+.dd{position:absolute;left:0;right:0;top:50px;z-index:12;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 28px rgba(16,23,43,.25);overflow:hidden}.op{padding:11px 13px;border-bottom:1px solid var(--line);transition:transform .12s}.op:last-child{border:0}
+.tkr{padding:10px 0;border-bottom:1px solid var(--line)}.tkr:last-child{border:0}.t1{display:flex;align-items:flex-start;gap:10px}
+.tkr input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:var(--acc);transition:transform .12s}.tt{flex:1;min-width:0;font-weight:500}.tt.dn{text-decoration:line-through;color:var(--mute)}.amt{font-weight:700;white-space:nowrap}
+.t2{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:6px;font-size:13px;color:var(--mute)}.ta{display:flex;gap:6px;margin-left:auto}
+.tdb{margin-top:6px;padding:8px 10px;background:var(--bg);border-left:3px solid var(--acc);border-radius:6px;font-size:14px}
+.li{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;padding:9px 0;border-bottom:1px solid var(--line)}.li .main{flex:1 1 120px}.ttl{font-weight:600}.sub{color:var(--mute);font-size:13px}
+.lk{display:inline-block;color:var(--acc);font-weight:600;font-size:13px;transition:transform .12s}
+.v:empty:before{content:attr(data-ph);color:#b4b9cf}
+#toast{position:absolute;left:50%;bottom:92px;z-index:30;transform:translate(-50%,20px);opacity:0;transition:.3s;background:var(--ink);color:#fff;padding:9px 16px;border-radius:99px;font-weight:600;font-size:13px;white-space:nowrap}#toast.on{transform:translate(-50%,0);opacity:1}
+#pop{position:absolute;z-index:21;width:216px;background:var(--ink);color:#fff;border:1.5px solid var(--amb);border-radius:12px;padding:9px 11px;font:500 12.5px/1.4 var(--t);box-shadow:0 10px 28px rgba(0,0,0,.45);opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;pointer-events:none}
+#pop.on{opacity:1;transform:none}#pop b{display:block;color:var(--amb);font-size:12px;margin-bottom:2px}
+#pop:after{content:"";position:absolute;left:var(--ax,20px);width:10px;height:10px;background:var(--ink);border:0 solid var(--amb)}
+#pop.up:after{top:-6px;border-width:1.5px 0 0 1.5px;transform:rotate(45deg)}#pop.dn2:after{bottom:-6px;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><symbol id="lg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#5948F5"/><path fill="#F6F7FB" transform="translate(136.4 105.2) scale(1.3)" d="M34 0 H160 A24 24 0 0 1 184 24 A24 24 0 0 1 160 48 H62 A14 14 0 0 0 48 62 V78 A14 14 0 0 0 62 92 H160 A24 24 0 0 1 184 116 A24 24 0 0 1 160 140 H62 A14 14 0 0 0 48 154 V170 A14 14 0 0 0 62 184 H160 A24 24 0 0 1 184 208 A24 24 0 0 1 160 232 H34 A34 34 0 0 1 0 198 V34 A34 34 0 0 1 34 0 Z"/></symbol></svg>
+<main class="page">
+<div class="info">
+ <div class="hd"><div class="brand"><svg viewBox="0 0 512 512"><use href="#lg"/></svg>Campus Events<em>Tutorial</em></div>
+  <div class="seg"><button id="tA" class="on">1 Assign a task</button><button id="tB">2 Add an item</button><button id="tC">3 Keep track</button></div>
+  <h1 id="h"></h1></div>
+ <div class="sl"><ol id="steps"></ol><p id="tip"></p></div>
+</div>
+<div class="stage">
+ <div id="who"></div>
+ <div class="fitbox" id="fb"><div class="phone" id="ph">
+  <div class="scr" id="scr">
+   <div class="sbar"><span>9:41</span><i class="cam"></i><span class="sig">5G<i class="bat"></i></span></div>
+   <div id="body">
+    <div class="dh"><div class="b2"><svg viewBox="0 0 512 512"><use href="#lg"/></svg>Campus Events</div><i class="av">R</i></div>
+    <div class="tabs" id="tb"><span id="t_det" class="on">Details</span><span>Attendees</span><span id="t_tk">Tasks</span><span>People</span><span>Payments</span><span>Income</span><span>Expenses</span><span>Chat</span></div>
+    <div id="det"><div class="card" style="border-left:6px solid #d9482b"><span class="tag" style="color:#d9482b;background:#d9482b1a">Fest</span><h3 style="margin-top:8px">Tech Fest 2026</h3><dl class="kv"><dt>Date</dt><dd>7 Nov 2026</dd><dt>Venue</dt><dd>Main Auditorium</dd></dl></div></div>
+    <div id="tk" class="hide"></div>
+   </div>
+   <div id="bn"><span>Dashboard</span><span class="on">Events</span><span>My tasks</span><span>New event</span></div>
+   <div id="toast"></div>
+   <div class="kb" id="kb"></div>
+   <i class="home"></i>
+  </div>
+  <div id="pop"></div>
+  <div id="cur"><svg width="26" height="26" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.9L21 10.5z" fill="#fff" stroke="#10172b" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+ </div></div>
+ <div class="ctl"><button id="bP">Back</button><button id="bPl" class="main">Pause</button><button id="bN">Next</button><button id="bR">Restart</button><button id="bS">Sound on</button><button id="bC" class="hide">Next part &#8250;</button></div>
+ <div class="prog" id="prog"></div>
+</div>
+</main>
+<script src="shared/tutorial.js"></script>
+<script>
+/* Demo: Tech Fest 2026, the same event as the other tutorials. Riya is the Organizer; Arjun and Meera are teammates.
+   Labels and rules copy www/app2.js (task groups, tasks) and www/expenses.js (Items to buy). */
+const ME='Riya Sen',PPL=[ME,'Arjun Rao','Meera Iyer'],CATS=['No category','Decor','Sound and AV','Food'];
+const BRIEF='Call Sharma Sound. Ask for 2 mics and a mixer.';
+let TAB,GR,GF,TF,IF,BX,FIL,XW,DD,TK,IT;
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const R=n=>'₹'+n.toLocaleString('en-IN'),sum=(l,k)=>l.reduce((a,i)=>a+(i[k]||0),0);
+const draw=k=>{const e=$('#'+k),v=e&&e.querySelector('.v');if(v)v.textContent=F[k]};
+const inp=(k,ph,c='',st='')=>`<div class="in ${c}" id="${k}" style="${st}"><span class="v" data-ph="${ph}">${esc(F[k])}</span><i class="ca"></i></div>`;
+const sel=(k,o)=>`<div class="sw"><div class="in" id="${k}"><span class="v">${esc(F[k])}</span><i class="chev">▾</i></div>${DD===k?`<div class="dd">${o.map((x,n)=>`<div class="op" id="${k}${n}">${esc(x)}</div>`).join('')}</div>`:''}</div>`;
+const due=k=>k.d?(!k.done&&k.late?`<span class="pill bad">Was due ${k.d}</span>`:`<span>Due ${k.d}</span>`):'';
+const trow=(k,i)=>`<div class="tkr"><div class="t1"><input type="checkbox" id="ck${i}" ${k.done?'checked':''}><span class="tt ${k.done?'dn':''}">${esc(k.t)}</span></div><div class="t2"><span>${k.w}</span>${due(k)}<span class="ta">${k.x?`<span class="btn ghost sm" id="bf${i}">Brief ${k.o?'▴':'▾'}</span>`:''}<span class="btn ghost sm del">Delete</span></span></div>${k.o?`<div class="tdb" id="bd${i}">${esc(k.x)}</div>`:''}</div>`;
+const irow=(i,n)=>`<div class="tkr"><div class="t1"><input type="checkbox" id="ib${n}" ${i.b?'checked':''}><span class="tt ${i.b?'dn':''}">${esc(i.t)}${i.q>1?' ×'+i.q:''}</span><span class="amt">${i.b?R(i.ac):'est. '+R(i.p)}</span></div><div class="t2"><span>${i.w}</span>${i.c!==CATS[0]?`<span class="pill">${i.c}</span>`:''}${i.b?'<span class="pill ok">Bought</span>':''}<span class="ta"><span class="btn ghost sm del">Delete</span></span></div>${BX===n&&!i.b?`<div class="fp row">${inp('ac','What did it cost? ₹','','width:170px')}<span class="btn sm" id="cb">Confirm bought</span></div>`:''}</div>`;
+function drawT(){
+ const bn=IT.filter(i=>i.b).length,done=TK.filter(k=>k.done).length+bn,tot=TK.length+IT.length,p=tot?Math.round(done/tot*100):0;
+ const ok=k=>FIL==='all'||FIL==='mine'||(FIL==='open'?!(k.done||k.b):!!(k.done||k.b));
+ const vt=TK.map((k,i)=>ok(k)?trow(k,i):'').join(''),vi=IT.map((k,n)=>ok(k)?irow(k,n):'').join('');
+ const gform=GF?`<div class="fp row" style="margin-top:12px">${inp('g','Group name, e.g. Logistics','','flex:1')}<span class="btn sm" id="ga">Add group</span></div>`:'';
+ const tform=`<div class="fp"><label class="first">Task *</label>${inp('t','What needs to be done?')}<label>Assign to</label>${sel('w',PPL)}<label>Due date</label>${inp('d','dd/mm/yyyy')}<label>Brief (optional)</label>${inp('x','Steps, links, deadlines...','ta2')}<div class="acts"><span class="btn" id="mk">Add task</span><span class="btn ghost">Cancel</span></div></div>`;
+ const iform=`<div class="fp"><label class="first">Item *</label>${inp('it','Banner, 3 x 6 ft')}<label>Quantity</label>${inp('q','')}<label>Estimated cost in ₹ (whole line)</label>${inp('p','')}<label>Allocate to</label>${sel('iw',['Unassigned',...PPL])}<label>Budget category</label>${sel('ic',CATS)}<div class="acts"><span class="btn" id="mi">Add item</span><span class="btn ghost">Close</span></div></div>`;
+ const by={};IT.forEach(i=>(by[i.w]=by[i.w]||[]).push(i));
+ const who=Object.keys(by).map(k=>{const l=by[k],b=l.filter(i=>i.b);return `<div class="li"><div class="main"><div class="ttl">${k}</div><div class="sub">${l.length} item${l.length>1?'s':''}, ${b.length} bought</div></div><span class="sub">To buy ${R(sum(l.filter(i=>!i.b),'p'))}, spent ${R(sum(b,'ac'))}</span></div>`}).join('');
+ E.tk.innerHTML=`<div class="card" id="sum"><div class="sh"><h3>Tasks and items to buy</h3><span class="meta">${done} of ${tot} done</span></div><div class="bar"><i style="width:${p}%"></i></div>
+ <div class="chips">${[['all','All'],['mine','Mine and my team'],['open','To do'],['done','Done']].map(c=>`<span class="chip${FIL===c[0]?' on':''}" id="f_${c[0]}">${c[1]}</span>`).join('')}</div>
+ ${GR?`<div class="row" style="margin-top:12px"><span class="btn ghost sm" id="ng">${GF?'Close':'+ New group'}</span><span class="btn ghost sm">Add standard groups</span></div>`:''}${gform}</div>
+ ${GR?`<div class="card"><div class="sh"><h3>${GR}</h3><div class="row"><span class="meta">${TK.filter(k=>k.done).length} of ${TK.length} done</span><span class="btn ghost sm del">Delete group</span></div></div>${vt||'<p class="meta" style="margin:0">No tasks here yet.</p>'}${TF?tform:'<div style="margin-top:8px"><span class="btn ghost sm" id="at">+ Add task</span></div>'}</div>`
+ :`<div class="empty" id="emp" style="margin:14px 20px 0"><p style="margin:0 0 10px">No task groups yet.</p><div class="row" style="justify-content:center"><span class="btn">Add standard groups</span><span class="btn ghost" id="ng2">New group</span></div></div>`}
+ <div class="card" id="icard"><div class="sh"><h3>Items to buy</h3><div class="row"><span class="meta">${bn} of ${IT.length} bought</span><span class="btn ghost sm" id="ai">${IF?'Close form':'+ Add item'}</span></div></div>${IF?iform:''}${vi||`<p class="meta" style="margin:8px 0 0">${IT.length?'Nothing in this filter.':'No items yet.'}</p>`}
+ ${IT.length?`<p class="meta" id="est" style="margin:10px 0 0">Still to buy (estimate): <b>${R(sum(IT.filter(i=>!i.b),'p'))}</b>. Spent on bought items: <b>${R(sum(IT.filter(i=>i.b),'ac'))}</b>.</p><div style="margin-top:6px"><span class="lk" id="xw">${XW?'Hide':'Show'} who is buying what</span></div>${XW?`<div id="xwl">${who}</div>`:''}`:''}</div>`;
+ const n=TK.filter(k=>!k.done).length+IT.filter(i=>!i.b).length;E.t_tk.innerHTML='Tasks'+(n?`<em>${n}</em>`:'')}
+function tabs(){E.det.classList.toggle('hide',TAB!=='det');E.tk.classList.toggle('hide',TAB!=='tk');E.t_det.className=TAB==='det'?'on':'';E.t_tk.className=TAB==='tk'?'on':'';E.body.scrollTop=0}
+/* ---- keyboard, callouts, toast (same helpers as the other tutorials) ---- */
+function keys(m){E.kb.innerHTML='<div class="tb"><span id="kbh"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7" fill="none" stroke="#5b6380" stroke-width="2.4" stroke-linecap="round"/></svg></span></div>'+(m==='num'?'<div class="np">'+'123456789'.split('').map(k=>`<b data-k="${k}">${k}</b>`).join('')+'<b></b><b data-k="0">0</b><b>&#9003;</b></div>':['1234567890','qwertyuiop','asdfghjkl','zxcvbnm'].map((r,i)=>`<div class="kr" style="padding:0 ${[0,0,16,36][i]}px">`+[...r].map(k=>`<b data-k="${k}">${k}</b>`).join('')+'</div>').join('')+'<div class="kr"><b style="flex:1.5">?123</b><b data-k=",">,</b><b data-k=" " style="flex:5"></b><b data-k=".">.</b><b class="ok" style="flex:1.5">&#10003;</b></div>')}
+async function kbo(m){if(E.kb.classList.contains('up')){if(E.kb.dataset.m!==m){keys(m);E.kb.dataset.m=m}return}keys(m);E.kb.dataset.m=m;void E.kb.offsetWidth;E.kb.classList.add('up');E.scr.style.setProperty('--kb','270px');await W(380)}
+const unpop=()=>E.pop.classList.remove('on');
+function popAt(t,x,px,py){if(fast)return;const w=216,p=E.pop;p.innerHTML='<b>'+t+'</b>'+x;p.className='';const l=Math.max(24,Math.min(404-24-w,px-w/2));p.style.left=l+'px';p.style.setProperty('--ax',Math.max(14,Math.min(w-24,px-l-5))+'px');const h=p.offsetHeight,up=py>430;p.style.top=Math.max(44,Math.min(770-h,up?py-h-16:py+28))+'px';void p.offsetWidth;p.className='on '+(up?'dn2':'up')}
+async function sp(el,t,x,fx=.5,fy=.5,hold){if(el.closest('#body'))await see(el);el.classList.add('hl');const[px,py]=pt(el,fx,fy);await move(px,py);popAt(t,x,px,py);await W(hold||800+x.length*26);unpop();el.classList.remove('hl');await W(200)}
+async function tp(el,t,x,fx=.5,fy=.5,hold){if(el.closest('#body'))await see(el);el.classList.add('hl');const[px,py]=pt(el,fx,fy);await move(px,py);if(x){popAt(t,x,px,py);await W(hold||800+x.length*26);unpop()}await W(150);E.cur.classList.add('dn');rip(px,py);el.classList.add('tp');await W(170);E.cur.classList.remove('dn');el.classList.remove('tp','hl');await W(150)}
+const hideKb=async()=>{if(!E.kb.classList.contains('up'))return;await tp($('#kbh'));await kbc();foc(null)};
+const tst=async(t,ms=1500)=>{E.toast.textContent=t;E.toast.classList.add('on');snd('ok');await W(ms);E.toast.classList.remove('on')};
+async function see(el){const b=E.body,r=el.getBoundingClientRect(),c=b.getBoundingClientRect(),s=S(),bi=E.kb.classList.contains('up')?20:92;let d=0;if(r.bottom>c.bottom-bi*s)d=r.bottom-c.bottom+(bi+8)*s;else if(r.top<c.top+44*s)d=r.top-c.top-52*s;if(d<0&&b.scrollTop===0)d=0;if(d){b.scrollTo({top:b.scrollTop+d/s,behavior:fast?'auto':'smooth'});await W(fast?0:550)}}
+const nxt=()=>{if(T!==TC)E.bC.classList.remove('hide')};
+/* tap a drop-down, then tap one of its choices */
+async function pick(k,n,t,x){await tp($('#'+k),t,x);DD=k;drawT();await W(450);const o=$('#'+k+n);await tp(o);F[k]=o.textContent;DD=null;drawT();await W(300)}
+/* a text field: tap it, type, keep the keyboard for the next field */
+async function fill(k,txt,t,x,m='text'){await tp($('#'+k),t,x);foc(k);await kbo(m);await see($('#'+k));await W(200);await type(k,txt);await W(300)}
+const T1={t:'Book the sound system',w:'Arjun Rao',d:'5 Nov',x:BRIEF};
+function reset(){
+ const m=T.m;
+ F={g:'',t:'',w:ME,d:'',x:'',it:'',q:'1',p:'',iw:'Unassigned',ic:CATS[0],ac:''};
+ GR=m==='A'?null:'Logistics';GF=TF=IF=XW=false;BX=-1;DD=null;FIL='all';TAB=m==='A'?'det':'tk';
+ TK=m==='A'?[]:m==='B'?[{...T1}]:[{...T1},{t:'Collect extension boards',w:'Arjun Rao',d:'25 Oct',late:1},{t:'Print entry signs',w:'Meera Iyer',d:'2 Nov'}];
+ IT=m==='C'?[{t:'Banner, 3 x 6 ft',q:2,p:1200,w:'Meera Iyer',c:'Decor'},{t:'Extension boards',q:4,p:800,w:'Arjun Rao',c:'Sound and AV'}]:[];
+ E.who.textContent='Organiser’s phone: Riya · Tech Fest 2026';
+ E.bC.classList.add('hide');E.scr.style.setProperty('--kb','0px');E.kb.className='kb';E.toast.classList.remove('on');unpop();foc(null);
+ document.querySelectorAll('.hl,.tp').forEach(e=>e.classList.remove('hl','tp'));
+ drawT();tabs();cx=370;cy=730;E.cur.style.transitionDuration='0s';E.cur.style.transform=`translate(${cx}px,${cy}px)`}
+/* ================= Part 1: assign a task ================= */
+const TA={m:'A',h:'Give a task to a teammate',st:[
+{t:'Open the Tasks tab',d:'Open your event and tap the Tasks tab. It holds task groups, tasks and the Items to buy list.',tip:'The amber number on the tab counts tasks and items still open. Everyone in the event can see this tab.',run:async()=>{await W(900);await tp(E.t_tk,'Tasks tab','Task groups, tasks and items to buy all live here.');TAB='tk';tabs();await W(600);await sp($('#emp'),'No groups yet','Tasks sit inside groups, such as Logistics or Marketing.',.5,.4,2800)}},
+{t:'Create a task group',d:'Tap New group, type a name such as Logistics, then tap Add group. Groups keep tasks tidy.',tip:'Roles with Manage tasks (Organizer, Manager, Team lead, Coordinator, Logistics lead) make groups. Add standard groups creates Logistics, Marketing, Finance, Hospitality and Tech and AV in one tap.',run:async()=>{await tp($('#ng2'),'New group','Or tap Add standard groups for ready-made ones.');GF=true;drawT();await W(400);await fill('g','Logistics','Group name','Short and clear, like Logistics.');await hideKb();await tp($('#ga'),'Add group');GR='Logistics';GF=false;drawT();await tst('Group added',1300)}},
+{t:'Tap “+ Add task”',d:'Inside the Logistics group, tap + Add task. A short form opens.',tip:'Members without Manage tasks can still add tasks for themselves and for people who report to them.',run:async()=>{await tp($('#at'),'+ Add task','Opens the form inside this group.');TF=true;drawT();await W(500)}},
+{t:'Write the task',d:'Type what needs to be done. Keep it short and start with a verb.',tip:'The title can have up to 120 characters. Nothing is saved until you tap Add task.',run:async()=>{await fill('t','Book the sound system','Task','What needs doing, in a few words.');await hideKb()}},
+{t:'Choose who does it, and when',d:'Open Assign to and pick a teammate. Then enter a due date.',tip:'The list also has people without the app (People tab, + Add person), so volunteers can get tasks too. On a phone the date field opens a date picker. A due date is optional.',run:async()=>{await pick('w',1,'Assign to','Everyone in the event, plus volunteers you added by hand.');await fill('d','05/11/2026','Due date','Optional. Late tasks later show a red label.','num');await hideKb()}},
+{t:'Add a brief (optional)',d:'Use the Brief box for steps, links or deadlines, so the person knows exactly what to do.',tip:'A brief can hold up to 600 characters. Add or change it later with + Brief on the task.',run:async()=>{await fill('x',BRIEF,'Brief','Anything the assignee should know.');await hideKb()}},
+{t:'Tap “Add task”',d:'Tap Add task. The task appears in the group with the person’s name and the due date.',tip:'The person is alerted and finds the task under My tasks in the top menu, across all their events.',run:async()=>{await tp($('#mk'),'Add task','Saves the task and gives it to Arjun.');TK.push({...T1,w:F.w});TF=false;drawT();await tst('Task added',1300);await sp($('.tkr'),'Arjun is alerted','He gets a notification and sees it in My tasks.',.5,.4,3000);nxt()}}]};
+/* ================= Part 2: add an item to buy ================= */
+const TB={m:'B',h:'Add an item to buy',st:[
+{t:'Find the Items to buy card',d:'Scroll down under the task groups. The Items to buy card is your shopping list for the event.',tip:'Adding items needs the Items to buy permission: Organizer, Manager, Treasurer, Team lead, Coordinator or Logistics lead.',run:async()=>{await W(700);await sp($('#icard'),'Items to buy','Banners, snacks, cables. Everything the team has to purchase.',.5,.15,3000)}},
+{t:'Tap “+ Add item”',d:'Tap + Add item. The form opens inside the card.',tip:'Tap Close form to hide it again.',run:async()=>{await tp($('#ai'),'+ Add item','Opens the item form.');IF=true;drawT();await W(500)}},
+{t:'Describe the item',d:'Type the item with its size or colour, then the quantity and the estimated cost.',tip:'The estimate is for the whole line: 2 banners at ₹600 each is ₹1,200.',run:async()=>{await fill('it','Banner, 3 x 6 ft','Item','Add the size or colour here.');F.q='';draw('q');await fill('q','2','Quantity','How many to buy.','num');await fill('p','1200','Estimated cost','Price of the whole line, not each piece.','num');await hideKb()}},
+{t:'Give it to someone',d:'Open Allocate to and pick who will buy it. Choose a budget category if you use one.',tip:'The person is alerted and also sees the item in My tasks. Budget category shows once you have added budget lines in Expenses.',run:async()=>{await pick('iw',3,'Allocate to','The buyer. Leave Unassigned if you have not decided.');await pick('ic',1,'Budget category','Links the cost to a budget line in Expenses.')}},
+{t:'Tap “Add item”',d:'Tap Add item. The item appears with the quantity, the estimate, the buyer and the category.',tip:'Items not yet bought count in your budget as money still to pay, at their estimate.',run:async()=>{await tp($('#mi'),'Add item','Adds the item to the list.');IT.push({t:F.it,q:+F.q,p:+F.p,w:F.iw,c:F.ic});IF=false;drawT();await tst('Item added',1300);await sp($('#est'),'Still to buy','The total estimate of everything not bought yet.',.5,.5,2800);nxt()}}]};
+/* ================= Part 3: keep track ================= */
+const TC={m:'C',h:'Keep track of everything',st:[
+{t:'Read the progress bar',d:'The card at the top shows how many tasks and items are done. The bar fills as you tick things off.',tip:'Tasks and items to buy are counted together. All, Mine and my team, To do and Done filter both lists.',run:async()=>{await W(800);await sp($('#sum'),'0 of 5 done','3 tasks and 2 items, none finished yet.',.5,.3,3000)}},
+{t:'Open a task’s Brief',d:'Tap Brief on a task to read the steps. Tap it again to close it.',tip:'Anyone who can edit the task sees Edit brief inside it.',run:async()=>{await tp($('#bf0'),'Brief','Shows the steps, links and deadlines.');TK[0].o=1;drawT();await W(500);await sp($('#bd0'),'Arjun’s instructions','Everything he needs is here.',.5,.5,2400)}},
+{t:'Tick a task when it is done',d:'Tick the box. The title is crossed out and the progress bar moves.',tip:'You can tick your own tasks and those of people who report to you. Roles with Manage tasks can tick any task.',run:async()=>{await tp($('#ck0'),'Done','Tick it once the work is finished.');TK[0].done=1;drawT();snd('ok');await W(500);await sp($('#sum'),'1 of 5 done','The bar and the count update at once.',.5,.3,2600)}},
+{t:'Mark an item as bought',d:'Tick the item, type what it really cost and tap Confirm bought.',tip:'A bought item counts as spent. Items still to buy stay in the budget at their estimate.',run:async()=>{await tp($('#ib0'),'Bought it?','Ticking asks for the real price.');F.ac='1200';BX=0;drawT();await W(400);await tp($('#ac'),'Real cost','Starts with the estimate. Type the price on the bill.');F.ac='';draw('ac');foc('ac');await kbo('num');await see($('#ac'));await type('ac','1150');await W(300);await hideKb();await tp($('#cb'),'Confirm bought','Saves the actual cost.');IT[0].b=1;IT[0].ac=+F.ac;BX=-1;drawT();await tst('Marked as bought',1300);await sp($('#est'),'Budget view','Estimate of what is left, and real money spent so far.',.5,.5,3000)}},
+{t:'Filter the lists',d:'Tap To do to hide finished work, Done to see what is complete, and All to see everything.',tip:'To do is your quick checklist. Overdue tasks show a red “Was due” label.',run:async()=>{await tp($('#f_open'),'To do','Only what is still open, tasks and items together.');FIL='open';drawT();await W(1000);await tp($('#f_done'),'Done','Only finished tasks and bought items.');FIL='done';drawT();await W(1000);await tp($('#f_all'));FIL='all';drawT();await W(500)}},
+{t:'See who is buying what',d:'Under the items, tap Show who is buying what. Each person gets a line with items, bought count and money.',tip:'Everyone sees their own items under My tasks in the top menu.',run:async()=>{await tp($('#xw'),'Show who is buying what','A summary per person.');XW=true;drawT();await W(500);await sp($('#xwl'),'Per person','What each one still has to buy and has already spent.',.5,.3,3200)}}]};
+const PARTS={A:TA,B:TB,C:TC};
+function mount(n){T=PARTS[n];['A','B','C'].forEach(k=>E['t'+k].className=k===n?'on':'');E.h.textContent=T.h;E.steps.innerHTML=T.st.map((s,k)=>`<li data-n="${k+1}"><b>${s.t}</b><p>${s.d}</p></li>`).join('');E.prog.innerHTML=T.st.map(()=>'<i></i>').join('')}
+E.tC.onclick=()=>{mount('C');play(0)};E.bC.onclick=()=>{mount(T===TA?'B':'C');play(0)};
+addEventListener('resize',fit);fit();mount('A');play(0);
+</script></body></html>
