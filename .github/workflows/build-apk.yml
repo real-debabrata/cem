@@ -97,8 +97,8 @@ jobs:
       #   2) release-notes/vX.Y.Z.md, if that file exists in the repo
       #   3) notes GitHub writes from the commits
       # - Release for this version does not exist yet: it is created with the APK attached.
-      # - Release exists but has no APK: the APK is added to it.
-      # - Release already has an APK: the APK is never touched.
+      # - Release exists (same version): the APK on it is OVERWRITTEN with the new build
+      #   (same file name is replaced in place; any other old .apk on that release is removed).
       # - Release exists and you typed notes: the notes are replaced with what you typed.
       #   (Notes written elsewhere are only overwritten when you type new ones here.)
       - name: Publish GitHub Release
@@ -130,10 +130,25 @@ jobs:
           fi
 
           if gh release view "$TAG" >/dev/null 2>&1; then
-            if gh release view "$TAG" --json assets --jq '.assets[].name' | grep -qi '\.apk$'; then
-              echo "- Release **$TAG** already has an APK, APK left unchanged." >> "$GITHUB_STEP_SUMMARY"
+            APK_NAME="$(basename "$APK")"
+            EXISTING_APKS="$(gh release view "$TAG" --json assets --jq '.assets[].name' | grep -i '\.apk$' || true)"
+            HAD_APK=0
+            [ -n "$EXISTING_APKS" ] && HAD_APK=1
+
+            # --clobber replaces the asset with the same name in place, so the release never
+            # sits without an APK (upload first, delete leftovers after).
+            gh release upload "$TAG" "$APK" --clobber
+
+            # Remove any OTHER .apk on this release (e.g. one uploaded under a different name),
+            # so the release always carries exactly one APK: the newest build.
+            while IFS= read -r OLD; do
+              [ -n "$OLD" ] && [ "$OLD" != "$APK_NAME" ] || continue
+              gh release delete-asset "$TAG" "$OLD" --yes
+            done <<< "$EXISTING_APKS"
+
+            if [ "$HAD_APK" = 1 ]; then
+              echo "- Release **$TAG** already existed: its APK was **overwritten** with the new build." >> "$GITHUB_STEP_SUMMARY"
             else
-              gh release upload "$TAG" "$APK"
               echo "- APK added to the existing release **$TAG**." >> "$GITHUB_STEP_SUMMARY"
             fi
             if [ "$TYPED" = 1 ]; then
