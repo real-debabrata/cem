@@ -86,7 +86,7 @@ let S={events:[],regs:[]};
 try{const r=localStorage.getItem('campus-events-v1');if(r)S=JSON.parse(r)}catch(e){}
 const ensure=e=>{e.croles=e.croles||[];e.team=e.team||[];e.groups=e.groups||[];e.tasks=e.tasks||[];e.teams=e.teams||[];e.don=e.don||[];e.forms=e.forms||[];e.payments=e.payments||[];e.bud=e.bud||[];e.ven=e.ven||[];e.exp=e.exp||[];e.itm=e.itm||[];e.spn=e.spn||[];e.pay=e.pay||{upi:'',payee:'',fee:0};return e};
 S.events.forEach(ensure);
-let V={dt:'info',qr:0,tab:'dash',eid:null,filter:'All',q:'',draft:null};
+let V={dt:'info',qr:0,tab:'dash',eid:null,filter:'All',es:'all',eo:'date',q:'',draft:null};   // 3.13.0: es = status filter, eo = sort order of the Events tab
 const save=()=>{try{localStorage.setItem('campus-events-v1',JSON.stringify(S))}catch(e){}window.onSave&&window.onSave()};
 const toast=m=>{const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),1800)};
 const ev=id=>S.events.find(e=>e.id===id);
@@ -119,12 +119,82 @@ function card(e){
  <div class="bar"><i style="width:${p}%"></i></div><div class="meta">${n} of ${e.cap} registered</div>
  <div class="row"><button class="btn sm" data-open="${e.id}">Manage</button></div></div>`;
 }
+/* 3.13.0: Events tab. Search, dropdown filters (type, status), a sort menu and one grouped list with a row per event.
+   Typing in the search box redraws only the results (evPaint), so the cursor and the phone keyboard stay where they are. */
+const EI={
+ search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ pin:'<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+ link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+ down:'<path d="m6 9 6 6 6-6"/>',
+ right:'<path d="m9 6 6 6-6 6"/>',
+ x:'<path d="M6 6l12 12M18 6 6 18"/>',
+ cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'};
+const ei=n=>`<svg class="ei" viewBox="0 0 24 24" aria-hidden="true">${EI[n]}</svg>`;
+const EV_SORT=[['date','Upcoming first'],['new','Latest first'],['name','Name A\u2013Z'],['reg','Most registered']];
+// whole days from today to the event date, in the device's own time zone (negative = already past)
+const dayGap=e=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(e.date||'');if(!m)return 0;const t=new Date();return Math.round((new Date(+m[1],m[2]-1,+m[3])-new Date(t.getFullYear(),t.getMonth(),t.getDate()))/864e5)};
+const evWhen=(e,g)=>{
+ if(g<0)return 'Ended';
+ const t=e.time?new Date(e.date+'T'+e.time).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'all day';
+ const day=g===0?'Today':g===1?'Tomorrow':new Date(e.date+'T00:00').toLocaleDateString([],{weekday:'short'});
+ return day+', '+t};
+const evVenue=v=>{
+ v=String(v||'').trim();if(!v)return '';
+ if(/^https?:\/\//i.test(v)){try{return ei('link')+`<span class="evtx">${esc(new URL(v).hostname.replace(/^www\./,''))}</span>`}catch(x){}}
+ return ei('pin')+`<span class="evtx">${esc(v)}</span>`};
+const evActive=()=>V.filter!=='All'||V.es!=='all'||!!V.q.trim();
+function evRow(x){
+ const e=x.e,g=x.g,n=x.n,cap=+e.cap>0?+e.cap:0,full=!!cap&&n>=cap,p=cap?Math.min(100,Math.round(n/cap*100)):0;
+ const dt=/^\d{4}-\d{2}-\d{2}$/.test(e.date||'')?new Date(e.date+'T00:00'):null;
+ const yr=dt&&dt.getFullYear()!==new Date().getFullYear()?' \u2019'+String(dt.getFullYear()).slice(2):'';
+ const v=evVenue(e.venue);
+ return `<button type="button" class="evr${g<0?' past':g===0?' today':''}${full?' full':''}" data-open="${esc(e.id)}">
+ <span class="evd"><small>${dt?dt.toLocaleDateString([],{month:'short'})+yr:''}</small><b>${dt?dt.getDate():'\u2013'}</b></span>
+ <span class="evm"><span class="evt">${esc(e.name)}</span><span class="evi"><span class="evk"><i style="background:${TYPES[e.type]||'var(--acc)'}"></i>${esc(e.type)}</span><span class="evw">${ei('clock')}${evWhen(e,g)}</span>${v?`<span class="evv">${v}</span>`:''}</span></span>
+ <span class="evrg"><span class="evn">${full?'Full ('+n+' of '+cap+')':cap?`<b>${n}</b> of ${cap} registered`:`<b>${n}</b> registered`}</span>${cap?`<span class="bar"><i style="width:${p}%"></i></span>`:''}</span>
+ <span class="evch">${ei('right')}</span></button>`}
+function evView(){
+ const cnt={};S.regs.forEach(r=>{cnt[r.eid]=(cnt[r.eid]||0)+1});
+ const q=V.q.trim().toLowerCase(),key=e=>(e.date||'')+' '+(e.time||'00:00');
+ let items=S.events.map(e=>({e,g:dayGap(e),n:cnt[e.id]||0}));const total=items.length;
+ items=items.filter(x=>(V.filter==='All'||x.e.type===V.filter)&&(V.es==='all'||(V.es==='up'?x.g>=0:x.g<0))&&(!q||[x.e.name,x.e.venue,x.e.type].some(s=>String(s||'').toLowerCase().includes(q))));
+ const by={
+  date:(a,b)=>((a.g<0)-(b.g<0))||(a.g<0?key(b.e).localeCompare(key(a.e)):key(a.e).localeCompare(key(b.e))),
+  new:(a,b)=>key(b.e).localeCompare(key(a.e)),
+  name:(a,b)=>String(a.e.name).localeCompare(String(b.e.name),undefined,{sensitivity:'base'}),
+  reg:(a,b)=>(b.n-a.n)||key(a.e).localeCompare(key(b.e))};
+ items.sort(by[V.eo]||by.date);
+ const count=items.length===total?`${total} event${total===1?'':'s'}`:`${items.length} of ${total} events`;
+ if(!items.length)return{count,html:`<div class="evempty"><h3>No matching events</h3><p>Try a different search, or clear the filters to see all your events.</p><button type="button" class="btn ghost" data-clr="all">Clear filters</button></div>`};
+ const up=items.filter(x=>x.g>=0),past=items.filter(x=>x.g<0);
+ const html=V.eo==='date'&&V.es==='all'&&up.length&&past.length
+  ?[['Upcoming',up],['Past',past]].map(([t,a])=>`<section class="evg"><h3 class="evgh">${t} <span>${a.length}</span></h3><div class="evl">${a.map(evRow).join('')}</div></section>`).join('')
+  :`<div class="evl">${items.map(evRow).join('')}</div>`;
+ return{count,html}}
+// redraw only the results, count and clear button (used while typing, so focus is never lost)
+function evPaint(){
+ const c=document.getElementById('evc'),r=document.getElementById('evres');if(!c||!r)return;
+ const v=evView(),x=document.getElementById('evclr'),w=document.querySelector('.evq');
+ c.textContent=v.count;r.innerHTML=v.html;if(x)x.hidden=!evActive();if(w)w.classList.toggle('has',!!V.q)}
+// a dropdown: the visible text is a label, the real <select> sits invisibly on top, so phones open their native picker
+function evSel(k,label,val,opts,on,cls){
+ const cur=opts.find(o=>o[0]===val)||opts[0];
+ return `<div class="evsel${on?' on':''}${cls?' '+cls:''}"><span class="evsk">${label}</span><span class="evsv">${esc(cur[2]||cur[1])}</span>${ei('down')}<select data-ef="${k}" aria-label="${label}">${opts.map(o=>`<option value="${esc(o[0])}"${o[0]===cur[0]?' selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`}
 function list(){
- const f=['All',...Object.keys(TYPES)];
- const items=S.events.filter(e=>(V.filter==='All'||e.type===V.filter)&&e.name.toLowerCase().includes(V.q.toLowerCase())).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
- return `<div class="chips">${f.map(t=>`<button class="chip ${V.filter===t?'on':''}" data-f="${t}">${t}</button>`).join('')}</div>
- <input id="q" placeholder="Search events" value="${esc(V.q)}" style="margin-bottom:14px">
- ${items.length?`<div class="grid">${items.map(card).join('')}</div>`:'<div class="empty">No events match. Try another filter.</div>'}`;
+ if(!S.events.length)return `<h2 class="evhd">Events</h2><div class="evempty">${ei('cal')}<h3>No events yet</h3><p>Create an event to take registrations, assign tasks and check people in.</p><button type="button" class="btn" data-go="new">New event</button></div>`;
+ const v=evView(),tc={},st={up:0,past:0};
+ S.events.forEach(e=>{tc[e.type]=(tc[e.type]||0)+1;st[dayGap(e)<0?'past':'up']++});
+ const types=[...new Set([...Object.keys(TYPES),...Object.keys(tc)])].filter(t=>tc[t]||t===V.filter);
+ const tOpts=[['All','All types ('+S.events.length+')','All'],...types.map(t=>[t,`${t} (${tc[t]||0})`,t])];
+ const sOpts=[['all','All ('+S.events.length+')','All'],['up','Upcoming ('+st.up+')','Upcoming'],['past','Past ('+st.past+')','Past']];
+ return `<h2 class="evhd">Events</h2>
+ <div class="evbar" role="search">
+  <div class="evq${V.q?' has':''}">${ei('search')}<input id="evq" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Search by name, venue or type" aria-label="Search events" value="${esc(V.q)}"><button type="button" class="evx" data-clr="q" aria-label="Clear search">${ei('x')}</button></div>
+  ${evSel('filter','Type',V.filter,tOpts,V.filter!=='All')}${evSel('es','Status',V.es,sOpts,V.es!=='all')}
+ </div>
+ <div class="evsum"><span><span id="evc" aria-live="polite">${v.count}</span><button type="button" class="evclr" id="evclr" data-clr="all"${evActive()?'':' hidden'}>Clear filters</button></span>${evSel('eo','Sort',V.eo,EV_SORT,false,'evs')}</div>
+ <div id="evres">${v.html}</div>`;
 }
 function fieldInput(f){
  const n=`f_${f.id}`,r=f.req?'required':'';
@@ -165,7 +235,7 @@ document.addEventListener('click',e=>{
  const t=e.target.closest('button');if(!t)return;const D=t.dataset;
  if(D.go){if(D.go==='new')V.draft=newDraft();go(D.go)}
  else if(D.open){window.resetEv&&resetEv();V.dt='info';go('detail',D.open)}
- else if(D.f){V.filter=D.f;render()}
+ else if(D.clr){if(D.clr==='q'){V.q='';evPaint();const i=document.getElementById('evq');if(i){i.value='';i.focus()}}else{V.filter='All';V.es='all';V.q='';render()}}   // 3.13.0: clear search / clear filters
  else if(D.ci){const r=S.regs.find(r=>r.id===D.ci),E0=r&&ev(r.eid);if(!r||(E0&&window.can&&!can(E0,'regs')))return;
   if(r.in){r.in=false;delete r.inAt;delete r.inBy}else{r.in=true;r.inAt=Date.now();r.inBy=window.MYNAME||''}   // 3.5.0: who and when
   save();render();toast(r.in?'Checked in':'Check-in undone')}
@@ -178,10 +248,11 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{
  const t=e.target;
+ if(t.dataset.ef&&['filter','es','eo'].includes(t.dataset.ef)){const k=t.dataset.ef;V[k]=t.value;render();const n=document.querySelector(`[data-ef="${k}"]`);if(n)n.focus({preventScroll:true});return}   // 3.13.0: Events dropdowns; focus goes back to the same dropdown for keyboard users
  if(t.dataset.fl){const f=V.draft.fields[+t.dataset.i];const k=t.dataset.fl;f[k]=k==='req'?t.checked:t.value;if(k==='type'){syncDraft();render()}}
 });
 document.addEventListener('input',e=>{
- if(e.target.id==='q'){V.q=e.target.value;const p=e.target.selectionStart;render();const q=document.getElementById('q');q.focus();q.setSelectionRange(p,p)}
+ if(e.target.id==='evq'){V.q=e.target.value;evPaint()}
  else if(e.target.dataset.fl&&e.target.dataset.fl!=='req'&&e.target.tagName==='INPUT')V.draft.fields[+e.target.dataset.i][e.target.dataset.fl]=e.target.value;
 });
 document.addEventListener('submit',e=>{

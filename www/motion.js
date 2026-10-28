@@ -1,4 +1,5 @@
-/* CEM 3.8.0: motion layer. Smooth transitions so the app feels alive.
+/* CEM 3.13.0: the Events tab (rows .evr, dropdowns) is part of the entrance, bar fill and list-change animation. Typing in its search box redraws the results in place and never replays them.
+   CEM 3.8.0: motion layer. Smooth transitions so the app feels alive.
    Loads after ui.js and splash.js. It changes no existing code: it only adds CSS and watches the page.
 
    What moves, and why (motion answers what the person just did; nothing loops):
@@ -116,7 +117,7 @@ function fillBars(scope){
  if(still())return;
  scope.querySelectorAll('.bar i,.prog i,.mbar i').forEach(i=>{
   if(!inView(i))return;
-  const sib=[...i.parentNode.children].indexOf(i),card=i.closest('.ev'),idx=card?[...card.parentNode.children].indexOf(card):0;
+  const sib=[...i.parentNode.children].indexOf(i),card=i.closest('.ev,.evr'),idx=card?[...card.parentNode.children].indexOf(card):0;
   i.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:700,delay:220+Math.min(idx,8)*45+sib*90,easing:EASE,fill:'backwards'});
  });
 }
@@ -125,7 +126,7 @@ function figures(scope){scope.querySelectorAll('.stat b,.gl b').forEach(countUp)
 /* ---------- view changes: which kind of change was it? ---------- */
 const screenKey=()=>V.tab+'|'+(V.eid||'');
 const majorKey=()=>screenKey()+'|'+(V.tab==='detail'?V.dt:'');
-const minorKey=()=>V.tab==='events'?V.filter:V.tab==='detail'?[V.av,V.rf,V.tf,V.pfl,V.xv].join('|'):'';
+const minorKey=()=>V.tab==='events'?[V.filter,V.es,V.eo].join('|'):V.tab==='detail'?[V.av,V.rf,V.tf,V.pfl,V.xv].join('|'):'';
 let kScreen=screenKey(),kMajor=majorKey(),kMinor=minorKey();
 
 function enterScreen(){
@@ -137,7 +138,7 @@ function enterTab(){
  const f=[];t.forEach(c=>{if(c.matches(FLAT))f.push(...c.children);else f.push(c)});
  rise(f,{y:8,dur:340,step:34,max:8});figures(app);
 }
-function enterList(){rise([...app.querySelectorAll('.ev,.li,.tkr,.xc')],{y:6,dur:240,step:22,max:12})}
+function enterList(){rise([...app.querySelectorAll('.ev,.evr,.li,.tkr,.xc')],{y:6,dur:240,step:22,max:12})}
 
 /* ---------- echo: show what just changed after a tap ---------- */
 let pend=null;
