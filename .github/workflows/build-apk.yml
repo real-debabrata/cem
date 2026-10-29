@@ -61,6 +61,11 @@ jobs:
       - name: Add ticket scanner (Android)
         run: bash scripts/patch-scanner.sh
 
+      # v3.14.0: in-app updates. Copies the native updater plugin into the app, registers it in MainActivity and adds the
+      # REQUEST_INSTALL_PACKAGES permission, so Profile menu > Update app can download and install the next release inside the app.
+      - name: Add in-app updater (Android)
+        run: bash scripts/patch-updater.sh
+
       - name: Set version and signing in build.gradle
         run: bash scripts/patch-android.sh
 
