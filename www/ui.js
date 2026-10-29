@@ -1,4 +1,5 @@
-/* CEM 3.13.0: new Events tab (see index.html, theme.css, motion.js). This file is unchanged apart from the version.
+/* CEM 3.14.0: in-app updates. Profile menu > Update app (see updater.js and scripts/native/ApkUpdaterPlugin.java); every Update button in the Android app now uses it instead of opening the browser.
+   CEM 3.13.0: new Events tab (see index.html, theme.css, motion.js). This file is unchanged apart from the version.
    CEM 3.12.3: Privacy Policy page (privacy.html), linked next to the Terms from the sign-in page, the profile menu and the Account panel.
    CEM 3.12.2: Terms & Conditions page (terms.html), linked from the sign-in page, the profile menu and the Account panel.
    CEM 3.8.0: smooth motion (see motion.js). This file is unchanged apart from the version.
@@ -6,7 +7,7 @@
    CEM 3.7.0: new brand (Indigo #5948F5, Amber, Midnight Navy, Cloud White, Fresh Mint) and new logo.
    Campus Events: menu bar, UI polish, app version control. Loads after sync.js/app2.js; no core code is modified. */
 (function(){
-const APP_VERSION='3.13.0',BUILD='2026-10-29';   // bump these on every release
+const APP_VERSION='3.14.0',BUILD='2026-10-29';   // bump these on every release
 const $=s=>document.querySelector(s),LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const root=document.documentElement;
 let theme=localStorage.getItem('campus-theme')||'auto',CFG=LS('campus-ver',null);
@@ -98,7 +99,14 @@ async function check(force){
  }
  gate();if(force)about();
 }
-const update=()=>isApp()&&CFG&&CFG.url?window.open(CFG.url,'_blank'):location.replace(location.pathname+'?v='+Date.now());
+const update=()=>{
+ if(isApp()){
+  vs.classList.add('hid');   // close the About box; the updater opens its own window on top
+  if(window.CEMUpdater)return CEMUpdater.open({fallbackUrl:CFG&&CFG.url});   // 3.14.0: download + install inside the app (shows a one-time help screen if this APK predates the native updater)
+  if(CFG&&CFG.url)return window.open(CFG.url,'_blank');
+ }
+ location.replace(location.pathname+'?v='+Date.now());
+};
 function about(){
  if(!isApp()){   // website: no update status, only a reload for a stale browser cache
   vs.innerHTML=`<div class="box"><button type="button" class="x" data-u="x" aria-label="Close">✕</button><h3>Campus Events</h3><p class="meta">Version ${APP_VERSION} · build ${BUILD}</p><p><b>Web version</b></p><p class="meta">The website always uses the latest version. If something looks old, reload to fetch the newest files.</p>
@@ -114,7 +122,7 @@ function openUM(){
  const u=window.firebase&&firebase.apps.length?firebase.auth().currentUser:null;
  um.innerHTML=`<div class="uh"><b>${esc(window.MYNAME||'Guest')}</b><span>${esc(u?u.email:'Not signed in')}</span></div>
  <button data-u="acct">Account, alerts & join event</button><button data-u="help">Help & guides</button><button data-u="tut">Tutorials</button><button data-u="terms">Terms & Conditions</button><button data-u="privacy">Privacy Policy</button><button data-u="theme">Theme <small>${theme}</small></button>
- <button data-u="about">About & updates <small>v${APP_VERSION}</small></button>${u?'<button data-u="out" class="dg">Sign out</button>':''}`;
+ ${isApp()?`<button data-u="appupd">Update app${newer()?' <small>New</small>':''}</button>`:''}<button data-u="about">About & updates <small>v${APP_VERSION}</small></button>${u?'<button data-u="out" class="dg">Sign out</button>':''}`;
  um.classList.toggle('hid');
 }
 document.addEventListener('click',e=>{
@@ -129,6 +137,7 @@ document.addEventListener('click',e=>{
  else if(u==='tut')window.open(TUT_URL,'_blank','noopener,noreferrer');   // website tutorials page: new tab on the web, the phone's own browser in the app
  else if(u==='terms')location.href='terms.html';
  else if(u==='privacy')location.href='privacy.html';
+ else if(u==='appupd')update();
  else if(u==='about')about();
  else if(u==='chk')check(true);
  else if(u==='upd')update();
