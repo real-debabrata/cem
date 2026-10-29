@@ -616,6 +616,44 @@ Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or 
 | Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |
 
 
+## Upgrade to 3.14.0: update the app from inside the app
+
+Adds **Profile menu > Update app** to the Android app. It asks GitHub Releases for the newest version, downloads the APK inside the app with a progress bar, then shows an **Update** button that opens Android's normal update screen. Nobody has to visit the download website any more. The website (`downloadcem.deba.indevs.in`) keeps working as before, and is still how a brand new user installs the app.
+
+**No Firebase rules change, no Worker change, no new secret.** The website (pages workflow) is not affected: the menu entry only appears inside the Android app.
+
+### How it works (so you can trust it)
+A web page cannot save and install files, so the Build APK workflow now also adds a small native Android plugin (`scripts/native/ApkUpdaterPlugin.java`) to the app it builds. `www/updater.js` is the window the user sees. The plugin downloads only from `github.com/real-debabrata/cem/releases/download/...` (every redirect must stay on GitHub), checks the file size and checksum, checks that it is a newer version of this same app signed with the same key, then hands it to Android's installer. Android always shows its own confirmation screen: an app cannot install silently.
+
+### Files
+In the repo root replace: `package.json`, `README.md`, `SETUP.md`. Add `release-notes/v3.14.0.md`.
+In `.github/workflows/` replace: `build-apk.yml` (it gains one step, "Add in-app updater (Android)").
+In `scripts/` add: `patch-updater.sh`, and the folder `native/` with `ApkUpdaterPlugin.java`.
+In `www/` add: `updater.js`. Replace: `ui.js`, `index.html`.
+In `tests/` add (optional): `test-updater.mjs`, `test-update-menu.mjs`.
+
+### Steps (about 10 minutes)
+1. Upload the files above (keep the folder structure), commit.
+2. **Actions > Build APK > Run workflow** as usual. The version becomes 3.14.0. Check the log of the step **Add in-app updater (Android)**: it must print `ApkUpdaterPlugin.java copied`, `MainActivity: ApkUpdaterPlugin registered` and `REQUEST_INSTALL_PACKAGES added`.
+3. **One time only:** install this 3.14.0 APK the old way (download website, or the Release page). Older apps cannot update themselves, because they do not contain the updater yet. (Run **Deploy web version** too if you want the website on 3.14.0 as well.)
+4. **Test the real thing:** bump `APP_VERSION` in `www/ui.js` to the next number (for example 3.14.1), build and publish a Release as usual. On the phone that has 3.14.0, open the profile menu, tap **Update app**. You should see: Checking, Downloading with a progress bar, Update ready. Tap **Update**.
+5. The first time only, Android sends you to a settings page: turn on **Allow from this source**, press back, and the update continues. Confirm on Android's update screen. The app closes while it updates. Open it again: it is now 3.14.1.
+
+### Rules you must keep
+- **Raise the version on every release** (`APP_VERSION` in `www/ui.js`). The updater compares the Release tag (for example `v3.14.1`) with the installed version. Re-running the build for the *same* version replaces the file on that Release, but phones that already have that version will not be offered it.
+- **Keep one signing key.** The workflow already guarantees this. If the key ever changes, in-app updates (and normal updates) will be refused by Android; the app says so clearly.
+- **Release must be public and not a draft or pre-release**, and the APK must be attached. This is how the download website already works.
+- **If you rename the GitHub repository**, change `OWNER`/`REPO` at the top of `www/updater.js` and `ALLOWED_PATH` in `scripts/native/ApkUpdaterPlugin.java`.
+
+### Small details
+- GitHub allows 60 anonymous checks per hour per network. The app caches the answer for 5 minutes and only checks when the user taps **Update app**, so a whole college on one Wi-Fi is fine. If the limit is ever hit, the window says so and offers the download page.
+- If an update was downloaded but not installed, it stays on the phone and is offered again instantly (and is cleaned up automatically once installed).
+- Play Protect may show "Install anyway" for a sideloaded update. That is Android's normal behaviour for apps not from the Play Store.
+- **Privacy Policy:** the app now also contacts GitHub (to look for updates). Consider changing the GitHub row in section 5 of `www/privacy.html` from "Hosts the website" to "Hosts the website and app updates", and updating its `POLICY-DATE`.
+
+### Rolling back
+Restore the 3.13.0 versions of `build-apk.yml`, `ui.js`, `index.html` and `package.json`. `updater.js`, `patch-updater.sh` and `native/` can stay or be deleted.
+
 ## Upgrade to 3.12.3: Privacy Policy page
 
 Adds a public Privacy Policy page (`privacy.html`) and links it next to the Terms everywhere: the sign-in page ("By continuing, you agree to our Terms & Conditions. Read our Privacy Policy."), the profile menu, and the bottom of the Account panel. The Terms page now links to it, and its wording about the saved mail login is corrected (the "Remember this login" box is ticked by default).

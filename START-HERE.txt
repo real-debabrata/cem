@@ -1,0 +1,4 @@
+CEM 3.14.0 - in-app updates
+Upload everything in this folder to the ROOT of your repo (real-debabrata/cem), keeping the folder structure.
+Then: Actions > Build APK > Run workflow. Full steps: SETUP.md > "Upgrade to 3.14.0".
+Install the resulting 3.14.0 APK the old way ONCE; after that updates happen inside the app.

@@ -174,6 +174,7 @@ Open the profile menu to access:
 - **Help & guides:** open the searchable guide.
 - **Terms & Conditions** and **Privacy Policy:** read how Campus Events works and how personal data is handled. Both are also linked from the sign-in page and at the bottom of the Account panel.
 - **Theme:** switch between Auto, Light and Dark.
+- **Update app** (Android app only): checks GitHub for a newer version, downloads it inside the app and installs it with Android's normal update screen. No download website needed.
 - **About & updates:** view the installed version and check for updates.
 
 ## Important notes
