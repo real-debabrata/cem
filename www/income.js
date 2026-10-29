@@ -123,53 +123,137 @@ function figures(e){
  const need=gap<=0?0:(price>0?Math.ceil(gap/price):Infinity),full=tFull+spAll;
  return{rs,price,cap,paidN,spIn,spOut,spAll,mb,actual,basis,cost,tIn,tDue,tFull,gap,need,full};
 }
-function breakEven(f){
- if(f.cost<=0)return '<p class="meta" style="margin:10px 0 0">Add a budget or some costs in Expenses to see the break-even point.</p>';
- let t;
- if(f.gap<=0)t=`Sponsorship alone covers the cost of ${R(f.cost)}. Every ticket sold is extra.`;
- else if(f.price<=0)t=`Costs are ${R(f.cost)} and sponsorship covers ${R(f.spAll)}. The ticket price is not set, so ${R(f.gap)} is not covered yet. Set it in Attendees > Registration > Price and settings.`;
- else if(f.need>f.cap)t=`Even a full house does not cover the costs: you would be ${R(f.cost-f.full)} short. Raise the price, add sponsors or cut costs.`;
- else t=`You break even at ${f.need} ticket${f.need===1?'':'s'} (${Math.round(f.need/Math.max(1,f.cap)*100)}% of ${f.cap} seats). ${f.rs.length>=f.need?`You already have ${f.rs.length} registered, so the costs are covered once they pay.`:`${f.need-f.rs.length} more registration${f.need-f.rs.length===1?'':'s'} to go (${f.rs.length} registered).`}`;
- const mx=Math.max(f.cost,f.full,1),w=v=>Math.max(0,Math.min(100,v/mx*100)).toFixed(2),cp=Math.min(99,f.cost/mx*100).toFixed(2);
- const seg=[['ba',f.spIn,'Sponsor money received'],['bb',f.tIn,'Ticket fees paid'],['bc',f.spOut,'Sponsor money still expected'],['bd',Math.max(0,f.tFull-f.tIn),'Tickets not yet paid or sold']];
- return `<p style="margin:12px 0 8px"><b>${esc(t)}</b></p>
-  <div class="be" role="img" aria-label="Income compared with cost. ${esc(seg.map(s=>s[2]+' '+R(s[1])).join('. '))}. Cost ${R(f.cost)}.">${seg.map(s=>`<i class="${s[0]}" style="width:${w(s[1])}%"></i>`).join('')}<span class="bm" style="left:${cp}%"><em>Cost ${R(f.cost)}</em></span></div>
-  <div class="mlg" style="margin-top:14px">${seg.map(s=>`<span><i class="${s[0]}"></i>${s[2]} <b>${R(s[1])}</b></span>`).join('')}</div>`;
+
+/* ---- small helpers for the layout ---- */
+const IC=p=>`<svg class="ei" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+const ICON={
+ plus:IC('<path d="M12 5v14M5 12h14"/>'),
+ ok:IC('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>'),
+ warn:IC('<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.2v.1"/>'),
+ info:IC('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.1"/>'),
+ star:IC('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/>')
+};
+const M=n=>{const s=R(n);return s.charAt(0)==='₹'?'<span class="cur">₹</span>'+esc(s.slice(1)):esc(s)};   // rupee sign drawn smaller than the digits
+const pct=(a,b)=>b>0?Math.max(0,Math.min(100,a/b*100)):0;
+const hue=s=>{let h=0;for(const c of String(s||''))h=(h*31+c.charCodeAt(0))%360;return h};
+const ini=s=>{const w=String(s||'?').trim().split(/\s+/).filter(Boolean),a=Array.from(w[0]||'?')[0],b=w.length>1?Array.from(w[w.length-1])[0]:'';return (a+b).toUpperCase()};
+const kindOf=s=>KINDS.includes(s.k)?s.k:'Sponsor';
+
+/* ---- 1. summary ---- */
+function hero(f){
+ const got=f.tIn+f.spIn,exp=f.tDue+f.spOut,total=got+exp,p=pct(got,total),surplus=f.full-f.cost;
+ return `<section class="card inc-hero" aria-label="Income summary">
+  <div class="inc-main"><span class="inc-lbl">Income received</span>
+   <div class="inc-big">${M(got)}</div>
+   <p class="inc-of">${total>0?`${Math.round(p)}% of the ${R(total)} due so far`:'Nothing is due yet. Register attendees or add a sponsor.'}</p>
+   <div class="inc-track" role="img" aria-label="${Math.round(p)}% of the expected income has been received"><i style="width:${p.toFixed(1)}%"></i></div></div>
+  <dl class="inc-kpis">
+   <div><dt>Still expected</dt><dd>${M(exp)}</dd></div>
+   <div><dt>Cost <small>${f.basis==='plan'?'from your budget':'spent and still to pay'}</small></dt><dd>${M(f.cost)}</dd></div>
+   <div class="${surplus<0?'neg':'pos'}"><dt>${surplus<0?'Shortfall':'Surplus'} <small>if every seat sells</small></dt><dd>${surplus<0?'&minus;':''}${M(Math.abs(surplus))}</dd></div>
+  </dl></section>`;
 }
+
+/* ---- 2. break-even ---- */
+function beInfo(f){
+ if(f.cost<=0)return{tone:'',h:'No costs to compare yet',p:'Add a budget or some costs in Expenses to see the break-even point.'};
+ if(f.gap<=0)return{tone:'ok',h:'Sponsorship covers all costs',p:`Sponsorship of ${R(f.spAll)} covers the cost of ${R(f.cost)}. Every ticket sold is extra.`};
+ if(f.price<=0)return{tone:'warn',h:'Set a ticket price',p:`Costs are ${R(f.cost)} and sponsorship covers ${R(f.spAll)}, so ${R(f.gap)} is not covered yet. Set the price in Attendees > Registration > Price and settings.`};
+ if(f.need>f.cap)return{tone:'bad',h:'A full house will not cover the costs',p:`You would be ${R(f.cost-f.full)} short. Raise the price, add sponsors or cut costs.`};
+ const n=f.rs.length,left=f.need-n;
+ return{tone:left<=0?'ok':'warn',h:`Break even at ${f.need} ticket${f.need===1?'':'s'}`,
+  p:`That is ${Math.round(f.need/Math.max(1,f.cap)*100)}% of your ${f.cap} seats. `+(left<=0?`You already have ${n} registered, so the costs are covered once they pay.`:`${left} more registration${left===1?'':'s'} to go (${n} registered).`),meter:[n,f.need]};
+}
+function breakEven(f){
+ const b=beInfo(f),icon=b.tone==='ok'?ICON.ok:(b.tone==='warn'||b.tone==='bad')?ICON.warn:ICON.info;
+ const head=`<div class="inc-verdict ${b.tone}" role="status">${icon}<div><b>${esc(b.h)}</b><p>${esc(b.p)}</p></div></div>`;
+ if(f.cost<=0)return head;
+ const meter=b.meter?`<div class="inc-meter"><div class="inc-mh"><span>Registrations toward break-even</span><b>${Math.min(b.meter[0],b.meter[1])} of ${b.meter[1]}</b></div><div class="inc-track sm" role="img" aria-label="${b.meter[0]} registered, ${b.meter[1]} needed to break even"><i style="width:${pct(b.meter[0],b.meter[1]).toFixed(1)}%"></i></div></div>`:'';
+ const mx=Math.max(f.cost,f.full,1),w=v=>Math.max(0,Math.min(100,v/mx*100)).toFixed(2),cpv=Math.min(99,f.cost/mx*100),cp=cpv.toFixed(2);
+ const seg=[['ba',f.spIn,'Sponsor money received'],['bb',f.tIn,'Ticket fees paid'],['bc',f.spOut,'Sponsor money still expected'],['bd',Math.max(0,f.tFull-f.tIn),'Tickets not yet paid or sold']];
+ return `${head}${meter}
+  <div class="be" role="img" aria-label="Income compared with cost. ${esc(seg.map(s=>s[2]+' '+R(s[1])).join('. '))}. Cost ${R(f.cost)}.">${seg.map(s=>`<i class="${s[0]}" style="width:${w(s[1])}%"></i>`).join('')}<span class="bm${cpv>78?' r':cpv<12?' l':''}" style="left:${cp}%"><em>Cost ${R(f.cost)}</em></span></div>
+  <ul class="inc-lg">${seg.map(s=>`<li><i class="${s[0]}"></i><span>${s[2]}</span><b>${R(s[1])}</b></li>`).join('')}</ul>
+  <p class="inc-formula">${R(f.price)} &times; ${f.cap} seats = ${R(f.tFull)}, plus sponsorship ${R(f.spAll)} = <b>${R(f.full)}</b> if every seat sells, against costs of <b>${R(f.cost)}</b>.</p>`;
+}
+function breakEvenCard(f){
+ const b=(v,t)=>`<button type="button" class="${f.basis===v?'on':''}" data-ic="bas" data-v="${v}" aria-pressed="${f.basis===v}">${t}</button>`;
+ return `<section class="card inc-card" aria-label="Break-even"><div class="sh"><div><h3>Break-even</h3><p class="meta">Compare income with your costs.</p></div>
+  <div class="seg inc-seg" role="group" aria-label="Cost to compare with">${b('plan','Budget')}${b('act','Spent + to pay')}</div></div>${breakEven(f)}</section>`;
+}
+
+/* ---- 3. income by source ---- */
+function sourcesCard(e,f){
+ const spn=e.spn||[],rows=[];
+ if(f.price>0){
+  const pc=f.rs.filter(r=>r.paid&&r.pm==='cash').length,pu=f.rs.filter(r=>r.paid&&r.pm==='upi').length;
+  rows.push({n:'Ticket sales',s:[`${f.paidN} of ${f.rs.length} registered have paid`].concat(pc||pu?[`Cash ${pc} (${R(pc*f.price)}), UPI ${pu} (${R(pu*f.price)})`]:[]),got:f.tIn,exp:f.tDue});
+ }
+ const NM={Sponsor:'Sponsors',Donation:'Donations',Other:'Other income'};
+ KINDS.forEach(k=>{const l=spn.filter(s=>kindOf(s)===k);if(!l.length)return;
+  rows.push({n:NM[k],s:[l.length+(l.length===1?' entry':' entries')],got:sum(l,'rc'),exp:l.reduce((t,s)=>t+Math.max(0,(+s.cm||0)-(+s.rc||0)),0)})});
+ if(!rows.length)return '';
+ const tr=rows.map(r=>`<tr><td><span class="n">${esc(r.n)}</span>${r.s.map(x=>`<small>${esc(x)}</small>`).join('')}</td><td class="num">${R(r.got)}</td><td class="num mu">${R(r.exp)}</td></tr>`).join('');
+ return `<section class="card inc-card" aria-label="Income by source"><div class="sh"><h3>Income by source</h3></div>
+  <div class="tbl"><table class="inc-tbl"><thead><tr><th scope="col">Source</th><th scope="col" class="num">Received</th><th scope="col" class="num">Expected</th></tr></thead><tbody>${tr}</tbody>
+  <tfoot><tr><th scope="row">Total</th><td class="num">${R(f.tIn+f.spIn)}</td><td class="num mu">${R(f.tDue+f.spOut)}</td></tr></tfoot></table></div></section>`;
+}
+
+/* ---- 4. sponsors and donations ---- */
 function spForm(e,s){
  const x=s||{};
- return `<form id="spf" class="fp" data-i="${esc(x.id||'')}"><div class="rg"><div><label>Name *</label><input name="n" required maxlength="60" value="${esc(x.n||'')}" placeholder="Acme Bank"></div>
-  <div><label>Kind</label><select name="k">${KINDS.map(k=>`<option ${k===(x.k||'Sponsor')?'selected':''}>${k}</option>`).join('')}</select></div>
-  <div><label>Amount committed in ₹ *</label><input name="cm" type="number" min="0" step="any" inputmode="decimal" required value="${x.cm!=null?x.cm:''}"></div>
-  <div><label>Amount received so far in ₹</label><input name="rc" type="number" min="0" step="any" inputmode="decimal" value="${x.rc!=null?x.rc:0}"></div>
-  <div class="rw"><label>What you promised them (logo, stall, stage mention...)</label><textarea name="pr" rows="2" maxlength="500">${esc(x.pr||'')}</textarea></div>
-  <div class="rw"><label>Contact (optional)</label><input name="ct" maxlength="100" value="${esc(x.ct||'')}" placeholder="Name, phone or email"></div></div>
-  <div class="acts"><button class="btn" type="submit">${s?'Save changes':'Add'}</button><button type="button" class="btn ghost" data-ic="spx">Cancel</button></div></form>`;
+ const money=(nm,lb,v,req)=>`<div><label for="sp-${nm}">${lb}</label><div class="inc-in"><span aria-hidden="true">₹</span><input id="sp-${nm}" name="${nm}" type="number" min="0" step="any" inputmode="decimal" autocomplete="off" ${req?'required':''} value="${v}"></div></div>`;
+ return `<form id="spf" class="fp inc-form" data-i="${esc(x.id||'')}"><div class="rg"><div><label for="sp-n">Name *</label><input id="sp-n" name="n" required maxlength="60" autocomplete="off" value="${esc(x.n||'')}" placeholder="Acme Bank"></div>
+  <div><label for="sp-k">Kind</label><select id="sp-k" name="k">${KINDS.map(k=>`<option ${k===(x.k||'Sponsor')?'selected':''}>${k}</option>`).join('')}</select></div>
+  ${money('cm','Amount committed *',x.cm!=null?x.cm:'',true)}
+  ${money('rc','Received so far',x.rc!=null?x.rc:0,false)}
+  <div class="rw"><label for="sp-pr">What you promised them</label><textarea id="sp-pr" name="pr" rows="2" maxlength="500" placeholder="Logo on the banner, a stall, a stage mention">${esc(x.pr||'')}</textarea></div>
+  <div class="rw"><label for="sp-ct">Contact (optional)</label><input id="sp-ct" name="ct" maxlength="100" autocomplete="off" value="${esc(x.ct||'')}" placeholder="Name, phone or email"></div></div>
+  <div class="acts"><button class="btn" type="submit">${s?'Save changes':'Add to income'}</button><button type="button" class="btn ghost" data-ic="spx">Cancel</button></div></form>`;
 }
 function spRow(e,s){
  const cm=+s.cm||0,rc=+s.rc||0,out=Math.max(0,cm-rc),pc=cm>0?Math.min(100,rc/cm*100):(rc>0?100:0);
- return `<div class="li"><div class="main"><div class="ttl">${esc(s.n)} <span class="pill">${esc(s.k||'Sponsor')}</span> ${out===0&&cm>0?'<span class="pill ok">Received</span>':rc>0?'<span class="pill warn">Part received</span>':'<span class="pill warn">Pledged</span>'}</div>
-  <div class="sub">Committed <b>${R(cm)}</b>, received <b>${R(rc)}</b>${out?`, <span class="xo">${R(out)} still to come</span>`:''}${s.ct?', '+esc(s.ct):''}</div>
-  <div class="prog" style="height:6px;margin:6px 0"><i style="width:${pc}%"></i></div>
-  ${s.pr?`<div class="sub"><b style="color:var(--ink)">Promised:</b> ${esc(s.pr)}</div><label class="sub" style="display:flex;gap:8px;align-items:center;margin:4px 0 0"><input type="checkbox" data-spdl="${esc(s.id)}" ${s.dl?'checked':''}> Promises delivered</label>`:''}</div>
-  <div class="act">${out?`<button class="btn ghost sm" data-ic="spr" data-id="${esc(s.id)}">Mark fully received</button>`:''}<button class="btn ghost sm" data-ic="spe" data-id="${esc(s.id)}">Edit</button><button class="btn ghost sm del" data-ic="spd" data-id="${esc(s.id)}">Delete</button></div></div>`;
+ const st=out===0&&(cm>0||rc>0)?'<span class="pill ok">Received</span>':rc>0?'<span class="pill warn">Part received</span>':'<span class="pill">Pledged</span>';
+ return `<li class="inc-sp"><span class="av2" style="--h:${hue(s.n)}" aria-hidden="true">${esc(ini(s.n))}</span>
+  <div class="inc-spb"><div class="inc-sph"><span class="ttl">${esc(s.n)}</span><span class="pill acc">${esc(kindOf(s))}</span>${st}</div>
+   ${s.ct?`<div class="sub">${esc(s.ct)}</div>`:''}
+   <div class="inc-track sm" role="img" aria-label="${Math.round(pc)}% received"><i style="width:${pc.toFixed(1)}%"></i></div>
+   ${s.pr?`<div class="sub"><b>Promised:</b> ${esc(s.pr)}</div><label class="inc-chk"><input type="checkbox" data-spdl="${esc(s.id)}" ${s.dl?'checked':''}> Promises delivered</label>`:''}
+   <div class="inc-act">${out?`<button type="button" class="btn ghost sm" data-ic="spr" data-id="${esc(s.id)}">Mark fully received</button>`:''}<button type="button" class="btn ghost sm" data-ic="spe" data-id="${esc(s.id)}">Edit</button><button type="button" class="btn ghost sm del" data-ic="spd" data-id="${esc(s.id)}">Delete</button></div></div>
+  <div class="inc-amt"><b>${R(rc)}</b><span>of ${R(cm)}</span>${out?`<span class="due">${R(out)} still to come</span>`:''}</div></li>`;
 }
+function sponsorsCard(e,f){
+ const spn=e.spn||[],open=V.spa||V.spe;
+ const list=spn.slice().sort((a,b)=>(a.at||0)-(b.at||0)).map(s=>V.spe===s.id?`<li class="inc-formrow">${spForm(e,s)}</li>`:spRow(e,s)).join('');
+ const sub=spn.length?`${R(f.spIn)} received of ${R(f.spAll)} committed`:'Sponsors, donations and other money coming in.';
+ const empty=!spn.length&&!open?`<div class="inc-empty">${ICON.star}<b>No sponsors or donations yet</b><p>Add one to count it towards your break-even.</p><button type="button" class="btn sm" data-ic="spa">Add sponsor</button></div>`:'';
+ return `<section class="card inc-card" aria-label="Sponsors and donations"><div class="sh"><div><h3>Sponsors and donations${spn.length?` (${spn.length})`:''}</h3><p class="meta">${sub}</p></div>
+  ${V.spe||(!spn.length&&!open)?'':`<button type="button" class="btn sm inc-add" data-ic="spa" aria-expanded="${!!V.spa}">${V.spa?'Close form':ICON.plus+'Add sponsor'}</button>`}</div>
+  ${V.spa&&!V.spe?spForm(e):''}${list?`<ul class="inc-list">${list}</ul>`:''}${empty}</section>`;
+}
+
+/* ---- 6. export (Income tab version; the Details tab keeps exportV) ---- */
+function incExport(e){
+ const A=can(e,'regs'),P=can(e,'pay'),B=can(e,'exp');
+ if(!A&&!P&&!B)return '';
+ const b=(k,t)=>`<button type="button" class="btn ghost sm" data-ex="${k}">${t}</button>`;
+ return `<section class="card inc-card" aria-label="Export data"><div class="sh"><div><h3>Export data</h3><p class="meta">Spreadsheet files (CSV) that open in Excel or Google Sheets.</p></div></div>
+  <div class="inc-exp"><button type="button" class="btn sm" data-ex="all">Download everything (ZIP)</button></div>
+  <div class="inc-exp one"><span class="meta">Or one file:</span>${A?b('att','Attendees'):''}${P?b('pay','Payments'):''}${B?b('bills','Bills'):''}${B?b('spn','Sponsors'):''}</div></section>`;
+}
+
 window.incV=function(e){
  if(!can(e,'exp'))return '<div class="empty">You do not have access to this section.</div>';
- const f=figures(e),spn=e.spn||[],tin=f.tIn+f.spIn,exp=f.tDue+f.spOut;
- const surplus=f.full-f.cost;
- const open=V.spa||V.spe;
- const list=spn.slice().sort((a,b)=>(a.at||0)-(b.at||0)).map(s=>V.spe===s.id?spForm(e,s):spRow(e,s)).join('');
- return `<div class="stats"><div class="stat"><b>${R(tin)}</b><span>Received so far</span></div><div class="stat"><b>${R(exp)}</b><span>Still expected</span></div><div class="stat"><b>${R(f.cost)}</b><span>${f.basis==='plan'?'Budget (cost)':'Spent and to pay (cost)'}</span></div><div class="stat"><b class="${surplus<0?'xo':''}" style="${surplus<0?'-webkit-text-fill-color:var(--bad)':''}">${surplus<0?'-':''}${R(Math.abs(surplus))}</b><span>${surplus<0?'Shortfall':'Surplus'} if every seat sells</span></div></div>
- <div class="card"><div class="sh"><h3>Break-even</h3><div class="seg" style="margin:0;min-width:230px" role="group" aria-label="Cost to compare with"><button class="${f.basis==='plan'?'on':''}" data-ic="bas" data-v="plan">Budget</button><button class="${f.basis==='act'?'on':''}" data-ic="bas" data-v="act">Spent + to pay</button></div></div>
-  <p class="meta" style="margin:4px 0 0">${R(f.price)} x ${f.cap} seats = ${R(f.tFull)}, plus sponsorship ${R(f.spAll)} = <b>${R(f.full)}</b> against costs of <b>${R(f.cost)}</b>.</p>
-  ${breakEven(f)}
-  <p class="meta" style="margin:12px 0 0">Attendees paid: ${f.paidN} of ${f.rs.length} registered (${R(f.tIn)} received, ${R(f.tDue)} still to collect).${(()=>{const pc=f.rs.filter(r=>r.paid&&r.pm==='cash').length,pu=f.rs.filter(r=>r.paid&&r.pm==='upi').length;return pc||pu?` Of the paid: ${pc} by cash (${R(pc*f.price)}), ${pu} by UPI (${R(pu*f.price)}).`:''})()}</p></div>
+ const f=figures(e);
+ return `<div class="inc">
+ ${hero(f)}
+ ${breakEvenCard(f)}
+ ${sourcesCard(e,f)}
+ ${sponsorsCard(e,f)}
  ${window.cashSummaryV?cashSummaryV(e):''}
- <div class="card"><div class="sh"><h3>Sponsors and other income (${spn.length})</h3>${V.spe?'':`<button class="btn sm" data-ic="spa">${V.spa?'Close form':'+ Add'}</button>`}</div>
-  ${V.spa&&!V.spe?spForm(e):''}${list||(open?'':'<p class="meta" style="margin:0">No sponsors yet.</p>')}</div>
  ${window.linksV?linksV(e):''}
- ${exportV(e)}`;
+ ${incExport(e)}
+ </div>`;
 };
 
 /* ================= actions ================= */

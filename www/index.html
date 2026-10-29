@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="splash.css">
 <link rel="stylesheet" href="event.css">
 <link rel="stylesheet" href="theme.css" id="cem-theme">
+<link rel="stylesheet" href="income.css" id="cem-income">
 <title>Campus Events</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
@@ -302,5 +303,5 @@ render();
 <script src="ui.js"></script>
 <script src="splash.js"></script>
 <script src="motion.js"></script>
-<script>document.head.append(document.getElementById("cem-theme"))</script>   <!-- 3.9.0: re-append so theme.css comes after the styles ui.js and motion.js inject -->
+<script>document.head.append(document.getElementById("cem-theme"),document.getElementById("cem-income"))</script>   <!-- 3.9.0: re-append so theme.css comes after the styles ui.js and motion.js inject -->
 </body></html>

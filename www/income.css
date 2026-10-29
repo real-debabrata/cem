@@ -1,0 +1,137 @@
+/* Income tab layout (CEM 4.1). Loaded after theme.css and scoped to .inc, so no other screen is affected.
+   Uses the colour tokens from index.html / theme.css, so light and dark mode both work. */
+.inc{display:flex;flex-direction:column;gap:16px}
+.inc>.card,.inc>div{margin:0}
+.inc .card{padding:22px;border:1px solid var(--line);box-shadow:none}
+.inc .sh{align-items:flex-start;gap:12px;margin-bottom:16px}
+.inc .sh h3{font:650 17px/1.25 var(--disp);letter-spacing:-.01em}
+.inc .sh .meta{margin:3px 0 0}
+.inc .cur{font-weight:600;color:var(--mute)}
+
+/* ---- progress tracks ---- */
+.inc-track{height:8px;border-radius:999px;background:var(--line);overflow:hidden}
+.inc-track.sm{height:6px}
+.inc-track i{display:block;height:100%;border-radius:999px;background:var(--acc)}
+
+/* ---- summary ---- */
+.inc-hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px 40px;align-items:center;padding:26px 28px}
+.inc-lbl{font-size:14px;font-weight:600;color:var(--mute)}
+.inc-big{margin:6px 0 4px;font:700 clamp(40px,8vw,58px)/1 var(--disp);letter-spacing:-.04em;color:var(--ink)}
+.inc-big .cur{font-size:.5em;margin-right:5px;vertical-align:.62em;letter-spacing:0}
+.inc-of{margin:0 0 16px;font-size:14px;color:var(--mute)}
+.inc-kpis{margin:0;display:flex;flex-direction:column}
+.inc-kpis>div{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:13px 0;border-top:1px solid var(--line)}
+.inc-kpis>div:first-child{border-top:0;padding-top:0}
+.inc-kpis>div:last-child{padding-bottom:0}
+.inc-kpis dt{font-size:14px;font-weight:600;color:var(--ink)}
+.inc-kpis dt small{display:block;margin-top:1px;font-size:12.5px;font-weight:500;color:var(--mute)}
+.inc-kpis dd{margin:0;font:650 22px/1.15 var(--disp);letter-spacing:-.02em;white-space:nowrap}
+.inc-kpis dd .cur{font-size:.68em;margin-right:2px}
+.inc-kpis .pos dd{color:var(--ok)}
+.inc-kpis .neg dd{color:var(--bad)}
+
+/* ---- segmented switch ---- */
+.inc-seg{margin:0;flex:0 1 250px;min-width:210px}
+.inc-seg button{white-space:nowrap}
+.inc-seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(16,23,43,.14)}
+
+/* ---- break-even ---- */
+.inc-verdict{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:var(--r-sm);border:1px solid var(--line);background:color-mix(in srgb,var(--mute) 7%,var(--card));--tn:var(--mute)}
+.inc-verdict.ok{--tn:var(--ok);background:color-mix(in srgb,var(--ok) 9%,var(--card));border-color:color-mix(in srgb,var(--ok) 30%,var(--line))}
+.inc-verdict.warn{--tn:var(--warn);background:color-mix(in srgb,var(--warn) 10%,var(--card));border-color:color-mix(in srgb,var(--warn) 32%,var(--line))}
+.inc-verdict.bad{--tn:var(--bad);background:color-mix(in srgb,var(--bad) 9%,var(--card));border-color:color-mix(in srgb,var(--bad) 30%,var(--line))}
+.inc-verdict>.ei{width:22px;height:22px;margin-top:1px;color:var(--tn)}
+.inc-verdict b{display:block;font:650 16px/1.3 var(--txt);color:var(--ink)}
+.inc-verdict p{margin:3px 0 0;font-size:14px;color:var(--mute)}
+.inc-meter{margin-top:16px}
+.inc-mh{display:flex;justify-content:space-between;gap:12px;margin-bottom:7px;font-size:13.5px;color:var(--mute)}
+.inc-mh b{color:var(--ink);font-weight:650}
+.inc .be{height:14px;margin-top:46px;border-radius:999px}
+.inc .be i:first-child{border-radius:999px 0 0 999px}
+.inc .ba{background:var(--okf)}
+.inc .bb{background:var(--acc)}
+.inc .bc{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--okf) 70%,transparent) 0 4px,color-mix(in srgb,var(--okf) 22%,transparent) 4px 8px)}
+.inc .bd{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--acc) 55%,transparent) 0 4px,color-mix(in srgb,var(--acc) 16%,transparent) 4px 8px)}
+.inc .be .bm{top:-8px;bottom:-8px;width:2px;margin-left:-1px;background:var(--ink);border-radius:2px}
+.inc .be .bm em{margin-bottom:6px;padding:3px 9px;border-radius:8px;background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:650}
+.inc .be .bm.r em{left:auto;right:-1px;transform:none}
+.inc .be .bm.l em{left:-1px;transform:none}
+.inc-lg{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 32px}
+.inc-lg li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--mute)}
+.inc-lg li span{flex:1;min-width:0}
+.inc-lg li b{color:var(--ink);font-weight:650;white-space:nowrap}
+.inc-lg li i{flex:none;width:12px;height:12px;border-radius:4px}
+.inc-formula{margin:14px 0 0;font-size:13.5px;color:var(--mute)}
+.inc-formula b{color:var(--ink)}
+
+/* ---- income by source ---- */
+.inc-tbl{width:100%;border-collapse:collapse}
+.inc-tbl th,.inc-tbl td{padding:13px 0;text-align:left;vertical-align:top;border-bottom:1px solid var(--line);font-size:15px;white-space:normal}
+.inc-tbl thead th{padding-top:0;font-size:13px;font-weight:600;color:var(--mute);text-transform:none;letter-spacing:0}
+.inc-tbl .num{text-align:right;white-space:nowrap;padding-left:16px}
+.inc-tbl td.num{font-weight:650}
+.inc-tbl td.mu{font-weight:500;color:var(--mute)}
+.inc-tbl .n{display:block;font-weight:600}
+.inc-tbl small{display:block;margin-top:2px;font-size:13px;color:var(--mute)}
+.inc-tbl tfoot th,.inc-tbl tfoot td{border-bottom:0;border-top:1px solid color-mix(in srgb,var(--ink) 30%,var(--line));padding-bottom:0;font-weight:700;color:var(--ink);text-transform:none;font-size:15px;letter-spacing:0}
+.inc-tbl tfoot td.mu{color:var(--mute)}
+
+/* ---- sponsors ---- */
+.inc-add{display:inline-flex;align-items:center;gap:6px}
+.inc-add .ei{width:15px;height:15px;stroke-width:2.2}
+.inc-list{list-style:none;margin:0;padding:0}
+.inc-sp{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"a b m";gap:14px;align-items:start;padding:16px 0;border-bottom:1px solid var(--line)}
+.inc-sp:first-child{padding-top:4px}
+.inc-sp:last-child{padding-bottom:0;border-bottom:0}
+.inc-sp .av2{grid-area:a;width:42px;height:42px;font-size:14px}
+.inc-spb{grid-area:b;min-width:0;display:flex;flex-direction:column;gap:6px}
+.inc-sph{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.inc-sph .ttl{font-weight:650;font-size:16px;overflow-wrap:anywhere}
+.inc-sp .sub{font-size:13.5px;overflow-wrap:anywhere}
+.inc-sp .sub b{color:var(--ink);font-weight:600}
+.inc-chk{display:flex;align-items:center;gap:8px;margin:0;font-size:13.5px;font-weight:500;color:var(--mute);cursor:pointer}
+.inc-chk input{width:18px;height:18px;margin:0;accent-color:var(--acc)}
+.inc-act{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.inc-amt{grid-area:m;display:flex;flex-direction:column;align-items:flex-end;gap:1px;text-align:right}
+.inc-amt b{font:650 18px/1.2 var(--disp);letter-spacing:-.01em}
+.inc-amt span{font-size:13px;color:var(--mute)}
+.inc-amt .due{margin-top:3px;font-weight:600;color:var(--warn)}
+.inc-formrow{list-style:none}
+.inc-form{margin:0 0 12px;padding:16px}
+.inc-form .rg{gap:14px 12px}
+.inc-form+.inc-list>.inc-sp:first-child{padding-top:16px}
+.inc-formrow>.inc-form{margin-bottom:0}
+.inc-in{position:relative}
+.inc-in>span{position:absolute;left:12px;top:50%;translate:0 -50%;color:var(--mute);font-weight:600;pointer-events:none}
+.inc-in input{padding-left:28px}
+.inc-empty{display:flex;flex-direction:column;align-items:center;gap:4px;padding:26px 16px 10px;text-align:center}
+.inc-empty>.ei{box-sizing:border-box;width:46px;height:46px;padding:12px;margin-bottom:8px;border-radius:14px;background:var(--tint);color:var(--acc)}
+.inc-empty b{font:650 16px var(--txt)}
+.inc-empty p{max-width:34ch;margin:0 0 12px;font-size:14px;color:var(--mute)}
+
+/* ---- export ---- */
+.inc-exp{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.inc-exp.one{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.inc-exp .meta{margin-right:4px}
+
+/* ---- parts that other files draw (cash summary, payment links) pick up the same rhythm ---- */
+.inc .li{padding:13px 0}
+.inc .li .ttl{font-weight:600}
+.inc .grid .card{padding:18px}
+
+/* ---- narrow screens ---- */
+@media(max-width:720px){
+ .inc-hero{grid-template-columns:1fr;gap:22px;padding:22px 20px}
+ .inc-kpis{padding-top:18px;border-top:1px solid var(--line)}
+ .inc-kpis>div:first-child{border-top:0;padding-top:13px}
+}
+@media(max-width:560px){
+ .inc .card{padding:18px 16px}
+ .inc-seg{flex:1 1 100%}
+ .inc-lg{grid-template-columns:1fr}
+ .inc-sp{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"a b" "a m";gap:10px 12px}
+ .inc-amt{flex-direction:row;flex-wrap:wrap;align-items:baseline;justify-content:flex-start;gap:4px 8px;text-align:left}
+ .inc-amt .due{margin:0}
+ .inc-add{flex:1 1 100%;justify-content:center}
+ .inc-exp .btn:first-child{flex:1 1 100%}
+}
