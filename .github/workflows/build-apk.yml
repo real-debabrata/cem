@@ -66,6 +66,11 @@ jobs:
       - name: Add in-app updater (Android)
         run: bash scripts/patch-updater.sh
 
+      # v4.1.1: full-screen look. Paints the theme colour behind the status bar (notification bar), the camera cut-out and the
+      # navigation bar instead of a black bar. Must stay AFTER the updater step (both edit MainActivity).
+      - name: Add theme colour behind the status bar and camera (Android)
+        run: bash scripts/patch-themebars.sh
+
       - name: Set version and signing in build.gradle
         run: bash scripts/patch-android.sh
 
