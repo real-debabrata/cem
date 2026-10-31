@@ -616,6 +616,38 @@ Re-publish the 3.6.0 rules and restore the 3.6.0 files. Anyone holding a new or 
 | Help & guides does not open | `help.js` was not uploaded to `www/`, or the website was not redeployed. |
 
 
+## Upgrade to 4.1.1: full-screen look, theme colour behind the status bar and camera
+
+Fixes the black bar at the top of the Android app. Before, the app sat below a plain black system bar that also covered the front camera area. Now the app is drawn edge to edge and your theme colour (Light, Dark or Auto) is painted behind the **status bar** (clock, battery, notifications), the **camera notch or punch-hole** and the **navigation bar**. The clock and battery icons switch between dark and light so they stay readable.
+
+**No Firebase rules change, no Worker change, no new secret.** The website is not affected. This is a change to the app itself, so you must **build a new APK**; deploying the website alone does nothing for it.
+
+### How it works (so you can trust it)
+Same idea as the in-app updater: the Build APK workflow adds a small native plugin (`scripts/native/ThemeBarsPlugin.java`) to the app it builds. It switches the window to edge-to-edge, asks Android to draw into the camera cut-out, and moves the page clear of the bars with native padding (so nothing can hide behind the clock or camera, and the keyboard still lifts the page). `www/themebars.js` tells it which colour: Midnight Navy while the loading screen shows, then the page background (`--bg`), updated whenever the theme changes. It does not use CSS `env(safe-area-inset-*)`, because older Android WebViews report 0 for it.
+
+### Files
+In the repo root replace: `SETUP.md`. Add `release-notes/v4.1.1.md`.
+In `.github/workflows/` replace: `build-apk.yml` (it gains one step, "Add theme colour behind the status bar and camera (Android)", right after the updater step).
+In `scripts/` add: `patch-themebars.sh`, and in `scripts/native/` add `ThemeBarsPlugin.java`.
+In `www/` add: `themebars.js`. Replace: `ui.js`, `index.html`, `login.html`.
+In `tests/` add (optional): `test-themebars.mjs`.
+
+### Steps (about 10 minutes)
+1. Upload the files above (keep the folder structure), commit.
+2. **Actions > Build APK > Run workflow** as usual. The version becomes 4.1.1. Check the log of the step **Add theme colour behind the status bar and camera (Android)**: it must print `ThemeBarsPlugin.java copied`, `MainActivity: ThemeBarsPlugin registered and set up` and `styles.xml: transparent bars and default colour added`.
+3. On a phone that already has 3.14.0 or newer: profile menu > **Update app** > Update. (Older apps: install the APK from the Release page once.)
+4. Open the app. The top of the screen should be your theme colour, with no black bar. Change Profile menu > Theme between Light and Dark: the status bar and bottom bar follow.
+
+### If something looks wrong
+| What you see | Fix |
+|---|---|
+| Black bar still there | The APK was built before this upgrade, or the update was not installed. Check the version in Profile menu > About (must be 4.1.1). |
+| Build fails on the new step with `MainActivity.java has no onCreate(...)` | The step order changed. The new step must come after "Add in-app updater (Android)". |
+| Header sits under the clock | Tell me the phone model and Android version. The native padding should prevent this on every supported phone. |
+
+### Rolling back
+Restore the 4.1.0 versions of `build-apk.yml`, `ui.js`, `index.html` and `login.html`. `themebars.js`, `patch-themebars.sh` and `ThemeBarsPlugin.java` can stay or be deleted.
+
 ## Upgrade to 3.14.0: update the app from inside the app
 
 Adds **Profile menu > Update app** to the Android app. It asks GitHub Releases for the newest version, downloads the APK inside the app with a progress bar, then shows an **Update** button that opens Android's normal update screen. Nobody has to visit the download website any more. The website (`downloadcem.deba.indevs.in`) keeps working as before, and is still how a brand new user installs the app.
