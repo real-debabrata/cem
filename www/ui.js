@@ -1,4 +1,5 @@
-/* CEM 3.14.0: in-app updates. Profile menu > Update app (see updater.js and scripts/native/ApkUpdaterPlugin.java); every Update button in the Android app now uses it instead of opening the browser.
+/* CEM 4.1.1: full-screen look in the Android app: theme colour behind the status bar, camera cut-out and navigation bar (see themebars.js, scripts/native/ThemeBarsPlugin.java). This file is unchanged apart from the version.
+   CEM 3.14.0: in-app updates. Profile menu > Update app (see updater.js and scripts/native/ApkUpdaterPlugin.java); every Update button in the Android app now uses it instead of opening the browser.
    CEM 3.13.0: new Events tab (see index.html, theme.css, motion.js). This file is unchanged apart from the version.
    CEM 3.12.3: Privacy Policy page (privacy.html), linked next to the Terms from the sign-in page, the profile menu and the Account panel.
    CEM 3.12.2: Terms & Conditions page (terms.html), linked from the sign-in page, the profile menu and the Account panel.
@@ -7,7 +8,7 @@
    CEM 3.7.0: new brand (Indigo #5948F5, Amber, Midnight Navy, Cloud White, Fresh Mint) and new logo.
    Campus Events: menu bar, UI polish, app version control. Loads after sync.js/app2.js; no core code is modified. */
 (function(){
-const APP_VERSION='4.1.0',BUILD='2026-10-31';   // bump these on every release
+const APP_VERSION='4.1.1',BUILD='2026-10-31';   // bump these on every release
 const $=s=>document.querySelector(s),LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const root=document.documentElement;
 let theme=localStorage.getItem('campus-theme')||'auto',CFG=LS('campus-ver',null);
