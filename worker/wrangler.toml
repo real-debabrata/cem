@@ -23,7 +23,7 @@ id = "PASTE_KV_NAMESPACE_ID_HERE"
 
 [vars]
 # Sites allowed to call the Worker: your website, GitHub Pages address, and the Android app (https://localhost).
-ALLOWED_ORIGINS = "https://cem.deva.indevs.in,https://YOUR_USERNAME.github.io,https://localhost,capacitor://localhost"
+ALLOWED_ORIGINS = "https://cem.deba.indevs.in,https://YOUR_USERNAME.github.io,https://localhost,capacitor://localhost"
 # The sender address you verified in Brevo.
 FROM_EMAIL = "you@example.com"
 FROM_NAME = "Campus Events"
