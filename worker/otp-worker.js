@@ -34,6 +34,7 @@
  *   POST /ai/chat      { ctx, contents:[{role,text}] }                     -> { ok, text, calls:[{name,args}], left }
  *   GEMINI_API_KEY     secret  your key from aistudio.google.com (free, no card). Without it the helper says it is not set up.
  *   GEMINI_MODEL       text    OPTIONAL, default "gemini-3.8-flash"
+ *   GEMINI_FALLBACK_MODEL text OPTIONAL, used if the main model is busy (503). Default "gemini-3.6-flash"; set to "off" to disable
  *   AI_DAILY_LIMIT     text    OPTIONAL, AI messages one signed-in user may send per day (default 40)
  * Privacy: the app removes names/emails/phones/UPI ids before sending, and this Worker removes them again. Message text is never
  * stored or logged here; only a per-user daily COUNT is kept (under a hashed id). Needs the same Firebase sign-in token as /mail.
@@ -642,21 +643,32 @@ async function handleAi(req, env, cors) {
   };
   if (x.allow.length) { body.tools = [{ functionDeclarations: x.allow.map(k => AI_DECL[k]) }]; body.toolConfig = { functionCallingConfig: { mode: 'AUTO' } }; }
 
-  const ac = new AbortController(), timer = setTimeout(() => ac.abort(), 28000);
-  let r, j = null;
-  try {
-    r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': String(env.GEMINI_API_KEY) }, body: JSON.stringify(body), signal: ac.signal });
-    try { j = await r.json(); } catch (e) { j = null; }
-  } catch (e) {
-    throw new HttpError(504, 'The AI took too long to answer. Please try again.');
-  } finally { clearTimeout(timer); }
-
-  if (!r.ok) {
-    // log only the error CODE, never the message (it could echo the prompt)
+  // Google sometimes answers "busy" (503) for a new model. Try again once, then fall back to a second free model.
+  const fb = String(env.GEMINI_FALLBACK_MODEL == null ? 'gemini-3.6-flash' : env.GEMINI_FALLBACK_MODEL).trim();
+  const plan = [model, model];
+  if (fb && fb.toLowerCase() !== 'off' && fb !== model && /^[a-z0-9][a-z0-9.-]{2,60}$/i.test(fb)) plan.push(fb);
+  const BUSY = st => st === 0 || st === 500 || st === 503 || st === 504;
+  let r = null, j = null, st = 0;
+  for (let i = 0; i < plan.length; i++) {
+    const ac = new AbortController(), timer = setTimeout(() => ac.abort(), 15000);
+    r = null; j = null;
+    try {
+      r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(plan[i]) + ':generateContent', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': String(env.GEMINI_API_KEY) }, body: JSON.stringify(body), signal: ac.signal });
+      try { j = await r.json(); } catch (e) { j = null; }
+    } catch (e) { r = null; j = null; }   // timeout or network failure counts like a busy service
+    finally { clearTimeout(timer); }
+    st = r ? r.status : 0;
+    if (r && r.ok) break;
+    // log only the error CODE and model name, never the message (it could echo the prompt)
     const er = (j && j.error) || {}, why = ((er.details || []).find(d => d && d.reason) || {}).reason || '';
-    console.error('Gemini error', r.status, er.status || '', why);
-    if (r.status === 429) throw new HttpError(429, 'The free AI limit is reached for a moment. Please wait a minute and try again.');
+    console.error('Gemini error', st, er.status || '', why, plan[i]);
+    if (!BUSY(st)) break;                          // only "busy" errors are retried
+    if (i === 0) await new Promise(res => setTimeout(res, 700));
+  }
+  if (!r || !r.ok) {
+    if (st === 429) throw new HttpError(429, 'The free AI limit is reached for a moment. Please wait a minute and try again.');
+    if (BUSY(st)) throw new HttpError(503, 'Google\'s AI is busy right now. Please try again in a minute.');
     throw new HttpError(502, 'The AI service refused the request. The admin should check GEMINI_API_KEY and GEMINI_MODEL (Worker > Logs).');
   }
   const parts = (((j && j.candidates && j.candidates[0]) || {}).content || {}).parts || [];
