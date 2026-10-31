@@ -36,6 +36,7 @@
  *   GEMINI_MODEL       text    OPTIONAL, default "gemini-3.8-flash"
  *   GEMINI_FALLBACK_MODEL text OPTIONAL, used if the main model is busy (503). Default "gemini-3.6-flash"; set to "off" to disable
  *   AI_DAILY_LIMIT     text    OPTIONAL, AI messages one signed-in user may send per day (default 40)
+ * v4.2.0 (CEM Pro): five more functions for the same endpoint: analyze_breakeven, create_budget, add_sponsor, draft_sponsor_email, email_attendees. No new variables.
  * Privacy: the app removes names/emails/phones/UPI ids before sending, and this Worker removes them again. Message text is never
  * stored or logged here; only a per-user daily COUNT is kept (under a hashed id). Needs the same Firebase sign-in token as /mail.
  * The SMTP password is used for that one request and is never stored or logged. Optional settings:
@@ -577,7 +578,19 @@ const AI_DECL = {
   assign_task: { name: 'assign_task', description: 'Create a task and give it to someone on the team.',
     parameters: { type: 'OBJECT', properties: { title: AI_STR('What must be done, max 120 characters.'), assignee: AI_STR('A person token such as "P2", or "me".'), due_date: AI_STR('YYYY-MM-DD, or empty if no date was given.'), group: AI_STR('Name of an existing task group, if one clearly fits.'), details: AI_STR('Optional extra detail, max 300 characters.') }, required: ['title'] } },
   add_shopping_item: { name: 'add_shopping_item', description: 'Add an item to the "items to buy" list.',
-    parameters: { type: 'OBJECT', properties: { item: AI_STR('Item name, max 80 characters.'), quantity: { type: 'INTEGER' }, price_each: { type: 'NUMBER', description: 'Estimated price per piece in rupees, or 0 if unknown.' }, assignee: AI_STR('A person token such as "P2" who should buy it, or empty.') }, required: ['item'] } }
+    parameters: { type: 'OBJECT', properties: { item: AI_STR('Item name, max 80 characters.'), quantity: { type: 'INTEGER' }, price_each: { type: 'NUMBER', description: 'Estimated price per piece in rupees, or 0 if unknown.' }, assignee: AI_STR('A person token such as "P2" who should buy it, or empty.') }, required: ['item'] } },
+  // v4.2.0 (CEM Pro): money and outreach
+  analyze_breakeven: { name: 'analyze_breakeven', description: 'Show a break-even analysis card. The app calculates every number on the user\'s device from the real budget, sponsors, ticket price and registrations, so never calculate or quote figures yourself. Fill the optional fields only for what-if questions.',
+    parameters: { type: 'OBJECT', properties: { ticket_price: { type: 'NUMBER', description: 'What-if ticket price in rupees. Omit or 0 to use the current price.' }, extra_sponsorship: { type: 'NUMBER', description: 'What-if extra sponsorship in rupees. Omit or 0 for none.' }, cost_basis: AI_STR('Which cost to compare with. Omit unless the user said.', { enum: ['budget', 'actual'] }) } } },
+  create_budget: { name: 'create_budget', description: 'Draft budget lines for the event. Only call it when the user gave a total budget in rupees; otherwise ask for it first. The lines must add up to that total.',
+    parameters: { type: 'OBJECT', properties: { lines: { type: 'ARRAY', description: '4 to 12 budget categories that suit this type of event (for example Venue, Food, Printing, Prizes, Marketing, Contingency).', items: { type: 'OBJECT', properties: {
+      name: AI_STR('Category name, max 40 characters.'), amount: { type: 'NUMBER', description: 'Rupees for this category.' } }, required: ['name', 'amount'] } } }, required: ['lines'] } },
+  add_sponsor: { name: 'add_sponsor', description: 'Record a sponsor, donor or other income source. The app asks the user for contact details itself. Never ask for them.',
+    parameters: { type: 'OBJECT', properties: { name: AI_STR('Company or person, max 60 characters.'), kind: AI_STR('Type of income.', { enum: ['Sponsor', 'Donation', 'Other'] }), committed: { type: 'NUMBER', description: 'Rupees promised, or 0 if unknown.' }, benefits: AI_STR('What the event gives in return (logo, stall, mentions). Max 300 characters.') }, required: ['name'] } },
+  draft_sponsor_email: { name: 'draft_sponsor_email', description: 'Write a sponsorship request email. The app asks the user for the recipient address and company name itself. Never ask for them.',
+    parameters: { type: 'OBJECT', properties: { subject: AI_STR('Subject line, max 100 characters.'), body: AI_STR('Plain text, 90 to 180 words. Start with "Dear {sponsor},". End with "Regards," then "{organizer}". May use {event}, {date}, {time}, {venue}. Say what the event is, who attends, what the sponsor gets, and ask for a short call. No contact details, no made-up numbers.') }, required: ['subject', 'body'] } },
+  email_attendees: { name: 'email_attendees', description: 'Draft an email to the people registered for the event. The app opens its email window with this draft; the user chooses the recipients and presses Send there.',
+    parameters: { type: 'OBJECT', properties: { subject: AI_STR('Subject line, max 100 characters.'), body: AI_STR('Plain text, under 150 words. Start with "Hi {first_name},". May use {event}, {date}, {time}, {venue}, {organizer}. Do not invent facts. Do not write the ticket; the app adds it.'), include_ticket: { type: 'BOOLEAN', description: 'true to attach each person\'s own ticket QR code.' } }, required: ['subject', 'body'] } }
 };
 
 function aiContext(c) {
@@ -585,7 +598,7 @@ function aiContext(c) {
   const ev = c.event && typeof c.event === 'object' ? c.event : {};
   const arr = (x, n) => (Array.isArray(x) ? x : []).slice(0, n);
   const today = /^\d{4}-\d{2}-\d{2}$/.test(String(c.today || '')) ? c.today : new Date().toISOString().slice(0, 10);
-  const allow = arr(c.allow, 8).filter(k => Object.prototype.hasOwnProperty.call(AI_DECL, k));
+  const allow = arr(c.allow, 16).filter(k => Object.prototype.hasOwnProperty.call(AI_DECL, k));
   const people = arr(c.people, 40).map(p => ({ t: /^P\d{1,2}$/.test(String(p && p.t)) ? p.t : '', r: aiLine(p && p.role, 30) })).filter(p => p.t);
   return { today, allow, people,
     event: { name: aiLine(ev.name, 80), type: aiLine(ev.type, 20), date: aiLine(ev.date, 10), time: aiLine(ev.time, 5), venue: aiLine(ev.venue, 80), cap: Math.max(0, Math.min(1e6, Math.round(+ev.cap || 0))) },
@@ -593,8 +606,9 @@ function aiContext(c) {
 }
 function aiSystem(x) {
   return [
-    'You are the helper inside Campus Events, an event-management app for college teams. You work on ONE event at a time (below).',
+    'You are CEM Pro, the AI assistant inside Campus Events, an event-management app for college teams. You work on ONE event at a time (below).',
     'Your job: propose actions using the provided functions, or answer short questions about planning this event.',
+    'What you can do, when the function is available: write the event description, add registration questions, assign tasks, add items to buy, create payment links, run a break-even analysis, draft a budget, record sponsors, write sponsor outreach emails, and draft emails to attendees.',
     'Rules:',
     '- You only PROPOSE. The user confirms every action in the app, so say "Here is a draft", never "Done".',
     '- People appear only as tokens (P1, P2, ...) or "me". Use tokens exactly as given. Never invent a name or token.',
@@ -602,6 +616,11 @@ function aiSystem(x) {
     '- If something essential is missing (for example the amount of a fee), ask ONE short question instead of guessing.',
     '- Several requests in one message mean several function calls (at most ' + AI_MAX_CALLS + ').',
     '- Dates: write YYYY-MM-DD. Today is ' + x.today + '.',
+    '- Break-even: call analyze_breakeven. Never state figures of your own; the app calculates them on the device.',
+    '- Budget: if the user gave no total in rupees, ask for it first. Then call create_budget with lines that add up to that total.',
+    '- Sponsors: use add_sponsor to record one and draft_sponsor_email for outreach. Emails to attendees: use email_attendees. The user reviews and sends; never say an email was sent.',
+    '- If asked what you can do, answer in one or two sentences naming only the available functions below.',
+    '- Questions about how to use the app, or problems with it: do not invent buttons or steps. Say the app\'s Help & guides (profile icon) and Tutorials page explain it, and offer to help with the planning side.',
     '- Replies: under 60 words, plain text, no markdown. If the request has nothing to do with this event, say you can only help plan it.',
     '- Available functions: ' + (x.allow.length ? x.allow.join(', ') : 'none (this user may only chat)') + '. If an action is not available, say the user\'s role does not allow it.',
     '',
