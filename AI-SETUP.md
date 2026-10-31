@@ -19,7 +19,7 @@ It only proposes. You tap **Confirm** before anything is saved.
 2. Replace everything with the new `otp-worker.js` and **Deploy**.
 3. **Settings > Variables and Secrets > Add**:
    - Type **Secret**, name `GEMINI_API_KEY`, value = your key.
-   - Optional text vars: `GEMINI_MODEL` (default `gemini-3.8-flash`), `AI_DAILY_LIMIT` (default `40` messages per user per day).
+   - Optional text vars: `GEMINI_MODEL` (default `gemini-3.8-flash`), `GEMINI_FALLBACK_MODEL` (used when Google says the main model is busy; default `gemini-3.6-flash`, `off` to disable), `AI_DAILY_LIMIT` (default `40` messages per user per day).
 4. Your existing `ALLOWED_ORIGINS` and the `OTP_KV` binding are reused. Nothing else to add.
 
 ## 3. Update the app
@@ -41,6 +41,7 @@ Sign in, open an event, tap **✨ AI**, accept the notice, then try:
 |---|---|
 | "The AI helper is not set up yet" | Add the `GEMINI_API_KEY` secret and redeploy. |
 | "The AI service refused the request" | Worker > Logs shows a reason code. `ACCESS_TOKEN_TYPE_UNSUPPORTED`: the key type is not accepted on this route, create a new key in AI Studio. `NOT_FOUND`: set `GEMINI_MODEL` to a model listed in AI Studio. |
+| "Google's AI is busy right now" | Google answered 503 (overloaded). The Worker already retries once and then tries the fallback model. Wait a minute and resend. |
 | "free AI limit is reached" | Wait a minute. The free plan has low per-minute limits. |
 | "Sign in to use the AI helper" | The helper needs a signed-in account. |
 
