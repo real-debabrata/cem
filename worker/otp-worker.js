@@ -30,6 +30,13 @@
  *                      v3.11.0: ticket = the attendee's designed ticket picture (PNG as base64, up to ~520 KB; real ones are ~60 KB). It is shown in the email and also
  *                      attached as <file>. Without it the small QR picture (qr) is shown, as in v3.10.0. The answer includes ticketPng:true.
  * Both need the header  Authorization: Bearer <Firebase ID token>  (only signed-in app users may use them).
+ * v4.1.0 adds the AI helper (Google Gemini, free tier). Same Worker, one new secret:
+ *   POST /ai/chat      { ctx, contents:[{role,text}] }                     -> { ok, text, calls:[{name,args}], left }
+ *   GEMINI_API_KEY     secret  your key from aistudio.google.com (free, no card). Without it the helper says it is not set up.
+ *   GEMINI_MODEL       text    OPTIONAL, default "gemini-3.8-flash"
+ *   AI_DAILY_LIMIT     text    OPTIONAL, AI messages one signed-in user may send per day (default 40)
+ * Privacy: the app removes names/emails/phones/UPI ids before sending, and this Worker removes them again. Message text is never
+ * stored or logged here; only a per-user daily COUNT is kept (under a hashed id). Needs the same Firebase sign-in token as /mail.
  * The SMTP password is used for that one request and is never stored or logged. Optional settings:
  *   MAIL_DAILY_LIMIT    text  emails one signed-in user may send per day through this Worker (default 1000)
  *   SMTP_ALLOWED_HOSTS  text  OPTIONAL comma list, e.g. "smtp.gmail.com,smtp-relay.brevo.com"; leave out to allow any mail server
@@ -540,15 +547,137 @@ async function handleMail(path, req, env, cors) {
   return json({ ok: true, sent, results, ticketPng: true }, 200, cors);   // ticketPng tells the app this Worker is v3.11.0 or newer
 }
 
+/* ---------- v4.1.0: AI helper (Gemini free tier) ---------- */
+const AI_MAX_BODY = 14000, AI_MAX_TURNS = 10, AI_MAX_TEXT = 1200, AI_MAX_CALLS = 6;
+
+// Privacy backstop. The app already hides names and numbers before sending; this removes anything that still looks like contact or payment data.
+function aiScrub(v, n) {
+  let s = String(v == null ? '' : v).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, ' ');
+  s = s.replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/g, '[email]')
+       .replace(/\b[A-Za-z0-9._-]{2,}@[A-Za-z][A-Za-z0-9]{1,}\b/g, '[upi]')
+       .replace(/https?:\/\/\S+/gi, '[link]')
+       .replace(/\+\d{1,3}[\s-]?\d[\d\s-]{7,13}\d/g, '[number]')
+       .replace(/\b\d{5}[\s-]\d{5}\b/g, '[number]')
+       .replace(/\b\d{4}\s\d{4}\s\d{4}\b/g, '[number]')
+       .replace(/\d{10,}/g, '[number]');
+  return s.trim().slice(0, n || AI_MAX_TEXT);
+}
+const aiLine = (v, n) => aiScrub(v, n).replace(/\s+/g, ' ');
+
+const AI_STR = (d, extra) => Object.assign({ type: 'STRING', description: d }, extra || {});
+const AI_DECL = {
+  write_event_description: { name: 'write_event_description', description: 'Write or rewrite the public description of the open event.',
+    parameters: { type: 'OBJECT', properties: { description: AI_STR('Final text: 2 to 4 short sentences, max 500 characters, plain text, no hashtags, no contact details.') }, required: ['description'] } },
+  create_payment_link: { name: 'create_payment_link', description: 'Prepare a payment link (a page where people pay by UPI). The app fills in the payee and UPI id itself. Never ask for them.',
+    parameters: { type: 'OBJECT', properties: { title: AI_STR('Short title, e.g. "Entry fee".'), amount: { type: 'NUMBER', description: 'Amount in rupees. 0 means the payer types the amount.' }, note: AI_STR('Optional one-line note shown on the payment page.') }, required: ['title', 'amount'] } },
+  add_registration_questions: { name: 'add_registration_questions', description: 'Add questions to the registration form of the open event (they are added after the existing ones).',
+    parameters: { type: 'OBJECT', properties: { questions: { type: 'ARRAY', description: 'Up to 8 new questions.', items: { type: 'OBJECT', properties: {
+      label: AI_STR('The question, max 60 characters.'), type: AI_STR('Answer type.', { enum: ['text', 'select', 'checkbox'] }), required: { type: 'BOOLEAN' }, options: AI_STR('For type select only: choices separated by commas.') }, required: ['label', 'type'] } } }, required: ['questions'] } },
+  assign_task: { name: 'assign_task', description: 'Create a task and give it to someone on the team.',
+    parameters: { type: 'OBJECT', properties: { title: AI_STR('What must be done, max 120 characters.'), assignee: AI_STR('A person token such as "P2", or "me".'), due_date: AI_STR('YYYY-MM-DD, or empty if no date was given.'), group: AI_STR('Name of an existing task group, if one clearly fits.'), details: AI_STR('Optional extra detail, max 300 characters.') }, required: ['title'] } },
+  add_shopping_item: { name: 'add_shopping_item', description: 'Add an item to the "items to buy" list.',
+    parameters: { type: 'OBJECT', properties: { item: AI_STR('Item name, max 80 characters.'), quantity: { type: 'INTEGER' }, price_each: { type: 'NUMBER', description: 'Estimated price per piece in rupees, or 0 if unknown.' }, assignee: AI_STR('A person token such as "P2" who should buy it, or empty.') }, required: ['item'] } }
+};
+
+function aiContext(c) {
+  c = c && typeof c === 'object' ? c : {};
+  const ev = c.event && typeof c.event === 'object' ? c.event : {};
+  const arr = (x, n) => (Array.isArray(x) ? x : []).slice(0, n);
+  const today = /^\d{4}-\d{2}-\d{2}$/.test(String(c.today || '')) ? c.today : new Date().toISOString().slice(0, 10);
+  const allow = arr(c.allow, 8).filter(k => Object.prototype.hasOwnProperty.call(AI_DECL, k));
+  const people = arr(c.people, 40).map(p => ({ t: /^P\d{1,2}$/.test(String(p && p.t)) ? p.t : '', r: aiLine(p && p.role, 30) })).filter(p => p.t);
+  return { today, allow, people,
+    event: { name: aiLine(ev.name, 80), type: aiLine(ev.type, 20), date: aiLine(ev.date, 10), time: aiLine(ev.time, 5), venue: aiLine(ev.venue, 80), cap: Math.max(0, Math.min(1e6, Math.round(+ev.cap || 0))) },
+    groups: arr(c.groups, 12).map(g => aiLine(g, 40)).filter(Boolean), questions: arr(c.questions, 14).map(q => aiLine(q, 60)).filter(Boolean) };
+}
+function aiSystem(x) {
+  return [
+    'You are the helper inside Campus Events, an event-management app for college teams. You work on ONE event at a time (below).',
+    'Your job: propose actions using the provided functions, or answer short questions about planning this event.',
+    'Rules:',
+    '- You only PROPOSE. The user confirms every action in the app, so say "Here is a draft", never "Done".',
+    '- People appear only as tokens (P1, P2, ...) or "me". Use tokens exactly as given. Never invent a name or token.',
+    '- Never ask for, guess or repeat emails, phone numbers, UPI ids, bank or ID numbers. The app fills in payment details itself.',
+    '- If something essential is missing (for example the amount of a fee), ask ONE short question instead of guessing.',
+    '- Several requests in one message mean several function calls (at most ' + AI_MAX_CALLS + ').',
+    '- Dates: write YYYY-MM-DD. Today is ' + x.today + '.',
+    '- Replies: under 60 words, plain text, no markdown. If the request has nothing to do with this event, say you can only help plan it.',
+    '- Available functions: ' + (x.allow.length ? x.allow.join(', ') : 'none (this user may only chat)') + '. If an action is not available, say the user\'s role does not allow it.',
+    '',
+    'EVENT: ' + x.event.name + ' | type ' + x.event.type + ' | ' + x.event.date + ' ' + x.event.time + ' | venue ' + x.event.venue + ' | capacity ' + x.event.cap,
+    'TEAM (tokens only): ' + (x.people.length ? x.people.map(p => p.t + ' (' + (p.r || 'member') + ')').join(', ') : 'nobody else yet'),
+    'TASK GROUPS: ' + (x.groups.join(', ') || 'none'),
+    'EXISTING REGISTRATION QUESTIONS: ' + (x.questions.join(' | ') || 'none')
+  ].join('\n');
+}
+async function aiHash(uid) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('cem-ai|' + uid));
+  return [...new Uint8Array(d)].slice(0, 8).map(x => x.toString(16).padStart(2, '0')).join('');
+}
+async function handleAi(req, env, cors) {
+  const user = await authUser(req, env);
+  if (!env.GEMINI_API_KEY) throw new HttpError(503, 'The AI helper is not set up yet. Please tell the admin.');
+  const model = String(env.GEMINI_MODEL || 'gemini-3.8-flash').trim();
+  if (!/^[a-z0-9][a-z0-9.-]{2,60}$/i.test(model)) throw new HttpError(500, 'The AI helper is not set up correctly. Please tell the admin.');
+  const t = await req.text();
+  if (t.length > AI_MAX_BODY) throw new HttpError(413, 'That message is too long.');
+  let b; try { b = JSON.parse(t); } catch (e) { throw new HttpError(400, 'Bad request.'); }
+  if (!b || typeof b !== 'object' || !Array.isArray(b.contents)) throw new HttpError(400, 'Bad request.');
+
+  let turns = b.contents.slice(-AI_MAX_TURNS).map(m => ({ role: m && m.role === 'model' ? 'model' : 'user', text: aiScrub(m && m.text) })).filter(m => m.text);
+  while (turns.length && turns[0].role !== 'user') turns.shift();
+  if (!turns.length || turns[turns.length - 1].role !== 'user') throw new HttpError(400, 'Bad request.');
+
+  // daily allowance per signed-in user (only a number is stored, under a hashed id)
+  const limit = Math.max(1, Math.min(500, parseInt(env.AI_DAILY_LIMIT, 10) || 40));
+  const dayKey = env.OTP_KV ? 'ai:' + await aiHash(user.uid) + ':' + new Date().toISOString().slice(0, 10) : '';
+  const used = dayKey ? (parseInt(await env.OTP_KV.get(dayKey), 10) || 0) : 0;
+  if (used >= limit) throw new HttpError(429, 'You have used today\'s ' + limit + ' AI messages. Try again tomorrow.');
+
+  const x = aiContext(b.ctx);
+  const body = {
+    systemInstruction: { parts: [{ text: aiSystem(x) }] },
+    contents: turns.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
+    generationConfig: { temperature: 0.4, maxOutputTokens: 1500 }
+  };
+  if (x.allow.length) { body.tools = [{ functionDeclarations: x.allow.map(k => AI_DECL[k]) }]; body.toolConfig = { functionCallingConfig: { mode: 'AUTO' } }; }
+
+  const ac = new AbortController(), timer = setTimeout(() => ac.abort(), 28000);
+  let r, j = null;
+  try {
+    r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': String(env.GEMINI_API_KEY) }, body: JSON.stringify(body), signal: ac.signal });
+    try { j = await r.json(); } catch (e) { j = null; }
+  } catch (e) {
+    throw new HttpError(504, 'The AI took too long to answer. Please try again.');
+  } finally { clearTimeout(timer); }
+
+  if (!r.ok) {
+    // log only the error CODE, never the message (it could echo the prompt)
+    const er = (j && j.error) || {}, why = ((er.details || []).find(d => d && d.reason) || {}).reason || '';
+    console.error('Gemini error', r.status, er.status || '', why);
+    if (r.status === 429) throw new HttpError(429, 'The free AI limit is reached for a moment. Please wait a minute and try again.');
+    throw new HttpError(502, 'The AI service refused the request. The admin should check GEMINI_API_KEY and GEMINI_MODEL (Worker > Logs).');
+  }
+  const parts = (((j && j.candidates && j.candidates[0]) || {}).content || {}).parts || [];
+  const text = aiLine(parts.filter(p => p && typeof p.text === 'string' && !p.thought).map(p => p.text).join(' '), 700);
+  const calls = parts.filter(p => p && p.functionCall && AI_DECL[p.functionCall.name] && x.allow.includes(p.functionCall.name))
+    .slice(0, AI_MAX_CALLS).map(p => ({ name: p.functionCall.name, args: p.functionCall.args && typeof p.functionCall.args === 'object' ? p.functionCall.args : {} }));
+  if (!text && !calls.length) throw new HttpError(502, 'The AI had no answer for that. Try saying it differently.');
+  if (dayKey) await env.OTP_KV.put(dayKey, String(used + 1), { expirationTtl: 172800 });
+  return json({ ok: true, text, calls, left: Math.max(0, limit - used - 1) }, 200, cors);
+}
+
 export default {
   async fetch(req, env) {
     const cors = corsHeaders(req, env), path = new URL(req.url).pathname.replace(/\/+$/, '') || '/';
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (req.method === 'GET' && path === '/') return json({ ok: true, service: 'campus-events-otp' }, 200, cors);
     try {
-      const isMail = path === '/mail/verify' || path === '/mail/send';
-      if (req.method !== 'POST' || (path !== '/send' && path !== '/verify' && !isMail)) throw new HttpError(404, 'Not found.');
+      const isMail = path === '/mail/verify' || path === '/mail/send', isAi = path === '/ai/chat';
+      if (req.method !== 'POST' || (path !== '/send' && path !== '/verify' && !isMail && !isAi)) throw new HttpError(404, 'Not found.');
       if (!cors['Access-Control-Allow-Origin']) throw new HttpError(403, 'This site is not allowed to use the sign-up service.');
+      if (isAi) return await handleAi(req, env, cors);
       if (isMail) return await handleMail(path, req, env, cors);
       const body = await readJson(req);
       return path === '/send' ? await handleSend(body, req, env, cors) : await handleVerify(body, req, env, cors);
