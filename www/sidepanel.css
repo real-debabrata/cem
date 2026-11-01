@@ -1,0 +1,80 @@
+/* CEM 4.2.0: side panel. Uses the app's own colour variables, so Light, Dark and Auto all work.
+   Loaded last (index.html re-appends it after theme.css). */
+
+/* menu button in the top bar */
+.drb{display:inline-flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer;transition:background .15s}
+.drb:hover{background:var(--tint)}
+.drb[hidden]{display:none}
+.drb .dr-i{width:22px;height:22px}
+
+/* the panel: slides in over the page on small screens */
+.dr{position:fixed;z-index:36;top:0;bottom:0;left:0;width:min(86vw,320px);display:flex;flex-direction:column;background:var(--card);color:var(--ink);
+ box-shadow:var(--pop);transform:translateX(-104%);visibility:hidden;
+ transition:transform .26s cubic-bezier(.3,.8,.3,1),visibility 0s linear .26s;
+ padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.dr.open{transform:none;visibility:visible;transition:transform .26s cubic-bezier(.3,.8,.3,1),visibility 0s}
+.dr-scrim{position:fixed;inset:0;z-index:35;background:rgba(16,23,43,.5);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .2s}
+.dr-scrim.on{opacity:1;pointer-events:auto}
+html.dr-lock,html.dr-lock body{overflow:hidden}
+@media(prefers-reduced-motion:reduce){.dr,.dr.open,.dr-scrim{transition:none}}
+
+/* brand row */
+.dr-top{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.dr-logo{width:40px;height:40px;border-radius:12px;flex:none}
+.dr-brand{flex:1;min-width:0;font:700 21px var(--disp);letter-spacing:-.02em;white-space:nowrap}
+.dr-brand b{color:var(--acc);font-weight:700}
+.dr-x{display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;border-radius:50%;background:none;color:var(--ink);cursor:pointer}
+.dr-x:hover{background:var(--tint)}
+
+/* who / which event */
+.dr-who{display:flex;align-items:center;gap:14px;width:100%;padding:16px 20px;margin:0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;color:inherit;font:inherit;text-align:left}
+button.dr-who{cursor:pointer}
+button.dr-who:hover{background:var(--tint)}
+.dr-av{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:50%;font:700 17px var(--disp);color:var(--c,var(--acc));background:color-mix(in srgb,var(--c,var(--acc)) 14%,transparent)}
+.dr-wt{flex:1;min-width:0;display:flex;flex-direction:column}
+.dr-wt b{font:650 18px/1.25 var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dr-wt small{font-size:13px;color:var(--mute)}
+.dr-who>.dr-i{color:var(--mute);width:20px;height:20px}
+
+/* list */
+.dr-nav{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:10px 12px 12px}
+.dr-i{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.dr-it{display:flex;align-items:center;gap:16px;width:100%;min-height:48px;margin:2px 0;padding:0 18px;border:0;border-radius:999px;background:none;color:var(--ink);font:500 16px var(--txt);text-align:left;cursor:pointer;transition:background .15s}
+.dr-it .dr-i{color:var(--mute)}
+.dr-it:hover{background:var(--tint)}
+.dr-it.on{background:linear-gradient(90deg,#5948f5,#8b46ee);color:#fff;box-shadow:0 10px 20px -10px rgba(89,72,245,.75)}
+.dr-it.on .dr-i{color:#fff}
+.dr-l{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dr-sw{display:block;width:12px;height:12px;margin:0 5px;border-radius:50%;background:var(--c);stroke:none}
+.dr-n{flex:none;min-width:22px;padding:0 7px;border-radius:11px;background:var(--line);color:var(--ink);font:700 12px/22px var(--txt);font-style:normal;text-align:center}
+.dr-n.hot{background:#ffb547;color:#10172b}
+.dr-it.on .dr-n{background:rgba(255,255,255,.24);color:#fff}
+.dr-it.on .dr-n.hot{background:#ffb547;color:#10172b}
+.dr-dot{flex:none;width:9px;height:9px;margin-right:6px;border-radius:50%;background:#ffb547}
+
+/* group headings (tap to fold) */
+.dr-gh{display:flex;align-items:center;justify-content:space-between;width:100%;padding:20px 18px 8px;border:0;background:none;color:var(--mute);font:700 12px var(--txt);letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+.dr-gh .dr-i{width:18px;height:18px;transition:transform .2s}
+.dr-gh[aria-expanded="false"] .dr-i{transform:rotate(-90deg)}
+.dr-gb[hidden]{display:none}
+.dr-hint{margin:22px 18px 0;color:var(--mute);font-size:14px}
+
+/* bottom links */
+.dr-foot{padding:8px 12px 12px;border-top:1px solid var(--line)}
+
+.dr button:focus-visible,.drb:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+.dr-it.on:focus-visible{outline-color:#fff;outline-offset:-4px}
+
+/* wide screens: the panel stays open on the left */
+body.dr-dock{padding-left:288px}
+body.dr-dock .dr{width:288px;transform:none;visibility:visible;box-shadow:none;border-right:1px solid var(--line);z-index:6;transition:none}
+body.dr-dock .dr-x,body.dr-dock .dr-scrim{display:none}
+body.dr-dock header h1,body.dr-dock #mb{display:none}
+body.dr-dock #jt{margin-left:auto}
+body.dr-dock header{padding-left:max(16px,calc((100vw - 288px - 980px)/2 + 16px));padding-right:max(16px,calc((100vw - 288px - 980px)/2 + 16px))}
+
+/* the event page: sections now come from the panel, so the tab strips and sub-menus are hidden */
+body.dr-on .tabs,body.dr-on .avn,body.dr-on .seg[aria-label="Expenses sections"]{display:none}
+.dr-bar{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin:14px 0 16px}
+.dr-bar h3{font:700 22px/1.2 var(--disp);letter-spacing:-.02em}
+.dr-bar span{color:var(--mute);font-size:14px}

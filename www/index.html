@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="event.css">
 <link rel="stylesheet" href="theme.css" id="cem-theme">
 <link rel="stylesheet" href="income.css" id="cem-income">
+<link rel="stylesheet" href="sidepanel.css" id="cem-sidepanel">
 <title>Campus Events</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
@@ -305,5 +306,6 @@ render();
 <script src="splash.js"></script>
 <script src="themebars.js"></script>   <!-- 4.1.1: theme colour behind the status bar, camera and navigation bar (Android app) -->
 <script src="motion.js"></script>
-<script>document.head.append(document.getElementById("cem-theme"),document.getElementById("cem-income"))</script>   <!-- 3.9.0: re-append so theme.css comes after the styles ui.js and motion.js inject -->
+<script src="sidepanel.js"></script>   <!-- 4.2.0: side panel with every event section (replaces the tab strip) -->
+<script>document.head.append(document.getElementById("cem-theme"),document.getElementById("cem-income"),document.getElementById("cem-sidepanel"))</script>   <!-- 3.9.0: re-append so theme.css comes after the styles ui.js and motion.js inject -->
 </body></html>
