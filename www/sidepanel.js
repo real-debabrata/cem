@@ -18,7 +18,7 @@ if(!hdr||typeof render!=='function'||typeof ev!=='function')return;
 const root=document.documentElement,body=document.body;
 
 const LS={get(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const COL=LS.get('cem-drawer-closed',{});   // groups the person has folded: {attendees:true}
+const KEY='cem-drawer-closed-v2',COL=LS.get(KEY,{});   // groups the person has folded: {attendees:true}
 
 /* ---------- icons ---------- */
 const svg=p=>`<svg class="dr-i" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
@@ -103,47 +103,68 @@ function jumpItems(){
 
 /* ---------- drawing ---------- */
 const initials=s=>{const w=String(s||'').split(/[^A-Za-z0-9]+/).filter(Boolean);return ((w[0]||'?')[0]+(w[1]?w[1][0]:'')).toUpperCase()};
+let ix=0;   // position in the entrance sequence (CSS --i), reset on every paint
+const st=()=>` style="--i:${Math.min(ix++,14)}"`;
 function item(it){
  const at=it.go?`data-go="${it.go}"`:it.open?`data-open="${esc(it.open)}"`:`data-sp-dt="${it.dt}"${it.av?` data-sp-av="${it.av}"`:''}${it.xv?` data-sp-xv="${it.xv}"`:''}`;
  const lead=it.i?svg(P[it.i]):`<span class="dr-i dr-sw" style="--c:${it.color}"></span>`;
  const tail=it.n>0?`<em class="dr-n${it.hot?' hot':''}">${it.n}</em>`:it.dot?'<i class="dr-dot" role="img" aria-label="Unread messages"></i>':'';
- return `<button type="button" class="dr-it${it.on?' on':''}" data-spk="${esc(it.k)}" ${at}${it.on?' aria-current="page"':''}>${lead}<span class="dr-l">${esc(it.l)}</span>${tail}</button>`;
+ return `<button type="button" class="dr-it${it.on?' on':''}" data-spk="${esc(it.k)}" ${at}${it.on?' aria-current="page"':''}${st()}>${lead}<span class="dr-l">${esc(it.l)}</span>${tail}</button>`;
 }
 function group(g){
  const c=!!COL[g.id];
- return `<section class="dr-g"><button type="button" class="dr-gh" data-spk="g:${g.id}" data-sp-g="${g.id}" aria-expanded="${!c}" aria-controls="drg-${g.id}"><span>${esc(g.t)}</span>${svg(P.chev)}</button><div class="dr-gb" id="drg-${g.id}"${c?' hidden':''}>${g.items.map(item).join('')}</div></section>`;
+ return `<section class="dr-g"><button type="button" class="dr-gh" data-spk="g:${g.id}" data-sp-g="${g.id}" aria-expanded="${!c}" aria-controls="drg-${g.id}"${st()}><span>${esc(g.t)}</span>${svg(P.chev)}</button><div class="dr-gb${c?' c':''}" id="drg-${g.id}"><div class="dr-gbi">${g.items.map(item).join('')}</div></div></section>`;
 }
 function who(e){
  if(e){
   const c=(window.TYPES&&TYPES[e.type])||'#5948f5',d0=new Date((e.date||'')+'T00:00'),dt=isNaN(d0)?'':d0.toLocaleDateString([],{day:'numeric',month:'short'});
-  return `<button type="button" class="dr-who" data-go="events" data-spk="who" aria-label="Open event: ${esc(e.name)}. Switch to another event"><span class="dr-av" style="--c:${c}">${esc(initials(e.name))}</span><span class="dr-wt"><b>${esc(e.name)}</b><small>${esc(e.type)}${dt?' · '+esc(dt):''}</small></span>${svg(P.swap)}</button>`;
+  return `<button type="button" class="dr-who" data-go="events" data-spk="who" aria-label="Open event: ${esc(e.name)}. Switch to another event"${st()}><span class="dr-av" style="--c:${c}">${esc(initials(e.name))}</span><span class="dr-wt"><b>${esc(e.name)}</b><small>${esc(e.type)}${dt?' · '+esc(dt):''}</small></span>${svg(P.swap)}</button>`;
  }
  const nm=String(window.MYNAME||'').trim()||'Guest',n=S.events.length;
- return `<div class="dr-who"><span class="dr-av">${esc(initials(nm))}</span><span class="dr-wt"><b>${esc(nm)}</b><small>${n} event${n===1?'':'s'}</small></span></div>`;
+ return `<div class="dr-who"${st()}><span class="dr-av">${esc(initials(nm))}</span><span class="dr-wt"><b>${esc(nm)}</b><small>${n} event${n===1?'':'s'}</small></span></div>`;
 }
 
 const dr=document.createElement('aside'),scrim=document.createElement('div'),hb=document.createElement('button');
 dr.id='drw';dr.className='dr';dr.setAttribute('aria-label','Main menu');
+// the frame is built once; only the event card and the list are redrawn, so the active-item pill can glide between items
+dr.innerHTML=`<div class="dr-top" style="--i:0">${LOGO}<span class="dr-brand">Campus <b>Events</b></span><button type="button" class="dr-x" data-sp-close="1" aria-label="Close menu">${svg(P.x)}</button></div><div id="drs"></div><div class="dr-nav" id="drn"><i class="dr-pill" id="drp" aria-hidden="true"></i><div id="drc"></div></div><div class="dr-foot"><button type="button" class="dr-it" data-u="help" data-spk="help" style="--i:13">${svg(P.help)}<span class="dr-l">Help &amp; guides</span></button><button type="button" class="dr-it" data-u="acct" data-spk="acct" style="--i:14">${svg(P.acct)}<span class="dr-l">Account &amp; join event</span></button></div>`;
+const slot=dr.querySelector('#drs'),cont=dr.querySelector('#drc'),pill=dr.querySelector('#drp');
 scrim.id='drx';scrim.className='dr-scrim';
 hb.id='drb';hb.type='button';hb.className='drb';hb.setAttribute('aria-label','Open menu');hb.setAttribute('aria-controls','drw');hb.setAttribute('aria-expanded','false');hb.innerHTML=svg(P.menu);
 hdr.insertBefore(hb,hdr.firstChild);body.append(scrim,dr);
 
-let isOpen=false,returnTo=null;
+let isOpen=false,returnTo=null,placed=false,enterT=0;
 const mq=window.matchMedia?matchMedia('(min-width:1100px)'):{matches:false};
 const docked=()=>!!mq.matches;
 
+// the purple pill sits behind the active item and glides to the next one
+function place(snap){
+ const on=cont.querySelector('.dr-it.on');
+ if(!on||on.closest('.dr-gb.c')){pill.classList.remove('show');return}
+ const y=on.offsetTop,h=on.offsetHeight;
+ if(!h)return;   // panel not laid out (yet)
+ if(snap||!placed)pill.style.transition='none';
+ else if(pill.style.transition==='none'){void pill.offsetWidth;pill.style.transition=''}
+ pill.style.transform=`translateY(${y}px)`;pill.style.height=h+'px';
+ pill.classList.add('show');placed=true;
+}
+// while a group folds or unfolds, keep the pill on its item frame by frame
+function track(){
+ const t0=performance.now(),f=()=>{place(true);if(performance.now()-t0<360)requestAnimationFrame(f)};
+ requestAnimationFrame(f);
+}
+
 function paint(){
  const e=curEvent(),keep=document.activeElement,fk=keep&&dr.contains(keep)?keep.getAttribute('data-spk'):null;
- const nav=dr.querySelector('.dr-nav'),top=nav?nav.scrollTop:0;
- let h=`<div class="dr-top">${LOGO}<span class="dr-brand">Campus <b>Events</b></span><button type="button" class="dr-x" data-sp-close="1" aria-label="Close menu">${svg(P.x)}</button></div>${who(e)}<nav class="dr-nav" aria-label="Sections">`;
- h+=`<div class="dr-main">${mainItems().map(item).join('')}</div>`;
+ ix=1;
+ slot.innerHTML=who(e);
+ let h=`<div class="dr-main">${mainItems().map(item).join('')}</div>`;
  if(e)h+=eventGroups(e).map(group).join('');
  else if(S.events.length)h+=group({id:'jump',t:'Your events',items:jumpItems()});
  else h+='<p class="dr-hint">Create an event to manage attendees, tasks and money from here.</p>';
- h+=`</nav><div class="dr-foot"><button type="button" class="dr-it" data-u="help" data-spk="help">${svg(P.help)}<span class="dr-l">Help &amp; guides</span></button><button type="button" class="dr-it" data-u="acct" data-spk="acct">${svg(P.acct)}<span class="dr-l">Account &amp; join event</span></button></div>`;
- dr.innerHTML=h;
- const n2=dr.querySelector('.dr-nav');if(n2)n2.scrollTop=top;
+ cont.innerHTML=h;
  if(fk){const f=[...dr.querySelectorAll('[data-spk]')].find(x=>x.getAttribute('data-spk')===fk);if(f)f.focus({preventScroll:true})}
+ place(!(isOpen||docked()));
 }
 
 function sync(){   // panel mode (docked / slide-over) and the state that depends on it
@@ -153,6 +174,7 @@ function sync(){   // panel mode (docked / slide-over) and the state that depend
  if(dk&&isOpen)setOpen(false,true);
  dr.toggleAttribute('inert',!dk&&!isOpen);
  hb.hidden=dk;
+ place(true);
 }
 function setOpen(v,quiet){
  if(docked())v=false;
@@ -161,10 +183,13 @@ function setOpen(v,quiet){
  root.classList.toggle('dr-lock',v);
  hb.setAttribute('aria-expanded',String(v));
  dr.toggleAttribute('inert',!v&&!docked());
- if(v){dr.setAttribute('aria-modal','true');returnTo=document.activeElement;paint();
-  const t=dr.querySelector('.dr-it.on')||dr.querySelector('.dr-it');
-  if(t){t.focus({preventScroll:true});t.scrollIntoView&&t.scrollIntoView({block:'nearest'})}}
- else{dr.removeAttribute('aria-modal');
+ clearTimeout(enterT);
+ if(v){dr.setAttribute('aria-modal','true');returnTo=document.activeElement;
+  dr.classList.remove('dr-enter');paint();place(true);
+  void dr.offsetWidth;dr.classList.add('dr-enter');enterT=setTimeout(()=>dr.classList.remove('dr-enter'),900);   // one staggered entrance per opening
+  const t=dr.querySelector('#drc .dr-it.on')||dr.querySelector('.dr-it');
+  if(t){t.focus({preventScroll:true});t.scrollIntoView&&t.scrollIntoView({block:'nearest'});place(true)}}
+ else{dr.classList.remove('dr-enter');dr.removeAttribute('aria-modal');
   if(!quiet&&returnTo&&returnTo.focus&&document.contains(returnTo))returnTo.focus({preventScroll:true});returnTo=null}
 }
 
@@ -198,7 +223,10 @@ document.addEventListener('click',x=>{
  if(!dr.contains(b))return;
  const D=b.dataset;
  if(D.spClose!==undefined){setOpen(false);return}
- if(D.spG){COL[D.spG]=!COL[D.spG];LS.set('cem-drawer-closed',COL);paint();return}
+ if(D.spG){   // fold / unfold in place (no redraw), so the height and the arrow animate
+  const c=!COL[D.spG];COL[D.spG]=c;LS.set(KEY,COL);
+  const gb=b.closest('.dr-g').querySelector('.dr-gb');gb.classList.toggle('c',c);b.setAttribute('aria-expanded',String(!c));track();return;
+ }
  if(D.spDt){
   const E=curEvent();if(!E)return;
   V.dt=D.spDt;
