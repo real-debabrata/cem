@@ -1,4 +1,10 @@
-CEM 4.2.0 - side panel
+CEM 4.3.0 - profile pictures
 Upload everything in this folder to the ROOT of your repo (real-debabrata/cem), keeping the folder structure. Replace files when asked.
-Then: Actions > Build APK > Run workflow (Android), or just let GitHub Pages redeploy (website).
-New: www/sidepanel.js, www/sidepanel.css. Changed: www/index.html, www/ui.js, www/help.js, package.json, README.md.
+
+STEP 1 (do this FIRST, before the app update): Firebase console > Firestore Database > Rules > paste the whole new firestore.rules > Publish.
+   Without it, saving a photo shows "Photo not saved. Publish the latest firestore.rules". Nothing else breaks.
+STEP 2: Actions > Build APK > Run workflow (Android), or just let GitHub Pages redeploy (website).
+
+New: www/avatar.js, release-notes/v4.3.0.md, tests/test-avatar.mjs.
+Changed: firestore.rules, package.json, START-HERE.txt, www/index.html, www/ui.js, www/sync.js, www/chat.js, www/app2.js, www/event.js, www/sidepanel.js, www/privacy.html.
+No Worker change. No new Firebase service (no Storage, no Blaze plan).

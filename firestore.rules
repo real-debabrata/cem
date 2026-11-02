@@ -168,12 +168,19 @@ service cloud.firestore {
             : ((n.rc.r in (r == 'manager' ? ['treasurer','lead','coord','desk','logi','spons','vol','member','viewer'] : ['manager','treasurer','lead','coord','desk','logi','spons','vol','member','viewer'])
                 || (n.rc.r.matches('c_[a-z0-9]{3,10}') && n.rc.r in customRoles(o)))
                && n.members[n.rc.u].role == n.rc.r
-               && n.members[n.rc.u].keys().hasOnly(['name','role'])
+               && n.members[n.rc.u].keys().hasOnly(['name','role','pic'])
                && n.members[n.rc.u].name == o.members[n.rc.u].name
+               && n.members[n.rc.u].get('pic', '') == o.members[n.rc.u].get('pic', '')
                && n.memberIds.toSet() == o.memberIds.toSet()));
     }
 
-    // Anyone in the event may change THEIR OWN display name, nothing else about themselves.
+    // v4.3.0: a profile picture is a small data-URL made on the phone (64 x 64, WebP or JPEG), at most 4000 characters.
+    function picOk(p) {
+      return p is string && p.size() <= 4000 && p.matches('data:image/(jpeg|webp);base64,[A-Za-z0-9+/=]+');
+    }
+
+    // Anyone in the event may change THEIR OWN display name and profile picture (v4.3.0), nothing else about themselves.
+    // An unchanged name is always accepted (an older name made from a long email address may be over 40 characters).
     function ownNameOk() {
       let n = request.resource.data;
       let o = resource.data;
@@ -181,10 +188,11 @@ service cloud.firestore {
       return amMember()
         && topChanged().hasOnly(['members'])
         && n.members.diff(o.members).affectedKeys() == [me].toSet()
-        && n.members[me].keys().hasOnly(['name','role'])
+        && n.members[me].keys().hasOnly(['name','role','pic'])
         && n.members[me].role == o.members[me].role
-        && n.members[me].name is string
-        && n.members[me].name.size() >= 2 && n.members[me].name.size() <= 40;
+        && (n.members[me].name == o.members[me].name
+            || (n.members[me].name is string && n.members[me].name.size() >= 2 && n.members[me].name.size() <= 40))
+        && (!('pic' in n.members[me]) || picOk(n.members[me].pic));
     }
 
     // Leaving an event: remove only yourself (the owner cannot leave, the owner deletes the event).
@@ -208,9 +216,10 @@ service cloud.firestore {
         && n.memberIds.toSet().difference(o.memberIds.toSet()) == [me].toSet()
         && o.memberIds.toSet().difference(n.memberIds.toSet()).size() == 0
         && n.members.diff(o.members).affectedKeys() == [me].toSet()
-        && n.members[me].keys().hasOnly(['name','role'])
+        && n.members[me].keys().hasOnly(['name','role','pic'])
         && n.members[me].role == 'member'
-        && n.members[me].name is string;
+        && n.members[me].name is string
+        && (!('pic' in n.members[me]) || picOk(n.members[me].pic));
     }
 
     match /events/{id} {
@@ -381,6 +390,19 @@ service cloud.firestore {
         && canPay(resource.data.eid)
         && request.resource.data.eid == resource.data.eid;
       allow delete: if signedIn() && canPay(resource.data.eid);
+    }
+
+    // v4.3.0: your own profile picture. users/{uid} = { pic: '' or a small data-URL, at: time in ms }. Only you can read or change your own document.
+    // Other people see your picture through the copy kept inside each event's member list (members.<uid>.pic).
+    match /users/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if false;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['pic','at'])
+        && request.resource.data.pic is string
+        && (request.resource.data.pic == '' || picOk(request.resource.data.pic))
+        && request.resource.data.at is number;
+      allow delete: if signedIn() && request.auth.uid == uid;
     }
 
     // App version control: everyone can read, nobody can write from the app. Edit this doc in the Firebase console.
