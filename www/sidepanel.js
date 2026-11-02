@@ -120,8 +120,8 @@ function who(e){
   const c=(window.TYPES&&TYPES[e.type])||'#5948f5',d0=new Date((e.date||'')+'T00:00'),dt=isNaN(d0)?'':d0.toLocaleDateString([],{day:'numeric',month:'short'});
   return `<button type="button" class="dr-who" data-go="events" data-spk="who" aria-label="Open event: ${esc(e.name)}. Switch to another event"${st()}><span class="dr-av" style="--c:${c}">${esc(initials(e.name))}</span><span class="dr-wt"><b>${esc(e.name)}</b><small>${esc(e.type)}${dt?' · '+esc(dt):''}</small></span>${svg(P.swap)}</button>`;
  }
- const nm=String(window.MYNAME||'').trim()||'Guest',n=S.events.length;
- return `<div class="dr-who"${st()}><span class="dr-av">${esc(initials(nm))}</span><span class="dr-wt"><b>${esc(nm)}</b><small>${n} event${n===1?'':'s'}</small></span></div>`;
+ const nm=String(window.MYNAME||'').trim()||'Guest',n=S.events.length,pic=window.cemPicOf?cemPicOf(null,window.MYUID):'';   // 4.3.0: profile photo
+ return `<div class="dr-who"${st()}><span class="dr-av${pic?' dr-pic':''}">${pic?`<img src="${esc(pic)}" alt="">`:esc(initials(nm))}</span><span class="dr-wt"><b>${esc(nm)}</b><small>${n} event${n===1?'':'s'}</small></span></div>`;
 }
 
 const dr=document.createElement('aside'),scrim=document.createElement('div'),hb=document.createElement('button');

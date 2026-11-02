@@ -59,7 +59,7 @@ function infoV(e){
  const venue=/^https?:\/\//i.test(e.venue||'')?`<a href="${esc(e.venue)}" target="_blank" rel="noopener noreferrer">${esc(e.venue)}</a>`:(esc(e.venue)||'<span class="meta">Not set</span>');
  const past=e.date&&e.date<loc();
  const share=e.cloud?`<div class="code"><b aria-label="Event code">${esc(e.id)}</b><button class="btn ghost sm" data-copy="${esc(e.id)}">Copy code</button></div>
-   <p class="meta" style="margin:8px 0 0">${Object.keys(e.members||{}).length} member(s). ntfy topic: ntfy.sh/${esc(e.ntfy||'')}</p>`
+   ${window.cemStack?`<div style="margin-top:12px">${cemStack(e,8,30)}</div>`:''}<p class="meta" style="margin:8px 0 0">${Object.keys(e.members||{}).length} member(s). ntfy topic: ntfy.sh/${esc(e.ntfy||'')}</p>`
   :(window.shareBar?shareBar(e):'');
  return `<div class="card" style="border-left:6px solid ${TYPES[e.type]||'#5948f5'}">
   <div class="sh" style="margin-bottom:0"><div class="row"><span class="tag" style="color:${TYPES[e.type]}">${esc(e.type)}</span>${past?'<span class="pill">Past event</span>':''}</div>${mgr?`<button class="btn ghost sm" data-edit="${e.id}">Edit event</button>`:''}</div>

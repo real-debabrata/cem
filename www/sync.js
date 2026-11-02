@@ -292,6 +292,7 @@ function panel(){
  if(!ready){tp.innerHTML='<h3>Sync is off</h3><p class="meta">Add your Firebase config in firebase-config.js to share events with your team and get live alerts.</p>';return}
  if(!U){tp.innerHTML='<p class="meta">Not signed in.</p>';return}
  tp.innerHTML=`<button type="button" class="x" id="tpx" aria-label="Close">✕</button><h3>${esc(U.displayName||'Member')}</h3><p class="meta">${esc(U.email)}</p>
+ ${window.cemAv?`<div class="tpp"><span id="tpav">${cemAv(null,U.uid,U.displayName||U.email,56)}</span><button type="button" class="btn sm" data-u="pic">Change photo</button></div>`:''}
  <label for="nmi">Your name</label><div class="row"><input id="nmi" maxlength="40" value="${esc(U.displayName||'')}" autocomplete="name" style="flex:1"><button class="btn" id="nmb">Save</button></div>
  <label>Join an event</label><div class="row"><input id="jc" placeholder="Event code" style="flex:1;text-transform:uppercase"><button class="btn" id="jb">Join</button></div>
  <label>Notify me about</label><div class="row">${[['tasks','Tasks'],['people','People'],['money','Money'],['event','Event changes'],['chat','Chat messages'],['mention','Chat mentions']].map(k=>`<label style="margin:0"><input type="checkbox" data-p="${k[0]}" ${P[k[0]]?'checked':''}> ${k[1]}</label>`).join('')}</div>

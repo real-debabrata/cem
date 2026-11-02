@@ -1,4 +1,5 @@
-/* CEM 4.2.0: side panel (see sidepanel.js). This file is unchanged apart from the version.
+/* CEM 4.3.0: profile pictures (see avatar.js). This file changes only the version, the picture in the top-bar circle, and a "Profile photo" entry in the account menu.
+   CEM 4.2.0: side panel (see sidepanel.js). This file is unchanged apart from the version.
    CEM 4.1.1: full-screen look in the Android app: theme colour behind the status bar, camera cut-out and navigation bar (see themebars.js, scripts/native/ThemeBarsPlugin.java). This file is unchanged apart from the version.
    CEM 3.14.0: in-app updates. Profile menu > Update app (see updater.js and scripts/native/ApkUpdaterPlugin.java); every Update button in the Android app now uses it instead of opening the browser.
    CEM 3.13.0: new Events tab (see index.html, theme.css, motion.js). This file is unchanged apart from the version.
@@ -9,7 +10,7 @@
    CEM 3.7.0: new brand (Indigo #5948F5, Amber, Midnight Navy, Cloud White, Fresh Mint) and new logo.
    Campus Events: menu bar, UI polish, app version control. Loads after sync.js/app2.js; no core code is modified. */
 (function(){
-const APP_VERSION='4.2.0',BUILD='2026-11-01';   // bump these on every release
+const APP_VERSION='4.3.0',BUILD='2026-11-01';   // bump these on every release
 const $=s=>document.querySelector(s),LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const root=document.documentElement;
 let theme=localStorage.getItem('campus-theme')||'auto',CFG=LS('campus-ver',null);
@@ -75,7 +76,7 @@ av.setAttribute('aria-label','Account menu');hdr.insertBefore(mb,nav);hdr.append
 function paint(){
  const h=[...nav.querySelectorAll('button')].map(b=>{const m=b.textContent.match(/^(.*?)\s*\((\d+)\)\s*$/),on=b.classList.contains('on'),g=b.dataset.go;
   return `<button data-go="${g}" class="${on?'on':''}" ${on?'aria-current="page"':''}>${IC[g]||''}<span>${m?m[1]:b.textContent}</span>${m?`<em>${m[2]}</em>`:''}</button>`}).join('');
- mb.innerHTML=h;bn.innerHTML=h;av.textContent=(window.MYNAME||'?').trim().slice(0,1).toUpperCase();
+ mb.innerHTML=h;bn.innerHTML=h;if(window.cemPaintSelf)cemPaintSelf(av);else av.textContent=(window.MYNAME||'?').trim().slice(0,1).toUpperCase();
 }
 new MutationObserver(paint).observe(nav,{childList:true});
 new MutationObserver(()=>{const e=$('#app .empty');if(e&&/^No upcoming/.test(e.textContent)&&!e.querySelector('button'))e.insertAdjacentHTML('beforeend','<div><button class="btn" data-go="new">Create your first event</button></div>')}).observe($('#app'),{childList:true});
@@ -123,7 +124,7 @@ const TUT_URL='https://cem.deba.indevs.in/tutorials/';
 function openUM(){
  const u=window.firebase&&firebase.apps.length?firebase.auth().currentUser:null;
  um.innerHTML=`<div class="uh"><b>${esc(window.MYNAME||'Guest')}</b><span>${esc(u?u.email:'Not signed in')}</span></div>
- <button data-u="acct">Account, alerts & join event</button><button data-u="help">Help & guides</button><button data-u="tut">Tutorials</button><button data-u="terms">Terms & Conditions</button><button data-u="privacy">Privacy Policy</button><button data-u="theme">Theme <small>${theme}</small></button>
+ <button data-u="pic">Profile photo</button><button data-u="acct">Account, alerts & join event</button><button data-u="help">Help & guides</button><button data-u="tut">Tutorials</button><button data-u="terms">Terms & Conditions</button><button data-u="privacy">Privacy Policy</button><button data-u="theme">Theme <small>${theme}</small></button>
  ${isApp()?`<button data-u="appupd">Update app${newer()?' <small>New</small>':''}</button>`:''}<button data-u="about">About & updates <small>v${APP_VERSION}</small></button>${u?'<button data-u="out" class="dg">Sign out</button>':''}`;
  um.classList.toggle('hid');
 }
@@ -134,6 +135,7 @@ document.addEventListener('click',e=>{
  if(t===av)return openUM();
  const u=t&&t.dataset.u;if(!u)return;um.classList.add('hid');
  if(u==='acct'){const p=$('#tp');if(tb&&(!p||p.classList.contains('hid')))tb.click()}   // open (never toggle shut) the account / alerts / join panel
+ else if(u==='pic'){if(window.cemPicOpen)cemPicOpen();else toast('Profile photos did not load. Reload the app.')}
  else if(u==='theme'){theme={auto:'light',light:'dark',dark:'auto'}[theme];localStorage.setItem('campus-theme',theme);applyTheme();toast('Theme: '+theme)}
  else if(u==='help'){if(window.openHelp)openHelp();else toast('Help did not load. Reload the app.')}
  else if(u==='tut')window.open(TUT_URL,'_blank','noopener,noreferrer');   // website tutorials page: new tab on the web, the phone's own browser in the app

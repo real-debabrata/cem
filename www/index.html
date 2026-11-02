@@ -153,7 +153,7 @@ function evRow(x){
  const v=evVenue(e.venue);
  return `<button type="button" class="evr${g<0?' past':g===0?' today':''}${full?' full':''}" data-open="${esc(e.id)}">
  <span class="evd"><small>${dt?dt.toLocaleDateString([],{month:'short'})+yr:''}</small><b>${dt?dt.getDate():'\u2013'}</b></span>
- <span class="evm"><span class="evt">${esc(e.name)}</span><span class="evi"><span class="evk"><i style="background:${TYPES[e.type]||'var(--acc)'}"></i>${esc(e.type)}</span><span class="evw">${ei('clock')}${evWhen(e,g)}</span>${v?`<span class="evv">${v}</span>`:''}</span></span>
+ <span class="evm"><span class="evt">${esc(e.name)}</span><span class="evi"><span class="evk"><i style="background:${TYPES[e.type]||'var(--acc)'}"></i>${esc(e.type)}</span><span class="evw">${ei('clock')}${evWhen(e,g)}</span>${v?`<span class="evv">${v}</span>`:''}</span>${window.cemStack?cemStack(e,4,22,1):''}</span>
  <span class="evrg"><span class="evn">${full?'Full ('+n+' of '+cap+')':cap?`<b>${n}</b> of ${cap} registered`:`<b>${n}</b> registered`}</span>${cap?`<span class="bar"><i style="width:${p}%"></i></span>`:''}</span>
  <span class="evch">${ei('right')}</span></button>`}
 function evView(){
@@ -290,6 +290,7 @@ render();
 <script src="expenses.js"></script>
 <script src="event.js"></script>
 <script src="chat.js"></script>
+<script src="avatar.js"></script>   <!-- 4.3.0: profile pictures (events, people list, chat). Must load before ui.js -->
 <script src="signup.js"></script>
 <script src="ticketart.js"></script>
 <script src="scan.js"></script>

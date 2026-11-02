@@ -1,4 +1,5 @@
-/* CEM 2.0.0: event chat. 3.1.0: scrolling fixes (the chat fills the screen and only the message list scrolls) and @tagging of members.
+/* CEM 4.3.0: the first message of each run shows the sender's profile photo (avatar.js; looked up by user id from the event's member list, no extra reads).
+   CEM 2.0.0: event chat. 3.1.0: scrolling fixes (the chat fills the screen and only the message list scrolls) and @tagging of members.
    Free-plan design: Firestore only (events/{eventId}/chat/{messageId}). No Cloud Functions, no Storage, no extra service.
    - Every member (also people who join later) can read the whole history; "Load older messages" pages back 40 at a time.
    - Own messages can be edited or deleted for 2 hours (enforced by firestore.rules, not just by this file).
@@ -179,7 +180,7 @@ function showMn(e,t){
  c.mi=Math.min(c.mi||0,st.items.length-1);
  let p=$('cmn');if(!p){p=document.createElement('div');p.id='cmn';p.className='cmn';p.setAttribute('role','listbox');box.append(p)}
  const cc=box.querySelector('.cc');p.style.bottom=(cc?cc.offsetHeight+6:64)+'px';
- p.innerHTML=st.items.map((x,i)=>`<div class="cmi${i===c.mi?' on':''}" role="option" data-mn="${x.id}"><b>${esc(x.n)}</b>${x.r?`<small>${esc(x.r)}</small>`:''}</div>`).join('');
+ p.innerHTML=st.items.map((x,i)=>`<div class="cmi${i===c.mi?' on':''}" role="option" data-mn="${x.id}">${window.cemAv?cemAv(e,x.id,x.n,22):''}<b>${esc(x.n)}</b>${x.r?`<small>${esc(x.r)}</small>`:''}</div>`).join('');
 }
 function pickMn(uid){
  const e=ev(V.eid),c=CH[V.eid],t=$('cin');if(!e||!c||!c.mn||!t)return;
@@ -215,7 +216,7 @@ function msgsHtml(e){
   const mine=m.u===me,grp=m.u===pu&&m.at-pt<3e5,r=roleOf(e,m.u);pu=m.u;pt=m.at;
   const nm=(mine?'You':esc(m.n))+(r?' ('+esc(r)+')':''),clr=mine?'inherit':'hsl('+hue(m.u)+' 65% 55%)';
   const tagged=!mine&&(m.mt||[]).includes(me);
-  h+=`<div class="cw${mine?' me':''}${grp?' g':''}${m.p?' pend':''}${tagged?' ment':''}"><div class="cb" data-cs="${m.id}">${grp?'':`<div class="cs" style="color:${clr}">${nm}</div>`}<div class="ct">${rich(e,m)}</div><div class="cmeta">${m.ed?'edited · ':''}${tm(m.at)}${m.p?' · sending':''}</div></div>${c.sel===m.id?actions(e,m):''}</div>`;
+  h+=`<div class="cw${mine?' me':''}${grp?' g':''}${m.p?' pend':''}${tagged?' ment':''}">${!mine&&!grp&&window.cemAv?cemAv(e,m.u,m.n,28,'cavc'):''}<div class="cb" data-cs="${m.id}">${grp?'':`<div class="cs" style="color:${clr}">${nm}</div>`}<div class="ct">${rich(e,m)}</div><div class="cmeta">${m.ed?'edited · ':''}${tm(m.at)}${m.p?' · sending':''}</div></div>${c.sel===m.id?actions(e,m):''}</div>`;
  });
  return h;
 }
