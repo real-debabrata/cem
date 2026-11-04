@@ -1,4 +1,5 @@
-/* CEM 4.3.0: profile pictures (see avatar.js). This file changes only the version, the picture in the top-bar circle, and a "Profile photo" entry in the account menu.
+/* CEM 4.4.0: navigation shell (see sidepanel.js). This file changes only paint(): it no longer draws the top menu and bottom bar.
+   CEM 4.3.0: profile pictures (see avatar.js). This file changes only the version, the picture in the top-bar circle, and a "Profile photo" entry in the account menu.
    CEM 4.2.0: side panel (see sidepanel.js). This file is unchanged apart from the version.
    CEM 4.1.1: full-screen look in the Android app: theme colour behind the status bar, camera cut-out and navigation bar (see themebars.js, scripts/native/ThemeBarsPlugin.java). This file is unchanged apart from the version.
    CEM 3.14.0: in-app updates. Profile menu > Update app (see updater.js and scripts/native/ApkUpdaterPlugin.java); every Update button in the Android app now uses it instead of opening the browser.
@@ -73,10 +74,8 @@ const mb=mk('div','mb'),bn=mk('div','bn'),av=mk('button','av'),um=mk('div','um')
 [um,vs,vb,ub].forEach(e=>e.classList.add('hid'));
 const jt=mk('button','jt'),js=mk('div','js');jt.dataset.u='join';jt.setAttribute('aria-label','Join team');jt.innerHTML=I('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3.2-5.5 6.5-5.5s6 2 6.5 5.5M19 8v6M16 11h6"/>')+'<span>Join team</span>';jt.classList.add('hid');js.classList.add('hid');
 av.setAttribute('aria-label','Account menu');hdr.insertBefore(mb,nav);hdr.append(jt,av);hdr.after(ub);document.body.append(bn,um,vs,vb,js);
-function paint(){
- const h=[...nav.querySelectorAll('button')].map(b=>{const m=b.textContent.match(/^(.*?)\s*\((\d+)\)\s*$/),on=b.classList.contains('on'),g=b.dataset.go;
-  return `<button data-go="${g}" class="${on?'on':''}" ${on?'aria-current="page"':''}>${IC[g]||''}<span>${m?m[1]:b.textContent}</span>${m?`<em>${m[2]}</em>`:''}</button>`}).join('');
- mb.innerHTML=h;bn.innerHTML=h;if(window.cemPaintSelf)cemPaintSelf(av);else av.textContent=(window.MYNAME||'?').trim().slice(0,1).toUpperCase();
+function paint(){   // 4.4.0: the top menu and the bottom bar are drawn by sidepanel.js now; this only refreshes the profile circle
+ if(window.cemPaintSelf)cemPaintSelf(av);else av.textContent=(window.MYNAME||'?').trim().slice(0,1).toUpperCase();
 }
 new MutationObserver(paint).observe(nav,{childList:true});
 new MutationObserver(()=>{const e=$('#app .empty');if(e&&/^No upcoming/.test(e.textContent)&&!e.querySelector('button'))e.insertAdjacentHTML('beforeend','<div><button class="btn" data-go="new">Create your first event</button></div>')}).observe($('#app'),{childList:true});

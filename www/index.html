@@ -103,23 +103,46 @@ function render(){
  const a=document.getElementById('app');
  a.innerHTML=V.tab==='mine'?mine():V.tab==='dash'?dash():V.tab==='events'?list():V.tab==='detail'?detail():form();
 }
+/* 4.4.0: Dashboard. Leads with the event that is next, then what needs attention across all events, then the numbers.
+   Shortcuts use data-nx="event id|section|view" (handled in sidepanel.js). Rows reuse evRow() from the Events tab. */
 function dash(){
- const tot=S.regs.length,ci=S.regs.filter(r=>r.in).length,cap=S.events.reduce((s,e)=>s+e.cap,0);
- const up=[...S.events].filter(e=>e.date>=d(0)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
- return `<div class="stats">
- <div class="stat"><b>${S.events.length}</b><span>Events</span></div>
- <div class="stat"><b>${tot}</b><span>Registrations</span></div>
- <div class="stat"><b>${ci}</b><span>Checked in</span></div>
- <div class="stat"><b>${cap?Math.round(tot/cap*100):0}%</b><span>Seats filled</span></div></div>
- <h2 style="margin-bottom:12px">Coming up</h2>
- ${up.length?`<div class="grid">${up.map(card).join('')}</div>`:'<div class="empty">No upcoming events. Create one from New event.</div>'}`;
-}
-function card(e){
- const n=regsOf(e.id).length,p=Math.min(100,Math.round(n/e.cap*100));
- return `<div class="ev" style="--tc:${TYPES[e.type]}"><span class="tag">${e.type}</span><h3>${esc(e.name)}</h3>
- <div class="meta">${fmt(e)}<br>${esc(e.venue)}</div>
- <div class="bar"><i style="width:${p}%"></i></div><div class="meta">${n} of ${e.cap} registered</div>
- <div class="row"><button class="btn sm" data-open="${e.id}">Manage</button></div></div>`;
+ const tot=S.regs.length,ci=S.regs.filter(r=>r.in).length,cap=S.events.reduce((s,e)=>s+(+e.cap||0),0);
+ const first=String(window.MYNAME||'').trim().split(/\s+/)[0],today=new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'});
+ const head=`<div class="dh-hd"><h2>${first?'Hello, '+esc(first):'Dashboard'}</h2><p>${esc(today)}</p></div>`;
+ if(!S.events.length)return head+`<div class="evempty">${ei('cal')}<h3>No events yet</h3><p>Create an event to take registrations, assign tasks and check people in.</p><button type="button" class="btn" data-go="new">Create your first event</button></div>`;
+ const cnt={};S.regs.forEach(r=>{cnt[r.eid]=(cnt[r.eid]||0)+1});
+ const key=e=>(e.date||'')+' '+(e.time||'00:00');
+ const up=S.events.map(e=>({e,g:dayGap(e),n:cnt[e.id]||0})).filter(x=>x.g>=0).sort((a,b)=>key(a.e).localeCompare(key(b.e)));
+ const att=[],mk=(e,n,t,nx)=>att.push({e,t:n+' '+t,nx:e.id+'|'+nx});
+ S.events.forEach(e=>{
+  const c=a=>!window.can||can(e,a),past=dayGap(e)<0;
+  const pn=window.regPendingN&&!past?regPendingN(e):0,pp=window.payPendingN&&c('pay')?payPendingN(e):0,od=window.billsOverdueN&&c('exp')?billsOverdueN(e):0;
+  if(pn)mk(e,pn,'online sign-up'+(pn>1?'s':'')+' to approve','regs|reg');
+  if(pp)mk(e,pp,'payment'+(pp>1?'s':'')+' to check','pay');
+  if(od)mk(e,od,'overdue bill'+(od>1?'s':''),'exp||bills');
+ });
+ const mine=window.mineCount?+((/\d+/.exec(mineCount())||[0])[0]):0;
+ const rows=att.slice(0,5).map(a=>`<button type="button" class="at" data-nx="${esc(a.nx)}"><span class="at-d"></span><span class="at-t"><b>${esc(a.t)}</b><small>${esc(a.e.name)}</small></span>${ei('right')}</button>`);
+ if(mine)rows.unshift(`<button type="button" class="at" data-go="mine"><span class="at-d"></span><span class="at-t"><b>${mine} task${mine>1?'s':''} assigned to you</b><small>Across your events</small></span>${ei('right')}</button>`);
+ const nx=up[0],c0=nx&&(a=>!window.can||can(nx.e,a));
+ const hero=nx?(()=>{
+  const e=nx.e,g=nx.g,n=nx.n,cap=+e.cap>0?+e.cap:0,p=cap?Math.min(100,Math.round(n/cap*100)):0,k=regsOf(e.id).filter(r=>r.in).length;
+  const lbl=g===0?'Happening today':g===1?'Tomorrow':'Next up',v=evVenue(e.venue);
+  const b=(t,s,pri)=>`<button type="button" class="nx-b${pri?' pri':''}" data-nx="${esc(e.id)}|${s}">${t}</button>`;
+  return `<section class="nx${g===0?' live':''}" style="--tc:${TYPES[e.type]||'var(--acc)'}" aria-label="${lbl}">
+   <div class="nx-k"><i></i>${lbl}</div><h3>${esc(e.name)}</h3>
+   <div class="nx-m"><span>${ei('clock')}${esc(evWhen(e,g))}</span>${v?`<span>${v}</span>`:''}</div>
+   <div class="nx-p"><div class="nx-n"><b>${n}</b>${cap?' of '+cap:''} registered${k?` <span>\u00b7 ${k} checked in</span>`:''}</div>${cap?`<span class="bar"><i style="width:${p}%"></i></span>`:''}</div>
+   <div class="nx-a">${b('Open event','info',1)}${c0('regs')?b('Check-in','regs|in'):''}${c0('addreg')||c0('regs')?b('Add attendee','regs|add'):''}${b('Tasks','tasks')}</div></section>`})():'';
+ const attn=rows.length?`<section class="atc" aria-label="Needs attention"><h3>Needs attention</h3>${rows.join('')}</section>`:'';
+ const list=up.slice(1,6);
+ return head+`<div class="dh${hero&&attn?'':' one'}">${hero}${attn}</div>
+  <div class="stats">
+   <div class="stat"><b>${S.events.length}</b><span>Events</span></div>
+   <div class="stat"><b>${tot}</b><span>Registrations</span></div>
+   <div class="stat"><b>${ci}</b><span>Checked in</span></div>
+   <div class="stat"><b>${cap?Math.round(tot/cap*100):0}%</b><span>Seats filled</span></div></div>
+  ${list.length?`<div class="dh-lh"><h3>Coming up</h3><button type="button" class="evclr" data-go="events">All events</button></div><div class="evl">${list.map(evRow).join('')}</div>`:(nx?'':`<div class="empty">No upcoming events. Create one from New event.</div>`)}`;
 }
 /* 3.13.0: Events tab. Search, dropdown filters (type, status), a sort menu and one grouped list with a row per event.
    Typing in the search box redraws only the results (evPaint), so the cursor and the phone keyboard stay where they are. */
