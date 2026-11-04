@@ -1,4 +1,5 @@
-// Loads the REAL app (www/index.html + every script) and checks the side panel.
+// Loads the REAL app (www/index.html + every script) and checks the navigation shell (sidepanel.js):
+// sidebar, context bottom bar, section strip, quick find, dashboard shortcuts.
 // Run: npm install --no-save jsdom && node tests/test-sidepanel.mjs
 import { JSDOM, VirtualConsole } from 'jsdom';
 import assert from 'node:assert/strict';
@@ -8,7 +9,7 @@ const www = fileURLToPath(new URL('../www/', import.meta.url));
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 async function boot(wide = false) {
-  const vc = new VirtualConsole(); vc.on('jsdomError', e => { if (/sidepanel/.test(String(e.stack))) console.error(e); });
+  const vc = new VirtualConsole(); vc.on('jsdomError', e => { if (/sidepanel|index\.html/.test(String(e.stack))) console.error(e); });
   const dom = await JSDOM.fromFile(www + 'index.html', {
     runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true, virtualConsole: vc,
     beforeParse(w) {
@@ -22,83 +23,120 @@ async function boot(wide = false) {
     } });
   const w = dom.window; await new Promise(r => w.addEventListener('load', r)); await wait(400);
   const $ = s => w.document.querySelector(s), $$ = s => [...w.document.querySelectorAll(s)];
-  return { w, $, $$, labels: () => $$('#drw .dr-it').map(txt), active: () => $$('#drw .dr-it.on').map(txt) };
+  return { w, $, $$, bar: () => $$('#bn button').map(b => b.querySelector('span').textContent.trim()), barOn: () => $$('#bn button.on').map(b => b.querySelector('span').textContent.trim()),
+    strip: () => $$('.sx .sx-t').map(b => b.querySelector('span').textContent.trim()), stripOn: () => $$('.sx .sx-t.on').map(b => b.querySelector('span').textContent.trim()),
+    V: () => w.eval('V'), tap: s => { const b = $(s); assert.ok(b, 'no element: ' + s); b.click(); },
+    tab: l => { const b = $$('.sx .sx-t').find(x => x.querySelector('span').textContent.trim() === l); assert.ok(b, 'no strip tab: ' + l); b.click(); },
+    area: l => { const b = $$('#bn button').find(x => x.querySelector('span').textContent.trim() === l); assert.ok(b, 'no bar item: ' + l); b.click(); },
+    qf: { open: () => $('#qfb').click(), box: () => $('#qfi'), type: v => { const i = $('#qfi'); i.value = v; i.dispatchEvent(new w.Event('input', { bubbles: true })); },
+          key: k => $('#qfi').dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })), shown: () => !$('#qf').hidden, rows: () => $$('#qfl .qf-o .qf-l').map(x => x.textContent.trim()) } };
 }
 const txt = b => [...b.children].map(c => c.textContent.trim()).filter(Boolean).join(' ');
 let n = 0; const ok = m => console.log('PASS ' + (++n) + ' ' + m);
 
 {
   const t = await boot();
-  assert.ok(t.$('#drw') && t.$('#drb') && t.$('#drx'), 'panel, menu button and scrim exist');
-  assert.equal(t.$('#drb').getAttribute('aria-expanded'), 'false'); assert.ok(t.$('#drw').hasAttribute('inert'), 'closed panel is inert');
-  ok('panel is built and closed on start');
+  assert.ok(t.$('#drw') && t.$('#bn') && t.$('#qfb') && t.$('#qf'), 'sidebar, bottom bar, quick-find button and dialog exist');
+  assert.ok(!t.$('#drb') && !t.$('#drx'), 'the hamburger and the slide-over scrim are gone');
+  assert.equal(t.$('#qf').hidden, true);
+  assert.deepEqual(t.bar(), ['Dashboard', 'Events', 'My tasks', 'New event']); assert.deepEqual(t.barOn(), ['Dashboard']);
+  const side = [...t.$$('#drn .dr-it')].map(b => b.querySelector('.dr-l').textContent.trim());
+  assert.deepEqual(side.slice(0, 3), ['Dashboard', 'Events', 'My tasks']); assert.ok(side.includes('Ignite Fest'), 'upcoming events are one click away');
+  assert.ok(t.$('#drw .dr-new[data-go="new"]'), 'New event is an action button, not a menu row');
+  assert.ok(t.$('#drw .dr-who'), 'account row'); assert.equal(t.$('#bn').getAttribute('aria-label'), 'Main');
+  ok('shell is built: sidebar + bottom bar + quick find, no hamburger; Dashboard is active');
 
-  t.$('#drb').click();
-  assert.ok(t.$('#drw').classList.contains('open')); assert.equal(t.$('#drb').getAttribute('aria-expanded'), 'true'); assert.ok(!t.$('#drw').hasAttribute('inert'));
-  assert.deepEqual(t.labels().slice(0, 4), ['Dashboard', 'Events 1', 'My tasks', 'New event']);
-  assert.ok(t.labels().includes('Ignite Fest'), 'quick list of events'); assert.ok(!t.labels().includes('Check-in'), 'no event groups yet');
-  ok('menu button opens the panel: Dashboard, Events, My tasks, New event + event shortcuts');
+  t.tap('#drw [data-open="e1"]');
+  assert.equal(t.V().tab, 'detail'); assert.equal(t.V().dt, 'info');
+  assert.deepEqual(t.bar(), ['Details', 'Attendees', 'Team', 'Money'], 'the bottom bar switches to the event areas'); assert.deepEqual(t.barOn(), ['Details']);
+  assert.equal(t.$('#bn').getAttribute('aria-label'), 'Event sections');
+  assert.equal(t.$('.ep h2').textContent, 'Ignite Fest'); assert.ok(t.$('.ep .ep-scan'), 'Scan tickets is in the event header');
+  assert.ok(!t.$('.sx'), 'Details has one section, so no strip'); assert.ok(!t.$('.eh'), 'old event header replaced');
+  assert.equal([...t.$$('#app h2')].filter(h => h.textContent === 'Ignite Fest').length, 1, 'the event name is shown once on Details');
+  assert.deepEqual([...t.$$('#drw .dr-g .dr-it.on')].map(b => b.querySelector('.dr-l').textContent), ['Details']);
+  ok('opening an event: the bar becomes Details / Attendees / Team / Money, header carries Scan, name shown once');
 
-  t.$('#drw [data-open="e1"]').click();
-  assert.ok(!t.$('#drw').classList.contains('open'), 'panel closes after choosing');
-  assert.equal(t.w.eval('V').tab, 'detail'); assert.equal(t.w.eval('V').dt, 'info');
-  assert.equal(t.$$('.tabs').length === 0, true, 'tab strip is gone');
-  assert.equal(t.$('.dr-bar h3').textContent, 'Details');
-  t.$('#drb').click();
-  const L = t.labels();
-  for (const x of ['Details', 'All attendees 1', 'Check-in', 'Add attendee', 'Email attendees', 'Tasks', 'People', 'Chat', 'Payments', 'Income', 'Budget', 'Bills', 'Vendors'])
-    assert.ok(L.some(l => l.startsWith(x)), 'missing: ' + x + ' in ' + L.join(' | '));
-  assert.deepEqual(t.active(), ['Details']);
-  assert.deepEqual(t.$$('.dr-gh').map(b => b.textContent.trim()), ['Event', 'Attendees', 'Team', 'Money']);
-  ok('with an event open the panel lists every section; Details is active and the tab strip is hidden');
+  t.area('Attendees');
+  assert.deepEqual(t.strip(), ['List', 'Check-in', 'Add', 'Email', 'Sign-ups']); assert.deepEqual(t.stripOn(), ['List']); assert.deepEqual(t.barOn(), ['Attendees']);
+  assert.ok(/Asha/.test(t.$('#app').textContent));
+  t.tab('Check-in'); assert.equal(t.V().av, 'in'); assert.deepEqual(t.stripOn(), ['Check-in']); assert.ok(/Scan tickets/.test(t.$('#app').textContent)); assert.ok(!t.$('.ep .ep-scan'), 'no duplicate Scan button on the check-in screen');
+  t.tab('Add'); assert.equal(t.V().av, 'add'); assert.ok(/Register an attendee/.test(t.$('#app').textContent));
+  t.tab('Email'); assert.equal(t.V().av, 'mail'); assert.ok(/Email attendees/.test(t.$('#app').textContent));
+  t.tab('List'); assert.equal(t.V().av, 'list'); assert.ok(t.$('.ep .ep-scan'));
+  assert.equal(t.$$('.avn').length, 1, 'the old Attendees switch is still in the page (hidden by CSS), nothing removed from the screens');
+  ok('Attendees: List, Check-in, Add, Email, Sign-ups are one always-visible strip');
 
-  const press = k => { t.$(`#drw [data-spk="${k}"]`).click(); if (!t.$('#drw').classList.contains('open')) t.$('#drb').click(); };
-  press('in'); assert.equal(t.w.eval('V').dt, 'regs'); assert.equal(t.w.eval('V').av, 'in'); assert.deepEqual(t.active(), ['Check-in']);
-  assert.ok(/Scan tickets/.test(t.$('#app').textContent), 'check-in screen is shown'); assert.equal(t.$('.dr-bar h3').textContent, 'Check-in'); assert.equal(t.$('.dr-bar span').textContent, 'Attendees');
-  press('add'); assert.equal(t.w.eval('V').av, 'add'); assert.ok(/Register an attendee/.test(t.$('#app').textContent));
-  press('mail'); assert.equal(t.w.eval('V').av, 'mail'); assert.ok(/Email attendees/.test(t.$('#app').textContent));
-  press('regs'); assert.equal(t.w.eval('V').av, 'list'); assert.ok(/Asha/.test(t.$('#app').textContent));
-  ok('Attendees entries switch between list, check-in, add and email');
+  t.area('Team'); assert.deepEqual(t.strip(), ['Tasks', 'People', 'Chat']); assert.equal(t.V().dt, 'tasks');
+  t.tab('People'); assert.equal(t.V().dt, 'people'); t.tab('Chat'); assert.equal(t.V().dt, 'chat');
+  t.area('Money'); assert.deepEqual(t.strip(), ['Payments', 'Income', 'Budget', 'Bills', 'Vendors']); assert.equal(t.V().dt, 'pay');
+  t.tab('Income'); assert.equal(t.V().dt, 'inc');
+  t.tab('Budget'); assert.equal(t.V().dt, 'exp'); assert.equal(t.V().xv, 'budget'); assert.deepEqual(t.stripOn(), ['Budget']);
+  t.tab('Bills'); assert.equal(t.V().xv, 'bills'); assert.deepEqual(t.stripOn(), ['Bills']);
+  t.tab('Vendors'); assert.equal(t.V().xv, 'vendors'); assert.deepEqual(t.stripOn(), ['Vendors']);
+  assert.equal(t.$$('.seg[aria-label="Expenses sections"]').length, 1, 'old Budget/Bills/Vendors switch is still in the DOM');
+  ok('Team (Tasks, People, Chat) and Money (Payments, Income, Budget, Bills, Vendors) open the right screens');
 
-  press('tasks'); assert.equal(t.w.eval('V').dt, 'tasks'); assert.deepEqual(t.active(), ['Tasks']);
-  press('people'); assert.equal(t.w.eval('V').dt, 'people');
-  press('chat'); assert.equal(t.w.eval('V').dt, 'chat');
-  press('pay'); assert.equal(t.w.eval('V').dt, 'pay');
-  press('inc'); assert.equal(t.w.eval('V').dt, 'inc');
-  ok('Team and Money entries open their screens');
+  // tapping an area returns to the section you last used there
+  t.area('Attendees'); t.tab('Check-in'); t.area('Team'); t.area('Attendees');
+  assert.equal(t.V().av, 'in'); assert.deepEqual(t.stripOn(), ['Check-in']);
+  t.area('Money'); assert.equal(t.V().xv, 'vendors', 'Money returns to Vendors');
+  ok('each area remembers the last section used');
 
-  press('xb'); assert.equal(t.w.eval('V').dt, 'exp'); assert.equal(t.w.eval('V').xv, 'budget'); assert.deepEqual(t.active(), ['Budget']);
-  press('xl'); assert.equal(t.w.eval('V').xv, 'bills'); assert.deepEqual(t.active(), ['Bills']);
-  press('xv'); assert.equal(t.w.eval('V').xv, 'vendors'); assert.deepEqual(t.active(), ['Vendors']);
-  assert.equal(t.$$('.seg[aria-label="Expenses sections"]').length, 1, 'old Budget/Bills/Vendors switch is still in the DOM (hidden by CSS)');
-  ok('Budget, Bills and Vendors open the matching Expenses view');
-
-  // fold a group, it stays folded after a repaint
-  t.$('#drw [data-sp-g="money"]').click();
-  assert.equal(t.$('#drw [data-sp-g="money"]').getAttribute('aria-expanded'), 'false'); assert.ok(t.$('#drg-money').hidden);
-  ok('tapping a group name folds it');
-
-  // Escape and scrim close it; the app's own buttons still work (glance tile on Details)
-  t.$('#drw [data-spk="info"]').click(); assert.equal(t.w.eval('V').dt, 'info');
-  t.$('#drb').click(); t.w.document.dispatchEvent(new t.w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-  assert.ok(!t.$('#drw').classList.contains('open'));
-  t.$('#drb').click(); t.$('#drx').click(); assert.ok(!t.$('#drw').classList.contains('open'));
-  t.$('[data-dt="regs"].gl').click(); assert.equal(t.w.eval('V').dt, 'regs'); t.$('#drb').click(); assert.deepEqual(t.active(), ['All attendees 1']);
-  ok('Escape and the scrim close the panel; the Details tiles still navigate and the panel follows');
-
-  t.$('#drw [data-go="events"]').click(); assert.equal(t.w.eval('V').tab, 'events'); t.$('#drb').click();
-  assert.deepEqual(t.active(), ['Events 1']); assert.ok(!t.labels().includes('Check-in'));
-  t.$('#drw [data-go="new"]').click(); assert.equal(t.w.eval('V').tab, 'new');
-  ok('Main entries (Events, New event) use the app navigation; event groups disappear outside an event');
+  t.tap('.ep-back'); assert.equal(t.V().tab, 'events'); assert.deepEqual(t.bar(), ['Dashboard', 'Events', 'My tasks', 'New event']); assert.deepEqual(t.barOn(), ['Events']);
+  ok('Back to Events restores the main bar');
+  t.w.close();
 }
 
+/* permissions: same rules as the old tab strip */
 {
-  const t = await boot(true);
-  assert.ok(t.w.document.body.classList.contains('dr-dock'), 'docked on wide screens'); assert.ok(t.$('#drb').hidden);
-  assert.ok(!t.$('#drw').hasAttribute('inert')); assert.equal(t.$('#drw').getAttribute('role'), 'navigation');
-  t.$('#drw [data-open="e1"]').click(); assert.equal(t.w.eval('V').tab, 'detail'); assert.ok(t.labels().includes('Check-in'));
-  t.$('#drw [data-spk="tasks"]').click(); assert.equal(t.w.eval('V').dt, 'tasks'); assert.deepEqual(t.active(), ['Tasks']);
-  ok('wide screen: panel is docked, always usable, no menu button');
+  const t = await boot();
+  t.w.can = (e, a) => !['exp', 'regs', 'pay'].includes(a);
+  t.tap('#drw [data-open="e1"]');
+  assert.ok(!t.$('.ep .ep-scan'), 'no Scan button without check-in rights');
+  t.area('Attendees'); assert.deepEqual(t.strip(), ['List', 'Add']);
+  t.area('Money'); assert.equal(t.V().dt, 'pay'); assert.deepEqual(t.strip(), [], 'only Payments is left, so there is no strip: no Income / Budget / Bills / Vendors without expense rights');
+  ok('sections follow the same permission rules as before');
+  t.w.close();
 }
-console.log('\nAll ' + n + ' checks passed');
-process.exit(0);
+
+/* quick find */
+{
+  const t = await boot();
+  t.qf.open(); assert.ok(t.qf.shown()); assert.equal(t.w.document.activeElement.id, 'qfi', 'focus goes to the search box');
+  let r = t.qf.rows(); assert.ok(r.includes('Dashboard') && r.includes('My tasks') && r.includes('New event') && r.includes('Ignite Fest') && r.includes('Help & guides'), r.join('|'));
+  t.qf.key('Escape'); assert.ok(!t.qf.shown());
+  t.w.document.dispatchEvent(new t.w.KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true })); assert.ok(t.qf.shown(), 'Ctrl+K opens');
+  t.w.document.dispatchEvent(new t.w.KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true })); assert.ok(!t.qf.shown(), 'Cmd+K toggles');
+  t.w.document.dispatchEvent(new t.w.KeyboardEvent('keydown', { key: '/', bubbles: true })); assert.ok(t.qf.shown(), '"/" opens'); t.qf.key('Escape');
+  ok('quick find opens from the button, Ctrl/Cmd+K and "/", focuses the box, closes on Esc');
+
+  t.qf.type('ignite'); assert.deepEqual(t.qf.rows(), ['Ignite Fest']); t.qf.key('Enter'); await wait(30);
+  assert.ok(!t.qf.shown()); assert.equal(t.V().tab, 'detail'); assert.equal(t.V().eid, 'e1');
+  ok('typing an event name and Enter opens that event');
+
+  r = (t.qf.open(), t.qf.rows());
+  for (const x of ['Details', 'All attendees', 'Check-in', 'Add attendee', 'Email attendees', 'Online sign-ups', 'Tasks', 'People', 'Chat', 'Payments', 'Income', 'Budget', 'Bills', 'Vendors', 'Scan tickets', 'Edit event'])
+    assert.ok(r.includes(x), 'missing ' + x + ' in ' + r.join('|'));
+  assert.ok(t.$('#qfl .qf-g') && t.$('#qfl .qf-g').textContent === 'Ignite Fest', 'functions are grouped under the event name');
+  t.qf.type('bil'); assert.equal(t.qf.rows()[0], 'Bills'); t.qf.key('Enter'); await wait(30);
+  assert.equal(t.V().dt, 'exp'); assert.equal(t.V().xv, 'bills'); assert.deepEqual(t.stripOn(), ['Bills']);
+  t.qf.open(); t.qf.type('qr'); assert.equal(t.qf.rows()[0], 'Scan tickets', 'synonyms: "qr" finds Scan tickets'); t.qf.key('Escape');
+  t.qf.open(); t.qf.type('sponsor'); assert.equal(t.qf.rows()[0], 'Income', 'synonyms: "sponsor" finds Income'); t.qf.key('ArrowDown'); t.qf.key('ArrowUp'); t.qf.key('Escape');
+  t.qf.open(); t.qf.type('zzzz'); assert.ok(/Nothing matches/.test(t.$('#qfl').textContent)); t.qf.key('Escape');
+  t.qf.open(); t.qf.type('edit'); t.qf.key('Enter'); await wait(30); assert.equal(t.V().tab, 'new', 'Edit event opens the editor');
+  ok('with an event open every function is listed; search by name or synonym; Enter runs it; empty result is explained');
+  t.w.close();
+}
+
+/* dashboard */
+{
+  const t = await boot();
+  assert.ok(t.$('.nx'), 'Next up card'); assert.ok(/Ignite Fest/.test(t.$('.nx h3').textContent)); assert.equal(t.$('.nx .nx-k').textContent.trim(), 'Next up');
+  const acts = [...t.$$('.nx .nx-b')].map(b => b.textContent); assert.deepEqual(acts, ['Open event', 'Check-in', 'Add attendee', 'Tasks']);
+  t.tap('.nx [data-nx="e1|regs|in"]'); assert.equal(t.V().tab, 'detail'); assert.equal(t.V().dt, 'regs'); assert.equal(t.V().av, 'in'); assert.deepEqual(t.stripOn(), ['Check-in']);
+  t.tap('.ep-back'); t.area('Dashboard'); t.tap('.nx [data-nx="e1|tasks"]'); assert.equal(t.V().dt, 'tasks');
+  ok('dashboard: Next up card with one-tap Check-in / Add attendee / Tasks');
+  t.w.close();
+}
+
+console.log('\nALL ' + n + ' PASSED');
