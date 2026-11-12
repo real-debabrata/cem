@@ -1,0 +1,87 @@
+/* CEM 4.5.0: Discover layout (see feed.js). Horizontal rails, poster cards and a sticky type strip on Dashboard and Events.
+   Uses the app's own colour variables, so Light, Dark and Auto all work. Loaded last (index.html re-appends it after sidepanel.css). */
+
+:root{--fd-w:clamp(158px,44vw,204px);--fd-gap:14px;--fd-ease:cubic-bezier(.22,1,.36,1)}
+@media(min-width:768px){:root{--fd-w:208px}}
+
+/* ---------- rail: a title row and one snapping, edge-bleeding row of cards ---------- */
+.rl{margin:0 0 30px}
+.rl-h{display:flex;align-items:center;gap:10px;min-height:32px;margin:0 0 10px}
+.rl-h h3{margin:0;font:650 clamp(18px,2.4vw,21px)/1.2 var(--disp);letter-spacing:-.015em}
+.rl-c{font:600 13px var(--txt);color:var(--mute)}
+.rl-all{margin-left:auto;padding:6px 2px;border:0;background:none;color:var(--acc);font:600 14px var(--txt);cursor:pointer}
+.rl-all:hover{text-decoration:underline;text-underline-offset:3px}
+.rl-nav{display:none;margin-left:auto;gap:6px}
+.rl-all~.rl-nav{margin-left:0}
+@media(hover:hover) and (pointer:fine){.rl-nav{display:inline-flex}}
+.rl-b{display:grid;place-items:center;width:32px;height:32px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--card);color:var(--ink);cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s,background .15s}
+.rl-b .ei{width:16px;height:16px}
+.rl-b.prev .ei{transform:scaleX(-1)}
+.rl-b:hover{background:var(--tint)}
+.rl.can-l .rl-b.prev,.rl.can-r .rl-b:not(.prev){opacity:1;pointer-events:auto}
+
+.rl-t{display:flex;gap:var(--fd-gap);overflow-x:auto;overflow-y:hidden;margin-inline:-16px;padding:2px 16px 8px;scroll-padding-inline:16px;scroll-snap-type:x proximity;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.rl-t::-webkit-scrollbar{display:none}
+.rl-t>*{flex:0 0 auto;scroll-snap-align:start}
+@media(min-width:768px){.rl-t{margin-inline:-8px;padding-inline:8px;scroll-padding-inline:8px}}
+@media(hover:hover) and (pointer:fine){
+ .rl.can-r .rl-t{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent)}
+ .rl.can-l .rl-t{-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px);mask-image:linear-gradient(90deg,transparent,#000 44px)}
+ .rl.can-l.can-r .rl-t{-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent)}
+}
+
+/* numbers: tiles share the rail so the page keeps one rhythm */
+.rl-stats .rl-t>.stat{flex:1 0 150px;margin:0}
+
+/* ---------- poster card: the date is the picture ---------- */
+.pc{display:flex;flex-direction:column;align-items:stretch;width:var(--fd-w);padding:0;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pc-art{position:relative;display:flex;flex-direction:column;justify-content:space-between;aspect-ratio:4/5;padding:14px 14px 0;border-radius:var(--r);overflow:hidden;color:#fff;
+ background:linear-gradient(165deg,color-mix(in srgb,var(--tc) 86%,#10172b),color-mix(in srgb,var(--tc) 44%,#10172b))}
+.pc-m{font:700 15px/1 var(--txt);letter-spacing:.01em}
+.pc-k{position:absolute;top:11px;right:11px;max-width:60%;padding:4px 9px;border-radius:99px;background:rgba(16,23,43,.36);font:600 12px/1.25 var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-d{display:block;margin:0 0 -8px -5px;font:800 clamp(80px,23vw,100px)/.8 var(--disp);letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.pc-f{position:absolute;right:11px;bottom:11px;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;background:#fff;color:#10172b;font:700 12px/1.25 var(--txt)}
+.pc-f i{width:7px;height:7px;border-radius:50%;background:#16a37f}
+.pc .cstack{position:absolute;left:14px;bottom:12px;margin:0}
+.pc .cstack .cs{border-color:transparent}
+.pc-t{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:11px 2px 0;font:650 16px/1.25 var(--txt);letter-spacing:-.005em}
+.pc-s{margin:3px 2px 0;font-size:13.5px;line-height:1.35;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc .bar{display:block;height:4px;margin:10px 2px 0;border-radius:99px;background:var(--line)}
+.pc .bar i{border-radius:99px;background:var(--acc)}
+.pc-n{margin:5px 2px 0;font-size:12.5px;color:var(--mute)}
+.pc-n b{color:var(--ink);font-weight:650}
+.pc.past .pc-art{filter:saturate(.3) brightness(.94)}
+.pc.past .pc-t{color:var(--mute)}
+.pc:focus-visible{outline:none}
+.pc:focus-visible .pc-art{outline:3px solid var(--acc);outline-offset:3px}
+@media(prefers-reduced-motion:no-preference){
+ .pc-art{transition:transform .35s var(--fd-ease),box-shadow .35s var(--fd-ease)}
+ .pc:active .pc-art{transform:scale(.97)}
+}
+@media(hover:hover) and (pointer:fine){.pc:hover .pc-art{transform:translateY(-4px);box-shadow:var(--pop)}}
+
+/* search results and sorted lists: the same cards in a wrapping grid */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:22px var(--fd-gap)}
+@media(min-width:768px){.pgrid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}}
+.pgrid .pc{width:auto}
+
+/* ---------- people: round faces, like a cast list ---------- */
+.pp{display:flex;flex-direction:column;align-items:center;gap:6px;width:88px;padding:0;border:0;background:none;color:var(--ink);font:inherit;text-align:center;cursor:pointer}
+.pp .cav{box-shadow:0 0 0 0 var(--acc);transition:box-shadow .2s}
+.pp:hover .cav{box-shadow:0 0 0 3px var(--acc)}
+.pp:focus-visible{outline:2px solid var(--acc);outline-offset:4px;border-radius:12px}
+.pp-n{max-width:100%;font:600 13.5px/1.2 var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-r{max-width:100%;font-size:12px;line-height:1.2;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- type strip on Events: sticks under the top bar, the marker glides ---------- */
+.fd-tabs{position:sticky;top:calc(var(--hh) + env(safe-area-inset-top,0px));z-index:12;display:flex;gap:2px;margin:14px -16px 6px;padding:0 12px;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;
+ background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
+.fd-tabs::-webkit-scrollbar{display:none}
+.fd-t{position:relative;flex:none;display:inline-flex;align-items:center;gap:7px;height:46px;padding:0 12px;border:0;background:none;color:var(--mute);font:600 14.5px var(--txt);white-space:nowrap;cursor:pointer}
+.fd-t:hover,.fd-t.on{color:var(--ink)}
+.fd-t:focus-visible{outline:2px solid var(--acc);outline-offset:-4px;border-radius:8px}
+.fd-t em{min-width:20px;padding:0 6px;border-radius:10px;background:color-mix(in srgb,var(--mute) 14%,transparent);color:var(--mute);font:600 12px/20px var(--txt);font-style:normal;text-align:center}
+.fd-t.on em{background:var(--tint);color:var(--acc)}
+.fd-ind{position:absolute;left:0;bottom:-1px;width:0;height:3px;border-radius:3px 3px 0 0;background:var(--acc);pointer-events:none}
+@media(prefers-reduced-motion:no-preference){.fd-ind{transition:transform .38s var(--fd-ease),width .38s var(--fd-ease)}}
+@media(min-width:1024px){.fd-tabs{margin-inline:0;padding:0}}

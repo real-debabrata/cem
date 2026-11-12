@@ -1,4 +1,5 @@
-/* CEM 4.4.0: navigation shell (see sidepanel.js). This file changes only paint(): it no longer draws the top menu and bottom bar.
+/* CEM 4.5.0: Discover layout (see feed.js, feed.css). This file is unchanged apart from the version.
+   CEM 4.4.0: navigation shell (see sidepanel.js). This file changes only paint(): it no longer draws the top menu and bottom bar.
    CEM 4.3.0: profile pictures (see avatar.js). This file changes only the version, the picture in the top-bar circle, and a "Profile photo" entry in the account menu.
    CEM 4.2.0: side panel (see sidepanel.js). This file is unchanged apart from the version.
    CEM 4.1.1: full-screen look in the Android app: theme colour behind the status bar, camera cut-out and navigation bar (see themebars.js, scripts/native/ThemeBarsPlugin.java). This file is unchanged apart from the version.
@@ -11,7 +12,7 @@
    CEM 3.7.0: new brand (Indigo #5948F5, Amber, Midnight Navy, Cloud White, Fresh Mint) and new logo.
    Campus Events: menu bar, UI polish, app version control. Loads after sync.js/app2.js; no core code is modified. */
 (function(){
-const APP_VERSION='4.4.0',BUILD='2026-11-04';   // bump these on every release
+const APP_VERSION='4.5.0',BUILD='2026-11-12';   // bump these on every release
 const $=s=>document.querySelector(s),LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const root=document.documentElement;
 let theme=localStorage.getItem('campus-theme')||'auto',CFG=LS('campus-ver',null);
